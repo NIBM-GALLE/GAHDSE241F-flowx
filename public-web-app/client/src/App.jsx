@@ -1,5 +1,9 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Services from "./components/Services";
+import AboutUs from "./components/AboutUs";
+import Contact from "./components/Contact";
 import { motion } from "framer-motion";
 
 function App() {
@@ -18,6 +22,18 @@ function App() {
       >
         <motion.div variants={gridSquareVariants}>
           <Navbar />
+        </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <Hero />
+        </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <Services />
+        </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <AboutUs />
+        </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <Contact />
         </motion.div>
       </motion.section>
     </>
