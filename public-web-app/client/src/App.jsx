@@ -1,5 +1,6 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
 import { motion } from "framer-motion";
 
 function App() {
@@ -18,6 +19,9 @@ function App() {
       >
         <motion.div variants={gridSquareVariants}>
           <Navbar />
+        </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <Hero />
         </motion.div>
       </motion.section>
     </>
