@@ -1,6 +1,8 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
+import RealTimeFloodAnalysis from "./components/RealTimeFloodAnalysis";
+import FloodImpactPrediction from "./components/FloodImpactPrediction";
 import Services from "./components/Services";
 import AboutUs from "./components/AboutUs";
 import Contact from "./components/Contact";
@@ -26,6 +28,13 @@ function App() {
         <motion.div variants={gridSquareVariants}>
           <Hero />
         </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <RealTimeFloodAnalysis />
+        </motion.div>
+        <motion.div variants={gridSquareVariants}>
+          <FloodImpactPrediction />
+        </motion.div>
+
         <motion.div variants={gridSquareVariants}>
           <Services />
         </motion.div>
