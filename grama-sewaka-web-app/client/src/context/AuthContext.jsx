@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState({
     name: "Grama Sewaka",
     email: "grama@example.com",
-    role: "grama_sewaka",
+    role: "admin",
     avatar: "/avatars/grama.jpg",
     notifications: 3,
   });
