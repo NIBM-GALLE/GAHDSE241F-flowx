@@ -4,7 +4,7 @@ import HeroImg from "../assets/hero.png";
 function Hero() {
   return (
     <section
-      className="flex flex-col md:flex-row items-center justify-between px-6 md:px-12 py-10 h-screen pt-30 md:pt-0"
+      className="flex flex-col md:flex-row items-center justify-between px-6 md:px-12 py-10 h-screen pt-30 md:pt-0 bg-white"
       id="hero"
     >
       <div className="w-full md:w-1/2">
