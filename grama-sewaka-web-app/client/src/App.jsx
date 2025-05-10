@@ -6,6 +6,7 @@ import { ThemeProvider } from "./components/ui/theme-provider";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
+import NewVictim from "./pages/NewVictimReq"; 
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
+           <Route path="/victims/new" element={<NewVictim />} /> 
         </Routes>
     </ThemeProvider>
   );
