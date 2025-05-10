@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Logo from '../assets/flowx-logo-1.png';
 
+import { Button } from "@/components/ui/button"
+
 function Navbar() {
   const [activeSection, setActiveSection] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,6 +87,16 @@ function Navbar() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Sign in button */}
+          <div className="hidden md:block">
+            <Button
+              className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 rounded-lg px-4 py-2"
+              onClick={() => window.location.href = "/login"}
+            >
+              Sign In
+            </Button>
           </div>
 
           {/* Mobile menu button */}
