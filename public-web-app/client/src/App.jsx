@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router";
 import { ThemeProvider } from "./components/ui/theme-provider";
 
 //pages
-import SignIn from "./pages/signin";
+import SignIn from "./pages/SignIn";
 import Main from "./pages/Main";
 
 
