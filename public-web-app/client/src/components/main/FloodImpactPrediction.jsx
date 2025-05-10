@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import RainIcon from "../assets/rain.png";
-import FloodIcon from "../assets/flood.png";
-import SafeZoneIcon from "../assets/safezone.png";
-import DurationIcon from "../assets/duration.png";
-import axioInstance from "../lib/axioInstance";
+import RainIcon from "@/assets/rain.png";
+import FloodIcon from "@/assets/flood.png";
+import SafeZoneIcon from "@/assets/safezone.png";
+import DurationIcon from "@/assets/duration.png";
+import axioInstance from "../../lib/axioInstance";
 
 function FloodImpactPrediction({ floodData }) {
   const [floodArea, setFloodArea] = useState(null);

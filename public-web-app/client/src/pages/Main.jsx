@@ -2,13 +2,13 @@ import React from "react";
 import { motion } from "framer-motion";
 
 //components
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import RealTimeFloodAnalysis from "../components/RealTimeFloodAnalysis";
-import FloodImpactPrediction from "../components/FloodImpactPrediction";
-import Services from "../components/Services";
-import AboutUs from "../components/AboutUs";
-import Contact from "../components/Contact";
+import Navbar from "../components/main/Navbar";
+import Hero from "../components/main/Hero";
+import RealTimeFloodAnalysis from "../components/main/RealTimeFloodAnalysis";
+import FloodImpactPrediction from "../components/main/FloodImpactPrediction";
+import Services from "../components/main/Services";
+import AboutUs from "../components/main/AboutUs";
+import Contact from "../components/main/Contact";
 
 
 function Main() {

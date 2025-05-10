@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import floodIcon from "../assets/flood.png";
-import RainIcon from "../assets/rain.png";
-import RiverIcon from "../assets/river.png";
-import supabase from "../lib/supabaseClient";
-import axioInstance from "../lib/axioInstance";
+import floodIcon from "@/assets/flood.png";
+import RainIcon from "@/assets/rain.png";
+import RiverIcon from "@/assets/river.png";
+
+import supabase from "../../lib/supabaseClient";
+import axioInstance from "../../lib/axioInstance";
 import FloodImpactPrediction from "./FloodImpactPrediction";
 
 function RealTimeFloodAnalysis({ onHighRiskDetected }) {

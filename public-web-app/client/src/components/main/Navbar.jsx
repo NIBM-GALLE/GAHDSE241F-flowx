@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Logo from '../assets/flowx-logo-1.png';
+import Logo from '@/assets/flowx-logo-1.png';
 
 import { Button } from "@/components/ui/button"
 

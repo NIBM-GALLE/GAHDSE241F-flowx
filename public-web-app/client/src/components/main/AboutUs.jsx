@@ -1,5 +1,5 @@
 import React from "react";
-import UserImg from "../assets/user.png";
+import UserImg from "@/assets/user.png";
 
 function AboutUs() {
   const teamMembers = [
