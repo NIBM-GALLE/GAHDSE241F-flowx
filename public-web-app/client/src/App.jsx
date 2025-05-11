@@ -7,6 +7,7 @@ import Main from "./pages/Main";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
+import FloodPredictionDetails from "./pages/FloodPredictionDetails";
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/flood-prediction" element={<FloodPredictionDetails />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
