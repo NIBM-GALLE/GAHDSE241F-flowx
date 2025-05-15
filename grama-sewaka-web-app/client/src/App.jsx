@@ -8,6 +8,7 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import NewVictim from "./pages/NewVictimReq"; 
 import ApprovedVictimsReq from "./pages/ApprovedVictimsReq";
+import VictimHistory from "./pages/VictimsHistory"; 
 
 function App() {
   return (
@@ -19,6 +20,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
            <Route path="/victims/new" element={<NewVictim />} /> 
           <Route path="/victims/approved" element={<ApprovedVictimsReq />} />
+          <Route path="/victims/history" element={<VictimHistory />} />
+
         </Routes>
     </ThemeProvider>
   );
