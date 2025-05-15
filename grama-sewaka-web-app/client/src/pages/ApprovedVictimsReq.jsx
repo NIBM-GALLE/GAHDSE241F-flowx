@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-import Victim from "@/components/victims/victims"
+import Victim from "@/components/victims/Victims"
 import { Button } from "@/components/ui/button"
 import { Filter, X } from "lucide-react"
 
