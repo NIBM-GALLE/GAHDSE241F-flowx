@@ -10,6 +10,9 @@ import NewVictim from "./pages/NewVictimReq";
 import ApprovedVictimsReq from "./pages/ApprovedVictimsReq";
 import VictimHistory from "./pages/VictimsHistory"; 
 import CreateAnnouncement from "./pages/CreateAnnouncement";
+import PendingDonations from "./pages/PendingDonations";
+import NewDonation from "./pages/NewDonation";
+import DonationHistory from "./pages/DonationHistory";
 
 function App() {
   return (
@@ -23,6 +26,10 @@ function App() {
           <Route path="/victims/approved" element={<ApprovedVictimsReq />} />
           <Route path="/victims/history" element={<VictimHistory />} />
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
+          <Route path="/donations/pending" element={<PendingDonations />} />
+          <Route path="/donations/new" element={<NewDonation />} />
+          <Route path="/donations/history" element={<DonationHistory />} />
+          
 
         </Routes>
     </ThemeProvider>
