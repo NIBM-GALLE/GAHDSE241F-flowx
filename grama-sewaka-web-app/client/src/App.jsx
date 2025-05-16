@@ -13,6 +13,8 @@ import CreateAnnouncement from "./pages/CreateAnnouncement";
 import PendingDonations from "./pages/PendingDonations";
 import NewDonation from "./pages/NewDonation";
 import DonationHistory from "./pages/DonationHistory";
+import SubsidyGivers from "./pages/SubsidyGivers";
+import SubsidyNotes from "./pages/SubsidyNotes";
 
 function App() {
   return (
@@ -29,7 +31,8 @@ function App() {
           <Route path="/donations/pending" element={<PendingDonations />} />
           <Route path="/donations/new" element={<NewDonation />} />
           <Route path="/donations/history" element={<DonationHistory />} />
-          
+          <Route path="/subsidy-givers" element={<SubsidyGivers />} />
+          <Route path="/subsidy-notes" element={<SubsidyNotes />} />
 
         </Routes>
     </ThemeProvider>
