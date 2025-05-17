@@ -15,6 +15,7 @@ import NewDonation from "./pages/NewDonation";
 import DonationHistory from "./pages/DonationHistory";
 import SubsidyGivers from "./pages/SubsidyGivers";
 import SubsidyNotes from "./pages/SubsidyNotes";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/donations/history" element={<DonationHistory />} />
           <Route path="/subsidy-givers" element={<SubsidyGivers />} />
           <Route path="/subsidy-notes" element={<SubsidyNotes />} />
+          <Route path="/profile" element={<Profile />} />
 
         </Routes>
     </ThemeProvider>
