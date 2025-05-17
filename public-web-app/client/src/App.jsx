@@ -9,6 +9,8 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import FloodPredictionDetails from "./pages/FloodPredictionDetails";
 import Announcements from "./pages/Announcements";
+import VictimRequest from "./pages/VictimsRequest";
+import VictimsHistory from "./pages/VictimsHistory";
 
 
 function App() {
@@ -23,6 +25,9 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/flood-prediction" element={<FloodPredictionDetails />} />
           <Route path="/announcements" element={<Announcements />} />
+          <Route path="/victim-request" element={<VictimRequest />} />
+          <Route path="/victims-history" element={<VictimsHistory />} />
+  
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
