@@ -11,6 +11,8 @@ import FloodPredictionDetails from "./pages/FloodPredictionDetails";
 import Announcements from "./pages/Announcements";
 import VictimRequest from "./pages/VictimsRequest";
 import VictimsHistory from "./pages/VictimsHistory";
+import NewSubsidies from "./pages/NewSubsidies";
+import SubsidyHistory from "./pages/SubsidyHistory";
 
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/victim-request" element={<VictimRequest />} />
           <Route path="/victims-history" element={<VictimsHistory />} />
+          <Route path="/new-subsidies" element={<NewSubsidies />} />
+          <Route path="/subsidy-history" element={<SubsidyHistory />} />
   
         </Routes>
       </BrowserRouter>
