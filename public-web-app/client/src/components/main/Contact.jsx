@@ -27,13 +27,13 @@ function Contact() {
     <section id="contact" className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-gray-800 text-center mb-12">
-          CONTACT
+          DONATE NOW
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Contact Information Card */}
           <div className="bg-gray-900 text-white p-8 rounded-lg">
-            <h3 className="text-xl font-bold mb-6">Contact Information</h3>
+            <h3 className="text-xl font-bold mb-6">Contact Information for Donations</h3>
 
             <div className="space-y-4">
               <p className="flex items-start">
@@ -198,6 +198,31 @@ function Contact() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="+94 XXXXXXXXX"
                 />
+              </div>
+
+             
+              <div className="form-group md:col-span-2">
+                <label
+                  htmlFor="donationType"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Type of Donation
+                </label>
+                <select
+                  id="donationType"
+                  name="donationType"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select type of donation</option>
+                  <option value="blood">Food & WaterDonations</option>
+                  <option value="clothes">Clothes Donation</option>
+                  <option value="shelter">Shelter Donation</option>
+                  <option value="money">Money Donation</option>
+                  <option value="food">Hygiene Supplies</option>
+                  <option value="water">Medical Supplies</option>
+                  <option value="other">Other</option>
+
+                </select>
               </div>
 
               <div className="form-group md:col-span-2">

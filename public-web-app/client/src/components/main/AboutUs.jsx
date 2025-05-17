@@ -27,7 +27,7 @@ function AboutUs() {
           <p className="text-gray-600 mb-6">
             FlowX was developed by a team of passionate software engineering
             students from the National Institute of Business Management as part
-            of their Machine Learning project.
+            of their final project.
           </p>
         </div>
 
