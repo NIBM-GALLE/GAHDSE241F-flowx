@@ -13,6 +13,7 @@ import VictimRequest from "./pages/VictimsRequest";
 import VictimsHistory from "./pages/VictimsHistory";
 import NewSubsidies from "./pages/NewSubsidies";
 import SubsidyHistory from "./pages/SubsidyHistory";
+import ShelterRequest from "./pages/ShelterRequest";
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="/victims-history" element={<VictimsHistory />} />
           <Route path="/new-subsidies" element={<NewSubsidies />} />
           <Route path="/subsidy-history" element={<SubsidyHistory />} />
+          <Route path="/shelter-request" element={<ShelterRequest />} />
   
         </Routes>
       </BrowserRouter>
