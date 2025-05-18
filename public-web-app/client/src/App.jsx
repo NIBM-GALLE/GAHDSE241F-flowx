@@ -15,7 +15,7 @@ import NewSubsidies from "./pages/NewSubsidies";
 import SubsidyHistory from "./pages/SubsidyHistory";
 import ShelterRequest from "./pages/ShelterRequest";
 import Contact from "./pages/Contact";
-
+import ShelterInformation from "./pages/ShelterInformation";
 
 function App() {
   
@@ -35,6 +35,8 @@ function App() {
           <Route path="/subsidy-history" element={<SubsidyHistory />} />
           <Route path="/shelter-request" element={<ShelterRequest />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/shelter-information" element={<ShelterInformation />} />
+          
   
         </Routes>
       </BrowserRouter>
