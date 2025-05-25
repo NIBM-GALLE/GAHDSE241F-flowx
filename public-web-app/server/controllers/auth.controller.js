@@ -15,6 +15,7 @@ export const registerUser = async (req, res, next) => {
     address,
     latitude,
     longitude,
+    members,
     distance_to_river,
     grama_niladhari_division_id,
     divisional_secretariat_id,
@@ -61,14 +62,15 @@ export const registerUser = async (req, res, next) => {
         // Create new house
         await pool.query(
         `INSERT INTO house 
-        (house_id, address, latitude, longitude, distance_to_river, 
+        (house_id, address, latitude, longitude, members, distance_to_river, 
         grama_niladhari_division_id, divisional_secretariat_id, district_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             houseId,
             address,
             latitude,
             longitude,
+            members,
             distance_to_river || 0.0,
             grama_niladhari_division_id,
             divisional_secretariat_id,
@@ -156,7 +158,7 @@ export const loginUser = async (req, res, next) => {
        m.first_name as firstName, m.last_name as lastName, 
        m.member_email as email, m.member_phone_number as phone,
        m.house_id, h.address as house_address,
-       COUNT(m2.member_id) as house_members
+       h.members as house_members
        FROM member m
        JOIN house h ON m.house_id = h.house_id
        LEFT JOIN member m2 ON m.house_id = m2.house_id
