@@ -66,7 +66,7 @@ export const registerUser = async (req, res, next) => {
     if (role === 'admin') {
       insertQuery = `
         INSERT INTO admin 
-        (NIC, firstname, lastname, address, admin_phone_number, admin_email, admin_password)
+        (NIC, first_name, last_name, address, admin_phone_number, admin_email, admin_password)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
       insertParams = [nic, firstname, lastname, address, phone, email, hashedPassword];
@@ -74,7 +74,7 @@ export const registerUser = async (req, res, next) => {
     else if (role === 'government_officer') {
       insertQuery = `
         INSERT INTO government_officer 
-        (nic, firstname, lastname, government_officer_email, government_officer_password, 
+        (nic, first_name, last_name, government_officer_email, government_officer_password, 
          government_officer_phone_number, address, district_id, divisional_secretariat_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
@@ -86,7 +86,7 @@ export const registerUser = async (req, res, next) => {
     else { // grama_sevaka
       insertQuery = `
         INSERT INTO grama_sevaka 
-        (nic, firstname, lastname, grama_sevaka_phone_number, address, 
+        (nic, first_name, last_name, grama_sevaka_phone_number, address, 
          grama_sevaka_email, grama_sevaka_password, grama_niladhari_division_id, 
          divisional_secretariat_id, district_id)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
