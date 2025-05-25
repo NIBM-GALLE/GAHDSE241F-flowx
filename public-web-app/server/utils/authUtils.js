@@ -13,8 +13,10 @@ export const comparePassword = async (password, hashedPassword) => {
 };
 
 // Generate JWT token
-export const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '1d'
-  });
+export const generateToken = (member_id) => {
+  return jwt.sign(
+    { member_id },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
 };

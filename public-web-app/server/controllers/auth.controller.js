@@ -185,18 +185,19 @@ export const loginUser = async (req, res, next) => {
     // Omit password in response
     const { password: _, ...userData } = user;
 
-    res
-      .status(200)
-      .cookie('access_token', token, {
+    res.status(200)
+      .cookie('access_token', token, { 
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
+        sameSite: 'strict'
       })
       .json({
         success: true,
-        message: "Login successful",
-        user: userData
+        user: {
+          member_id: user.id,
+          email: user.email,
+          house_id: user.house_id
+        }
       });
   } catch (error) {
     logger.error("Login error:", error);

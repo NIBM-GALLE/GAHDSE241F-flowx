@@ -5,7 +5,11 @@ import { connectDB, pool } from "./utils/db.js";
 import logger from "./utils/logger.js";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+
+//import routes
 import authRoutes from "./routes/auth.route.js";
+import donationRoutes from "./routes/donation.route.js";
+import announcementRoutes from "./routes/announcement.route.js";
 
 dotenv.config();
 
@@ -24,6 +28,8 @@ app.use(
 
 // Register routes
 app.use("/api/auth", authRoutes);
+app.use("/api/donations", donationRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 // Validate environment variables
 if (
