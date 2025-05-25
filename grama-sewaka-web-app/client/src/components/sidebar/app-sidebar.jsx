@@ -4,6 +4,7 @@ import { BiDonateHeart } from "react-icons/bi";
 import { LiaDonateSolid } from "react-icons/lia";
 import { MdOutlineAnnouncement } from "react-icons/md";
 
+
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { ModeToggle } from "@/components/ui/mode-toggle";
@@ -32,6 +33,15 @@ export function AppSidebar({ ...props }) {
         items: [
           { title: "Current Subsidies", url: "/admin/subsidies/current" },
           { title: "Approved History", url: "/admin/subsidies/history" },
+        ],
+      },
+      {
+        title: "Shelters",
+        icon: MdOutlineAnnouncement,
+        items: [
+          { title: "New Requests", url: "/admin/shelters/new" },
+          { title: "Approved Requests", url: "/admin/shelters/approved" },
+          { title: "Created Shelters", url: "/admin/shelters/created" },
         ],
       },
       {
