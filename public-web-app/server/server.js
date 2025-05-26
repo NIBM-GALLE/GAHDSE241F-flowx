@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.route.js";
 import donationRoutes from "./routes/donation.route.js";
 import announcementRoutes from "./routes/announcement.route.js";
+import victimRoutes from "./routes/victim.route.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/victims", victimRoutes);
 
 // Validate environment variables
 if (
