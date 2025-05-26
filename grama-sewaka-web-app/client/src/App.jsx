@@ -16,6 +16,8 @@ import DonationHistory from "./pages/DonationHistory";
 import SubsidyGivers from "./pages/SubsidyGivers";
 import SubsidyNotes from "./pages/SubsidyNotes";
 import Profile from "./pages/Profile";
+import ShelterRequest from "./pages/ShelterRequest";
+import CreateShelter from "./pages/CreateShelter";
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
           <Route path="/subsidy-givers" element={<SubsidyGivers />} />
           <Route path="/subsidy-notes" element={<SubsidyNotes />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/shelter-request" element={<ShelterRequest />} />
+          <Route path="/create-shelter" element={<CreateShelter />} />
 
         </Routes>
     </ThemeProvider>
