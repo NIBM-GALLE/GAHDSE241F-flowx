@@ -11,6 +11,8 @@ import authRoutes from "./routes/auth.route.js";
 import donationRoutes from "./routes/donation.route.js";
 import announcementRoutes from "./routes/announcement.route.js";
 import victimRoutes from "./routes/victim.route.js";
+import subsidiesRoutes from "./routes/subsidies.route.js";
+import shelterRoutes from "./routes/shelter.route.js";
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/victims", victimRoutes);
+app.use("/api/subsidies", subsidiesRoutes);
+app.use("/api/shelters", shelterRoutes);
 
 // Validate environment variables
 if (
