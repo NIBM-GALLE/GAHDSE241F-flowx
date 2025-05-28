@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import areaRoutes from "./routes/area.routes.js";
 import shelterRoutes from "./routes/shelter.routes.js";
+import victimRoutes from "./routes/victimRequest.routes.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/area", areaRoutes);
 app.use("/api/shelter", shelterRoutes);
+app.use("/api/victim", victimRoutes);
 
 //validate environment variables
 if (
