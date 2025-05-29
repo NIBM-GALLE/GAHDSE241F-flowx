@@ -13,6 +13,7 @@ import shelterRoutes from "./routes/shelter.routes.js";
 import victimRoutes from "./routes/victimRequest.routes.js";
 import announcementRoutes from './routes/announcement.routes.js';
 import subsidyRoutes from './routes/subsidy.routes.js';
+import donationRoutes from './routes/donation.routes.js';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/shelter", shelterRoutes);
 app.use("/api/victim", victimRoutes);
 app.use("/api/announcement", announcementRoutes);
 app.use("/api/subsidy", subsidyRoutes);
+app.use("/api/donation", donationRoutes);
 
 //validate environment variables
 if (
