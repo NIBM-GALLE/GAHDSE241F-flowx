@@ -1,5 +1,5 @@
-const pool = require('../config/database');
-const logger = require('../utils/logger');
+import pool from '../config/db.js';
+import logger from '../utils/logger.js';
 
 //function to get current or latest flood ID
 const getCurrentOrLatestFloodId = async () => {
@@ -30,7 +30,7 @@ const getCurrentOrLatestFloodId = async () => {
 };
 
 //GRAMA SEVAKA CONTROLLERS
-const gramaSevaka = {
+export const gramaSevaka = {
   //get pending victim requests for logged-in Grama Sevaka
   getPendingRequests: async (req, res) => {
     try {
@@ -249,7 +249,7 @@ const gramaSevaka = {
 };
 
 //GOVERNMENT OFFICER CONTROLLERS
-const governmentOfficer = {
+export const governmentOfficer = {
   //get pending victim requests for logged-in Government Officer
   getPendingRequests: async (req, res) => {
     try {
@@ -428,10 +428,4 @@ const governmentOfficer = {
       });
     }
   }
-};
-
-module.exports = {
-  gramaSevaka,
-  governmentOfficer,
-  getCurrentOrLatestFloodId
 };
