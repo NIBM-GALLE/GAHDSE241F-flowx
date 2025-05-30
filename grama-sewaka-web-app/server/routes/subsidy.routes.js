@@ -4,10 +4,9 @@ import {
   getSubsidyRequestsByGramaSevaka,
   updateSubsidyRequestStatus,
   getSubsidiesForCurrentFlood,
-  createSubsidy,
   getSubsidyRequestsByDivisionalSecretariat
 } from '../controllers/subsidy.controller.js';
-import { protect } from '../middleware/auth.middleware.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -23,7 +22,6 @@ router.put('/requests/:requestId/status', updateSubsidyRequestStatus);
 router.get('/current', getSubsidiesForCurrentFlood);
 
 //government officer routes
-router.post('/', createSubsidy);
 router.get('/division-requests', getSubsidyRequestsByDivisionalSecretariat);
 
 export default router;

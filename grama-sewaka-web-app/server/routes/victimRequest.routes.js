@@ -1,18 +1,21 @@
-const express = require('express');
+import express from 'express';
+import { gramaSevaka, governmentOfficer } from '../controllers/victimRequest.controller.js';
+import { protect } from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
-const { gramaSevaka, governmentOfficer } = require('../controllers/victimController');
-const { authenticateGramaSevaka, authenticateGovernmentOfficer } = require('../middlewares/auth');
 
-// GRAMA SEVAKA ROUTES
-router.get('/grama-sevaka/pending', authenticateGramaSevaka, gramaSevaka.getPendingRequests);
-router.put('/grama-sevaka/update-status/:victim_request_id', authenticateGramaSevaka, gramaSevaka.updateRequestStatus);
-router.get('/grama-sevaka/approved', authenticateGramaSevaka, gramaSevaka.getApprovedRequests);
-router.get('/grama-sevaka/history', authenticateGramaSevaka, gramaSevaka.getRequestHistory);
+//all routes protected
+router.use(protect);
 
-// GOVERNMENT OFFICER ROUTES
-router.get('/government-officer/pending', authenticateGovernmentOfficer, governmentOfficer.getPendingRequests);
-router.put('/government-officer/update-status/:victim_request_id', authenticateGovernmentOfficer, governmentOfficer.updateRequestStatus);
-router.get('/government-officer/approved', authenticateGovernmentOfficer, governmentOfficer.getApprovedRequests);
-router.get('/government-officer/history', authenticateGovernmentOfficer, governmentOfficer.getRequestHistory);
+//grama Sevaka routes
+router.get('/grama-sevaka/requests/pending', gramaSevaka.getPendingRequests);
+router.get('/grama-sevaka/requests/approved', gramaSevaka.getApprovedRequests);
+router.get('/grama-sevaka/requests/history', gramaSevaka.getRequestHistory);
+router.put('/grama-sevaka/requests/:victim_request_id/status', gramaSevaka.updateRequestStatus);
 
-module.exports = router;
+//government Officer routes
+router.get('/government-officer/requests/pending', governmentOfficer.getPendingRequests);
+router.get('/government-officer/requests/approved', governmentOfficer.getApprovedRequests);
+router.get('/government-officer/requests/history', governmentOfficer.getRequestHistory);
+
+export default router;

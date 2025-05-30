@@ -14,7 +14,7 @@ import victimRoutes from "./routes/victimRequest.routes.js";
 import announcementRoutes from './routes/announcement.routes.js';
 import subsidyRoutes from './routes/subsidy.routes.js';
 import donationRoutes from './routes/donation.routes.js';
-import floodRoutes from './routes/floodRoutes.js';
+import floodRoutes from './routes/flood.router.js';
 
 dotenv.config();
 
