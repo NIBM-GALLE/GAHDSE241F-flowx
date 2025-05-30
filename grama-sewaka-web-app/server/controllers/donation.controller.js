@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+import pool from '../utils/db.js';
 import logger from '../utils/logger.js';
 
 //function to get current or latest flood ID

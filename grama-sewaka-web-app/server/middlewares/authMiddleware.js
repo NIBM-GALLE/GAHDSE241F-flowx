@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import pool from '../db.js';
+import pool from '../utils/db.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -38,6 +38,12 @@ export const protect = async (req, res, next) => {
         message: 'User not found'
       });
     }
+
+    //debugging log
+    req.user = users[0];
+    req.user.role = decoded.role;
+
+    console.log('Authenticated User:', req.user);
 
     req.user = users[0];
     req.user.role = decoded.role;
