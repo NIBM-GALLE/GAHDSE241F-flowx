@@ -35,7 +35,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/area", areaRoutes);
 app.use("/api/shelter", shelterRoutes);
-app.use("/api/victim", victimRoutes);
+app.use("/api/victim-requests", victimRoutes);
 app.use("/api/announcement", announcementRoutes);
 app.use("/api/subsidy", subsidyRoutes);
 app.use("/api/donation", donationRoutes);

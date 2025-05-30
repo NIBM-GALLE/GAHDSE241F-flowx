@@ -19,6 +19,6 @@ router.post('/details', insertFloodDetails);
 router.put('/:flood_id/status', updateFloodStatus);
 router.put('/details/:flood_details_id', updateFloodDetails);
 router.get('/', getAllFloods);
-router.get('/details', getFloodDetails);
+router.get('/:flood_id/details', getFloodDetails);
 
 export default router;
