@@ -324,17 +324,15 @@ export const getFloodDetails = async (req, res, next) => {
 
   try {
     let query = `
-      SELECT * FROM flood_details ORDER BY flood_details_date DESC
-    `;
-
+      SELECT * FROM flood_details`;
     let queryParams = [];
 
     if (flood_id) {
-      query += ' WHERE fd.flood_id = ?';
+      query += ' WHERE flood_id = ?';
       queryParams.push(flood_id);
     }
 
-    query += ' ORDER BY fd.flood_details_date DESC';
+    query += ' ORDER BY flood_details_date DESC';
 
     const [floodDetails] = await pool.query(query, queryParams);
 

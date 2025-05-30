@@ -4,66 +4,95 @@ import pool from '../utils/db.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  //extract token from headers
+  if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized to access this route'
+      message: 'Not authorized: No token provided'
     });
   }
 
   try {
+    //verify JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Determine which table to query based on role
-    let query;
-    if (decoded.role === 'admin') {
-      query = 'SELECT * FROM admin WHERE admin_id = ?';
-    } else if (decoded.role === 'government_officer') {
-      query = 'SELECT * FROM government_officer WHERE government_officer_id = ?';
-    } else {
-      query = 'SELECT * FROM grama_sevaka WHERE grama_sevaka_id = ?';
+    //determine user table based on role
+    let table, idField;
+    switch (decoded.role) {
+      case 'admin':
+        table = 'admin';
+        idField = 'admin_id';
+        break;
+      case 'government_officer':
+        table = 'government_officer';
+        idField = 'government_officer_id';
+        break;
+      case 'grama_sevaka':
+        table = 'grama_sevaka';
+        idField = 'grama_sevaka_id';
+        break;
+      default:
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user role'
+        });
     }
 
-    const [users] = await pool.query(query, [decoded.id]);
-    if (users.length === 0) {
+    //fetch user from database
+    const [users] = await pool.query(
+      `SELECT * FROM ${table} WHERE ${idField} = ?`,
+      [decoded.id]
+    );
+
+    if (!users.length) {
       return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found in database'
       });
     }
 
-    //debugging log
-    req.user = users[0];
-    req.user.role = decoded.role;
+    //attach user to request
+    req.user = {
+      ...users[0],
+      role: decoded.role,
+      id: decoded.id,
+      [idField]: decoded.id
+    };
 
-    console.log('Authenticated User:', req.user);
+    //debug log (remove in production)
+    console.log('Authenticated User:', {
+      id: req.user.id,
+      role: req.user.role,
+      email: req.user.email
+    });
 
-    req.user = users[0];
-    req.user.role = decoded.role;
     next();
   } catch (err) {
+    console.error('Authentication Error:', err.message);
     return res.status(401).json({
       success: false,
-      message: 'Not authorized to access this route'
+      message: 'Not authorized: Invalid token'
     });
   }
 };
 
-export const authorize = (...roles) => {
+export const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: `User role ${req.user.role} is not authorized to access this route`
+        message: `Role ${req.user.role} is not authorized to access this route`
       });
     }
     next();
   };
+};
+
+//enhanced role-checking middleware
+export const requireRole = (role) => {
+  return [protect, authorize(role)];
 };
