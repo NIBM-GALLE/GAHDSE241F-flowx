@@ -39,6 +39,12 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    //debugging log
+    req.user = users[0];
+    req.user.role = decoded.role;
+
+    console.log('Authenticated User:', req.user);
+
     req.user = users[0];
     req.user.role = decoded.role;
     next();

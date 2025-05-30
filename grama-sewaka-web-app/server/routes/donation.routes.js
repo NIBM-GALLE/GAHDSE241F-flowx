@@ -7,12 +7,13 @@ import {
   getDonationById,
   getDonationStatistics
 } from '../controllers/donation.controller.js';
-import { protect } from '../middlewares/authMiddleware.js';
+
+import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 //all routes protected and only for government officers
-router.use(protect);
+router.use(protect, authorize('government_officer'));
 
 router.get('/new', getNewDonationRequests);
 router.get('/pending', getPendingDonationRequests);
