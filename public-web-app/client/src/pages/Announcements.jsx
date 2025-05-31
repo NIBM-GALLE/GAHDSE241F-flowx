@@ -1,3 +1,4 @@
+import React from "react";
 import {
     Bell,
     AlertTriangle,
@@ -37,80 +38,13 @@ import {
     SidebarProvider,
     SidebarTrigger,
   } from "@/components/ui/sidebar";
+  import { useAnnouncementsStore } from "@/stores/useAnnouncementsStore";
   
   function Announcements() {
-    const announcements = [
-      {
-        id: "ANN-2023-045",
-        title: "Heavy Rainfall Warning",
-        type: "warning",
-        message:
-          "The Meteorological Department warns of heavy rainfall exceeding 150mm in the next 24 hours across the southern region.",
-        date: "2023-11-15T08:30:00",
-        priority: "high",
-        status: "active",
-      },
-      {
-        id: "ANN-2023-044",
-        title: "Evacuation Centers Opened",
-        type: "info",
-        message:
-          "Three new evacuation centers have been established in Galle District. Transport will be provided from high-risk areas.",
-        date: "2023-11-14T14:15:00",
-        priority: "medium",
-        status: "active",
-      },
-      {
-        id: "ANN-2023-043",
-        title: "Water Purification Kits Distribution",
-        type: "info",
-        message:
-          "Free water purification kits available at local government offices from tomorrow.",
-        date: "2023-11-13T10:00:00",
-        priority: "medium",
-        status: "active",
-      },
-      {
-        id: "ANN-2023-042",
-        title: "Flood Relief Volunteer Program",
-        type: "general",
-        message:
-          "Register to volunteer for flood relief efforts in affected areas. Training provided.",
-        date: "2023-11-12T09:45:00",
-        priority: "low",
-        status: "active",
-      },
-      {
-        id: "ANN-2023-041",
-        title: "Road Closure Notification",
-        type: "warning",
-        message:
-          "Main road between Galle and Matara closed due to flooding. Use alternate routes.",
-        date: "2023-11-11T16:20:00",
-        priority: "high",
-        status: "expired",
-      },
-      {
-        id: "ANN-2023-040",
-        title: "Emergency Contact Numbers",
-        type: "info",
-        message:
-          "Updated emergency contact numbers for flood-related assistance.",
-        date: "2023-11-10T11:10:00",
-        priority: "medium",
-        status: "active",
-      },
-      {
-        id: "ANN-2023-039",
-        title: "School Closures",
-        type: "general",
-        message:
-          "All schools in flood-affected areas will remain closed until further notice.",
-        date: "2023-11-09T07:30:00",
-        priority: "low",
-        status: "expired",
-      },
-    ];
+    const { announcements, loading, error } = useAnnouncementsStore();
+    const [selectedAnnouncement, setSelectedAnnouncement] = React.useState(null);
+    const [search, setSearch] = React.useState("");
+    const [filter, setFilter] = React.useState("all");
   
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -123,14 +57,33 @@ import {
       });
     };
   
-    const getPriorityColor = (priority) => {
-      switch (priority) {
-        case "high":
-          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-        case "medium":
-          return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+    //map emergency_level to display label and color
+    const getPriorityLabel = (level) => {
+      switch (level) {
+        case "high_priority":
+          return "High";
+        case "active_only":
+          return "Active";
+        case "warnings":
+          return "Warning";
+        case "information":
+          return "Info";
         default:
-          return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+          return level;
+      }
+    };
+    const getPriorityColor = (level) => {
+      switch (level) {
+        case "high_priority":
+          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300";
+        case "active_only":
+          return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300";
+        case "warnings":
+          return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300";
+        case "information":
+          return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-300";
+        default:
+          return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 border-gray-300";
       }
     };
   
@@ -155,7 +108,7 @@ import {
                 Announcements
             </h1>
           </header>
-  
+
           <main className="p-4 space-y-6">
             <div className="flex-1 p-8">
               <div className="flex items-center justify-between mb-8">
@@ -168,16 +121,15 @@ import {
                     Important updates and notifications
                   </p>
                 </div>
-  
+
                 <div className="flex gap-2">
-                  <Button variant="outline">
+                  <Button>
                     <CalendarDays className="mr-2 h-4 w-4" />
                     Calendar View
                   </Button>
-                  <Button>+ New Announcement</Button>
                 </div>
               </div>
-  
+
               <Card className="mb-6">
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row gap-4">
@@ -186,9 +138,11 @@ import {
                       <Input
                         placeholder="Search announcements..."
                         className="pl-8"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
                       />
                     </div>
-  
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="flex gap-2">
@@ -197,82 +151,122 @@ import {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56">
-                        <DropdownMenuItem>All Announcements</DropdownMenuItem>
-                        <DropdownMenuItem>Active Only</DropdownMenuItem>
-                        <DropdownMenuItem>High Priority</DropdownMenuItem>
-                        <DropdownMenuItem>Warnings</DropdownMenuItem>
-                        <DropdownMenuItem>Information</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setFilter("all")} className={filter === "all" ? "font-semibold bg-accent" : ""}>All Announcements</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setFilter("active_only")} className={filter === "active_only" ? "font-semibold bg-accent" : ""}>Active Only</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setFilter("high_priority")} className={filter === "high_priority" ? "font-semibold bg-accent" : ""}>High Priority</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setFilter("warnings")} className={filter === "warnings" ? "font-semibold bg-accent" : ""}>Warnings</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setFilter("information")} className={filter === "information" ? "font-semibold bg-accent" : ""}>Information</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
-  
+
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Announcements</CardTitle>
                   <CardDescription>
-                    {announcements.length} announcements found
+                    {loading ? "Loading..." : error ? error : `${announcements.length} announcements found`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">ID</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {announcements.map((a) => (
-                        <TableRow key={a.id}>
-                          <TableCell className="font-medium">{a.id}</TableCell>
-                          <TableCell>
-                            <div className="font-medium">{a.title}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-1">
-                              {a.message}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getTypeIcon(a.type)}
-                              <span className="capitalize">{a.type}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={getPriorityColor(a.priority)}
-                            >
-                              {a.priority} priority
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{formatDate(a.date)}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                a.status === "active" ? "default" : "secondary"
-                              }
-                            >
-                              {a.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              View
-                            </Button>
-                          </TableCell>
+                  {loading ? (
+                    <div className="py-8 text-center text-muted-foreground">Loading announcements...</div>
+                  ) : error ? (
+                    <div className="py-8 text-center text-red-500">{error}</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">ID</TableHead>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Priority</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {announcements
+                          .filter((a) => {
+                            const title = (a.title || "").toLowerCase();
+                            const message = (a.message || "").toLowerCase();
+                            const searchTerm = (search || "").toLowerCase();
+                            const matchesSearch =
+                              title.includes(searchTerm) || message.includes(searchTerm);
+                            if (filter === "all") return matchesSearch;
+                            return matchesSearch && a.emergency_level === filter;
+                          })
+                          .map((a) => (
+                            <TableRow key={a.id} className="transition hover:bg-accent/50">
+                              <TableCell className="font-medium">{a.id}</TableCell>
+                              <TableCell>
+                                <div className="font-medium">{a.title}</div>
+                                <div className="text-sm text-muted-foreground line-clamp-1">
+                                  {a.message}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {getTypeIcon(a.type)}
+                                  <span className="capitalize">{a.type}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={getPriorityColor(a.emergency_level) + " border font-semibold px-3 py-1 text-sm"}
+                                >
+                                  {getPriorityLabel(a.emergency_level)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{formatDate(a.date)}</TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="sm" onClick={() => setSelectedAnnouncement(a)}>
+                                  View
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Announcement Details Dialog */}
+              {selectedAnnouncement && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-lg w-full p-8 relative border border-gray-200 dark:border-gray-800">
+                    <button
+                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                      onClick={() => setSelectedAnnouncement(null)}
+                    >
+                      <span className="sr-only">Close</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                    <div className="flex items-center gap-3 mb-2">
+                      {getTypeIcon(selectedAnnouncement.type)}
+                      <h2 className="text-2xl font-bold">{selectedAnnouncement.title}</h2>
+                    </div>
+                    <div className="mb-2 text-sm text-muted-foreground flex items-center gap-2">
+                      <span>{formatDate(selectedAnnouncement.date)}</span>
+                      <Badge variant="outline" className={getPriorityColor(selectedAnnouncement.emergency_level) + " border font-semibold px-2 py-0.5 text-xs"}>
+                        {getPriorityLabel(selectedAnnouncement.emergency_level)}
+                      </Badge>
+                    </div>
+                    <div className="mb-4 text-base text-gray-700 dark:text-gray-200">
+                      {selectedAnnouncement.message}
+                    </div>
+                    {selectedAnnouncement.description && (
+                      <div className="mb-2 text-sm text-gray-500 dark:text-gray-300">
+                        <span className="font-semibold">Description: </span>
+                        {selectedAnnouncement.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
   
               {/* Mobile View */}
               <div className="mt-6 md:hidden">
@@ -319,4 +313,3 @@ import {
   }
   
   export default Announcements;
-  
