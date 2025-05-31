@@ -2,6 +2,34 @@ import { pool } from "../utils/db.js";
 import logger from "../utils/logger.js";
 import { errorHandler } from "../middlewares/errorHandler.js";
 
+//function to get current or latest flood ID
+const getCurrentOrLatestFloodId = async () => {
+  try {
+    //get current active flood
+    const [activeFloods] = await pool.query(
+      `SELECT flood_id FROM flood 
+       WHERE CURRENT_DATE BETWEEN start_date AND IFNULL(end_date, CURRENT_DATE) 
+       AND flood_status = 'active' 
+       ORDER BY start_date DESC LIMIT 1`
+    );
+
+    if (activeFloods.length > 0) {
+      return activeFloods[0].flood_id;
+    }
+
+    //if no active flood, get the latest flood
+    const [latestFloods] = await pool.query(
+      `SELECT flood_id FROM flood 
+       ORDER BY start_date DESC, flood_id DESC LIMIT 1`
+    );
+
+    return latestFloods[0]?.f
+  } catch (error) {
+    logger.error("Error getting current or latest flood ID:", error);
+    throw error;
+  }
+};
+
 export const createDonation = async (req, res, next) => {
   const {
     fullname,

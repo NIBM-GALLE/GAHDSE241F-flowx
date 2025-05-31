@@ -1,8 +1,11 @@
 import express from 'express';
 import { 
     requestShelter,
-    getAssignedShelter,
-} from '../controllers/shelterController.js';
+    getShelterInfo,
+    getShelterRequestHistory,
+    getUserRelatedShelters,
+    
+} from '../controllers/shelter.controller.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();

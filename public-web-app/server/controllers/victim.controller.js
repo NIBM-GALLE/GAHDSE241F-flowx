@@ -2,26 +2,38 @@ import { pool } from "../utils/db.js";
 import { errorHandler } from "../middlewares/errorHandler.js";
 import logger from "../utils/logger.js";
 
-//get current active flood ID
-const getCurrentFloodId = async () => {
-    try {
-        const [floods] = await pool.query(
-            `SELECT flood_id FROM flood 
-             WHERE CURRENT_DATE BETWEEN start_date AND IFNULL(end_date, CURRENT_DATE)
-             AND flood_status = 'active'
-             LIMIT 1`
-        );
-        return floods[0]?.flood_id || null;
-    } catch (error) {
-        logger.error("Error getting current flood ID:", error);
-        throw error;
+//function to get current or latest flood ID
+const getCurrentOrLatestFloodId = async () => {
+  try {
+    //get current active flood
+    const [activeFloods] = await pool.query(
+      `SELECT flood_id FROM flood 
+       WHERE CURRENT_DATE BETWEEN start_date AND IFNULL(end_date, CURRENT_DATE) 
+       AND flood_status = 'active' 
+       ORDER BY start_date DESC LIMIT 1`
+    );
+
+    if (activeFloods.length > 0) {
+      return activeFloods[0].flood_id;
     }
+
+    //if no active flood, get the latest flood
+    const [latestFloods] = await pool.query(
+      `SELECT flood_id FROM flood 
+       ORDER BY start_date DESC, flood_id DESC LIMIT 1`
+    );
+
+    return latestFloods[0]?.f
+  } catch (error) {
+    logger.error("Error getting current or latest flood ID:", error);
+    throw error;
+  }
 };
 
 //new victim request
 export const createVictimRequest = async (req, res, next) => {
     try {
-        const currentFloodId = await getCurrentFloodId();
+        const currentFloodId = await getCurrentOrLatestFloodId();
         if (!currentFloodId) {
             return next(errorHandler(400, "No active flood event"));
         }
