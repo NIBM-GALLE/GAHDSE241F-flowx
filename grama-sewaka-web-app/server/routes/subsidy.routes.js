@@ -1,27 +1,27 @@
 import express from 'express';
 import {
   createSubsidyRequest,
+  createSubsidy,
   getSubsidyRequestsByGramaSevaka,
   updateSubsidyRequestStatus,
   getSubsidiesForCurrentFlood,
   getSubsidyRequestsByDivisionalSecretariat
 } from '../controllers/subsidy.controller.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-//all routes protected
+// All routes protected
 router.use(protect);
 
-//grama Sevaka routes
-router.post('/requests', createSubsidyRequest);
-router.get('/requests', getSubsidyRequestsByGramaSevaka);
-router.put('/requests/:requestId/status', updateSubsidyRequestStatus);
+// Grama Sevaka and Government Officer shared routes
+router.get('/current', authorize('government_officer', 'grama_sevaka'), getSubsidiesForCurrentFlood);
+router.post('/requests', authorize('grama_sevaka'), createSubsidyRequest);
+router.get('/requests', authorize('grama_sevaka'), getSubsidyRequestsByGramaSevaka);
+router.put('/requests/:subsidy_house_id/status', authorize('grama_sevaka'), updateSubsidyRequestStatus);
 
-//shared routes
-router.get('/current', getSubsidiesForCurrentFlood);
-
-//government officer routes
-router.get('/division-requests', getSubsidyRequestsByDivisionalSecretariat);
+// Government officer only
+router.post('/new', authorize('government_officer'), createSubsidy);
+router.get('/division-requests', authorize('government_officer'), getSubsidyRequestsByDivisionalSecretariat);
 
 export default router;

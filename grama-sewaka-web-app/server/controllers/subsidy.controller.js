@@ -55,7 +55,7 @@ export const createSubsidyRequest = async (req, res) => {
       return res.status(404).json({ error: 'Subsidy not found' });
     }
 
-    if (subsidyCheck[0].subsidies_status !== 'active') {
+    if (subsidyCheck[0].subsidies_status !== 'available') {
       return res.status(400).json({ error: 'Subsidy is not active' });
     }
 
@@ -133,7 +133,10 @@ export const updateSubsidyRequestStatus = async (req, res) => {
 
     const { subsidy_house_id } = req.params;
     const { subsidies_status } = req.body;
-    const grama_sevaka_id = req.user.grama_sevaka_id;
+    // DEBUG: Log user object for troubleshooting
+    logger.info('updateSubsidyRequestStatus: req.user', req.user);
+    console.log('updateSubsidyRequestStatus: req.user =', JSON.stringify(req.user));
+    const grama_sevaka_id = req.user.grama_sevaka_id || req.user.id;
 
     //validate status
     const validStatuses = ['pending', 'approved', 'rejected', 'distributed'];
@@ -216,7 +219,7 @@ export const getSubsidiesForCurrentFlood = async (req, res) => {
 };
 
 //insert new subsidy
-const createSubsidy = async (req, res) => {
+export const createSubsidy = async (req, res) => {
   try {
     const {
       subsidy_name,
