@@ -3,14 +3,19 @@ import {
     requestShelter,
     getShelterInfo,
     getShelterRequestHistory,
-    getUserRelatedShelters,
-    
+    getUserRelatedShelters
 } from '../controllers/shelter.controller.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/request', verifyToken, requestShelter);
-router.get('/assigned', verifyToken, getAssignedShelter);
+// Request a new shelter
+router.post('/request', protect, requestShelter);
+// Get assigned shelter and all available shelters
+router.get('/info', protect, getShelterInfo);
+// Get shelter request history
+router.get('/history', protect, getShelterRequestHistory);
+// Get user related shelters
+router.get('/related', protect, getUserRelatedShelters);
 
 export default router;

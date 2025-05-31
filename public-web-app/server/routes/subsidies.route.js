@@ -3,11 +3,11 @@ import {
     getNewSubsidies,
     getSubsidiesHistory
 } from '../controllers/subsidies.controller.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/available', verifyToken, getNewSubsidies);
-router.get('/history', verifyToken, getSubsidiesHistory);
+router.get('/available', protect, getNewSubsidies);
+router.get('/history', protect, getSubsidiesHistory);
 
 export default router;
