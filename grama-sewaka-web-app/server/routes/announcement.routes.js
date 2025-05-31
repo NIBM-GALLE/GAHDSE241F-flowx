@@ -6,14 +6,15 @@ import {
   updateAnnouncement,
   deleteAnnouncement
 } from '../controllers/announcement.controller.js';
+import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-//user specific announcement routes
-router.post('/:userType', createAnnouncement);
-router.get('/:userType', getAnnouncements);
-router.get('/:userType/:id', getAnnouncementById);
-router.put('/:userType/:id', updateAnnouncement);
-router.delete('/:userType/:id', deleteAnnouncement);
+//announcement routes with role-based protection
+router.post('/:userType', protect, authorize('admin', 'government_officer', 'grama_sevaka'), createAnnouncement);
+router.get('/:userType', protect, authorize('admin', 'government_officer', 'grama_sevaka'), getAnnouncements);
+router.get('/:userType/:id', protect, authorize('admin', 'government_officer', 'grama_sevaka'), getAnnouncementById);
+router.put('/:userType/:id', protect, authorize('admin', 'government_officer', 'grama_sevaka'), updateAnnouncement);
+router.delete('/:userType/:id', protect, authorize('admin', 'government_officer', 'grama_sevaka'), deleteAnnouncement);
 
 export default router;

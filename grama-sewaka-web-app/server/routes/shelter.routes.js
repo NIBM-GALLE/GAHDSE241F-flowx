@@ -7,30 +7,18 @@ import {
     updateShelter,
     approveShelterRequest
 } from '../controllers/shelter.controller.js';
-import { protect } from '../middlewares/authMiddleware.js';
-import { verifyGovernmentOfficer } from '../middlewares/roleMiddleware.js';
+import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// All routes protected
-router.use(protect);
+//all routes protected
+router.use(protect, authorize('government_officer'));
 
-// Create new shelter
-router.post('/create', verifyGovernmentOfficer, createShelter);
-
-// Get pending shelter requests
-router.get('/requests/pending', verifyGovernmentOfficer, getShelterRequests);
-
-// Get approved shelter requests
-router.get('/requests/approved', verifyGovernmentOfficer, getApprovedRequests);
-
-// Get all shelters
-router.get('/all', verifyGovernmentOfficer, getShelters);
-
-// Update shelter
-router.put('/update/:shelter_id', verifyGovernmentOfficer, updateShelter);
-
-// Approve shelter request and assign shelter
-router.post('/approve/:shelter_request_id', verifyGovernmentOfficer, approveShelterRequest);
+router.post('/create', createShelter);
+router.get('/requests/pending', getShelterRequests);
+router.get('/requests/approved', getApprovedRequests);
+router.get('/all', getShelters);
+router.put('/update/:shelter_id', updateShelter);
+router.post('/approve/:shelter_request_id', approveShelterRequest);
 
 export default router;

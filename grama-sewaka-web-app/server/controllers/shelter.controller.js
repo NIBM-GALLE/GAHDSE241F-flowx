@@ -278,14 +278,45 @@ export const updateShelter = async (req, res, next) => {
             });
         }
 
-        //update shelter
-        const [result] = await pool.query(
-            `UPDATE shelter 
-             SET shelter_name = ?, shelter_size = ?, shelter_address = ?, 
-                 available = ?, shelter_status = ?
-             WHERE shelter_id = ? AND divisional_secretariat_id = ?`,
-            [shelter_name, shelter_size, shelter_address, available, shelter_status, shelter_id, divisionalSecretariatId]
-        );
+        //build dynamic update query
+        const updateFields = [];
+        const updateParams = [];
+        if (shelter_name !== undefined) {
+            updateFields.push('shelter_name = ?');
+            updateParams.push(shelter_name);
+        }
+        if (shelter_size !== undefined) {
+            updateFields.push('shelter_size = ?');
+            updateParams.push(shelter_size);
+        }
+        if (shelter_address !== undefined) {
+            updateFields.push('shelter_address = ?');
+            updateParams.push(shelter_address);
+        }
+        if (available !== undefined) {
+            updateFields.push('available = ?');
+            updateParams.push(available);
+        }
+        if (shelter_status !== undefined) {
+            updateFields.push('shelter_status = ?');
+            updateParams.push(shelter_status);
+        }
+
+        if (updateFields.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No fields to update"
+            });
+        }
+
+        updateParams.push(shelter_id, divisionalSecretariatId);
+
+        const updateQuery = `
+            UPDATE shelter 
+            SET ${updateFields.join(', ')}
+            WHERE shelter_id = ? AND divisional_secretariat_id = ?`;
+
+        const [result] = await pool.query(updateQuery, updateParams);
 
         if (result.affectedRows === 0) {
             return res.status(400).json({
@@ -299,11 +330,11 @@ export const updateShelter = async (req, res, next) => {
             message: "Shelter updated successfully",
             data: {
                 shelter_id: parseInt(shelter_id),
-                shelter_name,
-                shelter_size,
-                shelter_address,
-                available,
-                shelter_status
+                ...(shelter_name !== undefined && { shelter_name }),
+                ...(shelter_size !== undefined && { shelter_size }),
+                ...(shelter_address !== undefined && { shelter_address }),
+                ...(available !== undefined && { available }),
+                ...(shelter_status !== undefined && { shelter_status })
             }
         });
 
