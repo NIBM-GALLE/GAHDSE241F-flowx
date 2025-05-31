@@ -23,9 +23,11 @@ export const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     //only member table is supported here
+    //accept both member_id and id for compatibility
+    const memberId = decoded.member_id || decoded.id;
     const [users] = await pool.query(
       'SELECT * FROM member WHERE member_id = ?',
-      [decoded.id]
+      [memberId]
     );
 
     if (!users.length) {
@@ -35,9 +37,9 @@ export const protect = async (req, res, next) => {
     //attach user to request
     req.user = {
       ...users[0],
-      id: decoded.id,
+      id: memberId,
       role: 'member',
-      member_id: decoded.id
+      member_id: memberId
     };
 
     logger.info('Authenticated Member:', {
