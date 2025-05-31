@@ -19,11 +19,13 @@ import { ModeToggle } from "../components/ui/mode-toggle";
 import { FcGoogle } from "react-icons/fc";
 
 //sign in image
-import signIn from "../assets/SignIn.png";
+import signInImage from "../assets/SignIn.png";
+import { useUserStore } from "../stores/useUserStore";
 
 
 function SignIn() {
   const navigate = useNavigate();
+  const { signIn } = useUserStore();
   // schema for form validation
   const formSchema = z.object({
     email: z.string().email({
@@ -44,15 +46,19 @@ function SignIn() {
   });
 
   //handle submission
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
+  const onSubmit = async (data) => {
+    try {
+      await signIn(data, navigate); // Pass navigate to signIn for redirect
+    } catch (err) {
+      alert(err.message || "Sign in failed");
+    }
   };
 
   return (
     <div className="min-h-screen grid sm:grid-cols-2 mx-auto justify-center items-center px-4">
       <div className="mx-auto hidden sm:block">
         <img
-          src={signIn}
+          src={signInImage}
           alt="Sign In"
           className="w-full h-full object-cover"
         />

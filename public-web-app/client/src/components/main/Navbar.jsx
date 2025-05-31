@@ -93,7 +93,7 @@ function Navbar() {
           <div className="hidden md:block">
             <Button
               className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 rounded-lg px-4 py-2"
-              onClick={() => window.location.href = "/login"}
+              onClick={() => window.location.href = "/signin"}
             >
               Sign In
             </Button>

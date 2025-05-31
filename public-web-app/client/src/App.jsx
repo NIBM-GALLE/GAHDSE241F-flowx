@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { ThemeProvider } from "./components/ui/theme-provider";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 //pages
 import Main from "./pages/Main";
@@ -26,18 +27,52 @@ function App() {
           <Route path="/" element={<Main />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/flood-prediction" element={<FloodPredictionDetails />} />
-          <Route path="/announcements" element={<Announcements />} />
-          <Route path="/victim-request" element={<VictimRequest />} />
-          <Route path="/victims-history" element={<VictimsHistory />} />
-          <Route path="/new-subsidies" element={<NewSubsidies />} />
-          <Route path="/subsidy-history" element={<SubsidyHistory />} />
-          <Route path="/shelter-request" element={<ShelterRequest />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/flood-prediction" element={
+            <ProtectedRoute>
+              <FloodPredictionDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/announcements" element={
+            <ProtectedRoute>
+              <Announcements />
+            </ProtectedRoute>
+          } />
+          <Route path="/victim-request" element={
+            <ProtectedRoute>
+              <VictimRequest />
+            </ProtectedRoute>
+          } />
+          <Route path="/victims-history" element={
+            <ProtectedRoute>
+              <VictimsHistory />
+            </ProtectedRoute>
+          } />
+          <Route path="/new-subsidies" element={
+            <ProtectedRoute>
+              <NewSubsidies />
+            </ProtectedRoute>
+          } />
+          <Route path="/subsidy-history" element={
+            <ProtectedRoute>
+              <SubsidyHistory />
+            </ProtectedRoute>
+          } />
+          <Route path="/shelter-request" element={
+            <ProtectedRoute>
+              <ShelterRequest />
+            </ProtectedRoute>
+          } />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/shelter-information" element={<ShelterInformation />} />
-          
-  
+          <Route path="/shelter-information" element={
+            <ProtectedRoute>
+              <ShelterInformation />
+            </ProtectedRoute>
+          } />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
