@@ -1,5 +1,7 @@
 "use client";
 import { LogOut, CircleUserRound } from "lucide-react";
+import { useUserStore } from "@/stores/useUserStore";
+import { useNavigate } from "react-router";
 
 import {
   DropdownMenu,
@@ -18,6 +20,13 @@ import {
 } from "@/components/ui/sidebar";
 
 export function NavUser({ user }) {
+  const { logout } = useUserStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/signin");
+  };
 
   return (
     <DropdownMenu>
@@ -40,7 +49,7 @@ export function NavUser({ user }) {
           Profile
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 size-4" />
           Logout
         </DropdownMenuItem>
