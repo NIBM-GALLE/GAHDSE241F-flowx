@@ -30,6 +30,7 @@ const getCurrentOrLatestFloodId = async () => {
   }
 };
 
+//create new donation
 export const createDonation = async (req, res, next) => {
   const {
     fullname,

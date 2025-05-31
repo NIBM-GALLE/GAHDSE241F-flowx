@@ -213,3 +213,40 @@ export const getAllCurrentFloodAnnouncements = async (req, res, next) => {
     next(errorHandler(500, "Failed to retrieve all announcements"));
   }
 };
+
+//function to get admin announcements for current flood
+export const getAdminAnnouncementsForCurrentFlood = async (req, res, next) => {
+  try {
+    const currentFloodId = await getCurrentOrLatestFloodId();
+    if (!currentFloodId) {
+      return res.status(200).json({
+        success: true,
+        message: "No active flood event",
+        announcements: []
+      });
+    }
+
+    logger.info("Current Flood ID:", currentFloodId);
+
+    //get all admin announcements for the current flood
+    const [adminAnnouncements] = await pool.query(
+      `SELECT 
+        admin_announcement_id as id,
+        admin_announcement_title as title,
+        admin_announcement_description as description,
+        emergency_level,
+        admin_announcement_date as date
+       FROM admin_announcement 
+       WHERE flood_id = ?`,
+      [currentFloodId]
+    );
+
+    res.status(200).json({
+      success: true,
+      announcements: adminAnnouncements
+    });
+  } catch (error) {
+    logger.error("Get admin announcements error:", error);
+    next(errorHandler(500, "Failed to retrieve admin announcements"));
+  }
+};

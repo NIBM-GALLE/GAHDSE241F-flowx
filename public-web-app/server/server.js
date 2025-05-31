@@ -33,9 +33,9 @@ app.use(
 
 // Register routes
 app.use("/api/auth", authRoutes);
-app.use("/api/floods", floodRoutes);
-app.use("/api/areas", areaRoutes);
-app.use("/api/donations", donationRoutes);
+app.use("/api/flood", floodRoutes);
+app.use("/api/area", areaRoutes);
+app.use("/api/donation", donationRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/victims", victimRoutes);
 app.use("/api/subsidies", subsidiesRoutes);
