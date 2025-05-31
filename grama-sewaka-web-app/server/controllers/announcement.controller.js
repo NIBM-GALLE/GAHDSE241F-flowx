@@ -271,14 +271,6 @@ export const updateAnnouncement = async (req, res, next) => {
       });
     }
 
-    //validate required fields
-    if (!title || !description || !emergency_level) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: title, description, emergency_level'
-      });
-    }
-
     //check if announcement exists
     const checkQuery = `SELECT ${config.idField} FROM ${config.table} WHERE ${config.idField} = ?`;
     const [existing] = await pool.query(checkQuery, [parseInt(id)]);
@@ -290,21 +282,37 @@ export const updateAnnouncement = async (req, res, next) => {
       });
     }
 
-    //update announcement
+    // Only update fields provided by the user, and always update the date
+    const fields = [];
+    const values = [];
+    if (title !== undefined) {
+      fields.push(`${config.titleField} = ?`);
+      values.push(title.trim());
+    }
+    if (description !== undefined) {
+      fields.push(`${config.descriptionField} = ?`);
+      values.push(description.trim());
+    }
+    if (emergency_level !== undefined) {
+      fields.push(`emergency_level = ?`);
+      values.push(emergency_level.trim());
+    }
+    // Always update the date
+    fields.push(`${config.dateField} = CURDATE()`);
+    // If no updatable fields provided, return error
+    if (fields.length === 1) { // Only date is being updated
+      return res.status(400).json({
+        success: false,
+        message: 'No updatable fields provided'
+      });
+    }
     const updateQuery = `
       UPDATE ${config.table}
-      SET ${config.titleField} = ?, 
-          ${config.descriptionField} = ?, 
-          emergency_level = ?
+      SET ${fields.join(', ')}
       WHERE ${config.idField} = ?
     `;
-
-    await pool.query(updateQuery, [
-      title.trim(), 
-      description.trim(), 
-      emergency_level.trim(), 
-      parseInt(id)
-    ]);
+    values.push(parseInt(id));
+    await pool.query(updateQuery, values);
 
     res.json({
       success: true,
