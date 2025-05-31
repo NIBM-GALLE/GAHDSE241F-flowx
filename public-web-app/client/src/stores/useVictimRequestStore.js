@@ -5,6 +5,9 @@ export const useVictimRequestStore = create((set) => ({
   loading: false,
   error: null,
   submitSuccess: false,
+  requests: [],
+  historyLoading: false,
+  historyError: null,
   async submitVictimRequest({ title, message, emergency_level, needs }) {
     set({ loading: true, error: null, submitSuccess: false });
     try {
@@ -26,6 +29,28 @@ export const useVictimRequestStore = create((set) => ({
         submitSuccess: false,
       });
       throw error;
+    }
+  },
+  async fetchVictimHistory() {
+    set({ historyLoading: true, historyError: null });
+    try {
+      const res = await axios.get('/api/victims/history');
+      if (!res.data?.data?.allHouseRequests) {
+        throw new Error('No requests found');
+      }
+      set({
+        requests: res.data?.data?.allHouseRequests || [],
+        historyLoading: false,
+        historyError: null,
+      });
+    } catch (error) {
+      set({
+        historyLoading: false,
+        historyError:
+          error?.response?.data?.message ||
+          error?.message ||
+          'Failed to load history',
+      });
     }
   },
   reset: () => set({ loading: false, error: null, submitSuccess: false }),
