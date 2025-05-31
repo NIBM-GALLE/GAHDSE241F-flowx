@@ -8,6 +8,8 @@ import cookieParser from "cookie-parser";
 
 //import routes
 import authRoutes from "./routes/auth.route.js";
+import floodRoutes from "./routes/flood.route.js";
+import areaRoutes from "./routes/area.route.js";
 import donationRoutes from "./routes/donation.route.js";
 import announcementRoutes from "./routes/announcement.route.js";
 import victimRoutes from "./routes/victim.route.js";
@@ -31,7 +33,9 @@ app.use(
 
 // Register routes
 app.use("/api/auth", authRoutes);
-app.use("/api/donations", donationRoutes);
+app.use("/api/flood", floodRoutes);
+app.use("/api/area", areaRoutes);
+app.use("/api/donation", donationRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/victims", victimRoutes);
 app.use("/api/subsidies", subsidiesRoutes);

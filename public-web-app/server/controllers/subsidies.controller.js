@@ -57,17 +57,17 @@ export const getNewSubsidies = async (req, res, next) => {
             });
         }
 
-        //check subsidies table where house_id = logged user house and flood_id = current/latest flood and status = pending
+        //check subsidy_house table where house_id = logged user house and subsidies_status = pending
         const [subsidies] = await pool.query(`
-            SELECT s.*, gs.grama_sevaka_name, gs.grama_sevaka_phone_number, 
-                   f.flood_name, f.start_date, f.end_date,
+            SELECT sh.*, s.subsidy_name, s.category as subsidy_category, s.flood_id, 
+                   g.grama_sevaka_id, g.first_name as grama_sevaka_first_name, g.last_name as grama_sevaka_last_name, g.grama_sevaka_phone_number,
                    h.address as house_address
-            FROM subsidies s
-            LEFT JOIN grama_sevaka gs ON s.grama_sevaka_id = gs.grama_sevaka_id
-            LEFT JOIN flood f ON s.flood_id = f.flood_id
-            LEFT JOIN house h ON s.house_id = h.house_id
-            WHERE s.house_id = ? AND s.flood_id = ? AND s.subsidies_status = 'pending'
-            ORDER BY s.subsidies_id DESC
+            FROM subsidy_house sh
+            JOIN subsidies s ON sh.subsidies_id = s.subsidies_id
+            JOIN house h ON sh.house_id = h.house_id
+            JOIN grama_sevaka g ON sh.grama_sevaka_id = g.grama_sevaka_id
+            WHERE sh.house_id = ? AND s.flood_id = ? AND sh.subsidies_status = 'pending'
+            ORDER BY sh.subsidy_house_id DESC
         `, [houseId, floodId]);
 
         res.status(200).json({
@@ -81,12 +81,25 @@ export const getNewSubsidies = async (req, res, next) => {
         });
 
     } catch (error) {
+        if (error.code === 'ER_BAD_FIELD_ERROR') {
+            return next(errorHandler(400, "Invalid field in query"));
+        }
+        if (error.code === 'ER_NO_SUCH_TABLE') {
+            return next(errorHandler(500, "Database table not found"));
+        }
+        if (error.code === 'ER_SYNTAX_ERROR') {
+            return next(errorHandler(400, "Syntax error in query"));
+        }
+        if (error.code === 'ER_PARSE_ERROR') {
+            return next(errorHandler(400, "Error parsing query"));
+        }
+        
         logger.error("Get new subsidies error:", error);
         next(errorHandler(500, "Failed to get new subsidies"));
     }
 };
 
-//funtion to get subsidies history (collected subsidies)
+//function to get subsidies history (collected subsidies)
 export const getSubsidiesHistory = async (req, res, next) => {
     try {
         //get user's house ID
@@ -101,17 +114,17 @@ export const getSubsidiesHistory = async (req, res, next) => {
 
         const houseId = user[0].house_id;
 
-        //select all subsidies where house_id = user's house and status = collected
+        //select all collected subsidies for this house
         const [subsidiesHistory] = await pool.query(`
-            SELECT s.*, gs.grama_sevaka_name, gs.grama_sevaka_phone_number,
-                   f.flood_name, f.start_date, f.end_date,
+            SELECT sh.*, s.subsidy_name, s.category as subsidy_category, s.flood_id, 
+                   g.grama_sevaka_id, g.first_name as grama_sevaka_first_name, g.last_name as grama_sevaka_last_name, g.grama_sevaka_phone_number,
                    h.address as house_address
-            FROM subsidies s
-            LEFT JOIN grama_sevaka gs ON s.grama_sevaka_id = gs.grama_sevaka_id
-            LEFT JOIN flood f ON s.flood_id = f.flood_id
-            LEFT JOIN house h ON s.house_id = h.house_id
-            WHERE s.house_id = ? AND s.subsidies_status = 'collected'
-            ORDER BY s.subsidies_id DESC
+            FROM subsidy_house sh
+            JOIN subsidies s ON sh.subsidies_id = s.subsidies_id
+            JOIN house h ON sh.house_id = h.house_id
+            JOIN grama_sevaka g ON sh.grama_sevaka_id = g.grama_sevaka_id
+            WHERE sh.house_id = ? AND sh.subsidies_status = 'collected'
+            ORDER BY sh.subsidy_house_id DESC
         `, [houseId]);
 
         res.status(200).json({
@@ -127,5 +140,42 @@ export const getSubsidiesHistory = async (req, res, next) => {
     } catch (error) {
         logger.error("Get subsidies history error:", error);
         next(errorHandler(500, "Failed to get subsidies history"));
+    }
+};
+
+//function to get all subsidies for a specific flood
+export const getAllSubsidiesForFlood = async (req, res, next) => {
+    const floodId = req.params.floodId;
+
+    if (!floodId) {
+        return next(errorHandler(400, "Flood ID is required"));
+    }
+
+    try {
+        //get all subsidies for the specified flood
+        const [subsidies] = await pool.query(`
+            SELECT sh.*, s.subsidy_name, s.category as subsidy_category, s.flood_id, 
+                   g.grama_sevaka_id, g.first_name as grama_sevaka_first_name, g.last_name as grama_sevaka_last_name, g.grama_sevaka_phone_number,
+                   h.address as house_address
+            FROM subsidy_house sh
+            JOIN subsidies s ON sh.subsidies_id = s.subsidies_id
+            JOIN house h ON sh.house_id = h.house_id
+            JOIN grama_sevaka g ON sh.grama_sevaka_id = g.grama_sevaka_id
+            WHERE s.flood_id = ?
+            ORDER BY sh.subsidy_house_id DESC
+        `, [floodId]);
+
+        res.status(200).json({
+            success: true,
+            message: subsidies.length > 0 ? "Subsidies found for the flood" : "No subsidies found for this flood",
+            data: {
+                subsidies: subsidies,
+                floodId: floodId
+            }
+        });
+
+    } catch (error) {
+        logger.error("Get all subsidies for flood error:", error);
+        next(errorHandler(500, "Failed to get subsidies for the flood"));
     }
 };

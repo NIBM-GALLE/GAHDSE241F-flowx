@@ -1,11 +1,19 @@
 import express from 'express';
 import {
-  getCurrentFloodAnnouncements,
+  getCurrentFloodAnnouncementsForUser,
+  getAllCurrentFloodAnnouncements,
+  getAdminAnnouncementsForCurrentFlood
 } from '../controllers/announcement.controller.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
+import { protect } from '../middlewares/authMiddleware.js';
+
 
 const router = express.Router();
 
-router.get('/all', verifyToken, getCurrentFloodAnnouncements);
+//user-specific announcements
+router.get('/all', protect, getCurrentFloodAnnouncementsForUser);
+router.get('/all-for-flood', protect, getAllCurrentFloodAnnouncements);
+
+//admin-specific announcements
+router.get('/', getAdminAnnouncementsForCurrentFlood);
 
 export default router;

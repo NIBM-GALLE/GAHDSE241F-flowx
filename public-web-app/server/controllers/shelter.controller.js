@@ -57,6 +57,7 @@ export const requestShelter = async (req, res, next) => {
         //get current or latest flood ID
         const floodId = await getCurrentOrLatestFloodId();
         if (!floodId) {
+            logger.error("No active flood found");
             return next(errorHandler(404, "No active flood found"));
         }
 
@@ -119,15 +120,15 @@ export const getShelterInfo = async (req, res, next) => {
 
         const { house_id: houseId, divisional_secretariat_id: divisionalSecretariatId } = user[0];
 
-        //get assigned shelter for the house
+        //get assigned shelter for the house (from shelter_house)
         const [assignedShelter] = await pool.query(
-            `SELECT sh.*, s.shelter_name, s.shelter_size, s.available, 
+            `SELECT sh.*, s.shelter_name, s.shelter_size, s.shelter_address, s.available, 
                     s.shelter_status, s.divisional_secretariat_id,
                     f.flood_name, f.start_date, f.end_date
              FROM shelter_house sh
              JOIN shelter s ON sh.shelter_id = s.shelter_id
              LEFT JOIN flood f ON sh.flood_id = f.flood_id
-             WHERE sh.house_id = ? AND sh.status = 'assigned'
+             WHERE sh.house_id = ?
              ORDER BY sh.shelter_house_id DESC
              LIMIT 1`,
             [houseId]
@@ -135,7 +136,7 @@ export const getShelterInfo = async (req, res, next) => {
 
         //get all shelters in user's divisional secretariat
         const [allShelters] = await pool.query(
-            `SELECT shelter_id, shelter_name, shelter_size, available, 
+            `SELECT shelter_id, shelter_name, shelter_size, shelter_address, available, 
                     shelter_status, divisional_secretariat_id
              FROM shelter 
              WHERE divisional_secretariat_id = ?
@@ -220,7 +221,7 @@ export const getUserRelatedShelters = async (req, res, next) => {
 
         //get all shelters related to the user's house
         const [relatedShelters] = await pool.query(
-            `SELECT s.*, sh.shelter_house_id, sh.status, 
+            `SELECT s.*, sh.shelter_house_id, 
                     f.flood_name, f.start_date, f.end_date
              FROM shelter s
              LEFT JOIN shelter_house sh ON s.shelter_id = sh.shelter_id AND sh.house_id = ?

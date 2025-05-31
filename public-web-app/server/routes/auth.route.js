@@ -3,15 +3,23 @@ import {
     registerUser, 
     loginUser, 
     logoutUser,
-    checkHouseId
+    checkHouseId,
+    getUserProfile,
+    updateUserProfile,
+    getUserHouseDetails,
+    getUserHouseMembers
 } from '../controllers/auth.controller.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/logout', verifyToken, logoutUser);
+router.post('/logout', protect, logoutUser);
 router.get('/check-house/:houseId', checkHouseId);
+router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, updateUserProfile);
+router.get('/house', protect, getUserHouseDetails);
+router.get('/house/members', protect, getUserHouseMembers);
 
 export default router;
