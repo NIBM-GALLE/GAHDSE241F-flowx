@@ -37,6 +37,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useVictimRequestStore } from "@/stores/useVictimRequestStore";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -45,7 +46,7 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
@@ -75,24 +76,19 @@ class ErrorBoundary extends React.Component {
 }
 
 function VictimRequest() {
+  // Only keep fields required by backend
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    familyMembers: '',
-    district: '',
-    city: '',
-    address: '',
-    landmarks: '',
-    urgency: '',
-    assistanceType: '',
-    details: '',
-    medicalConditions: ''
+    title: '',
+    message: '',
+    emergency_level: '',
+    needs: '',
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const victimRequestStore = useVictimRequestStore();
 
   const urgencyLevels = [
     { value: "critical", label: "Critical - Immediate danger" },
@@ -127,52 +123,24 @@ function VictimRequest() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.fullName) newErrors.fullName = 'Full name is required';
-    if (!formData.phone) newErrors.phone = 'Phone number is required';
-    if (!formData.district) newErrors.district = 'District is required';
-    if (!formData.city) newErrors.city = 'City is required';
-    if (!formData.address) newErrors.address = 'Address is required';
-    if (!formData.urgency) newErrors.urgency = 'Urgency level is required';
-    if (!formData.assistanceType) newErrors.assistanceType = 'Assistance type is required';
-    if (!formData.details) newErrors.details = 'Details are required';
-    
+    if (!formData.title) newErrors.title = 'Title is required';
+    if (!formData.message) newErrors.message = 'Description is required';
+    if (!formData.emergency_level) newErrors.emergency_level = 'Urgency level is required';
+    if (!formData.needs) newErrors.needs = 'Type of assistance is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsSubmitting(true);
-    
     try {
-      // Here you would typically make an API call
-      // For now, we'll just simulate it
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await victimRequestStore.submitVictimRequest(formData);
       setSubmitSuccess(true);
-      // Reset form after successful submission
-      setFormData({
-        fullName: '',
-        phone: '',
-        email: '',
-        familyMembers: '',
-        district: '',
-        city: '',
-        address: '',
-        landmarks: '',
-        urgency: '',
-        assistanceType: '',
-        details: '',
-        medicalConditions: ''
-      });
-    } catch (error) {
-      console.error('Submission error:', error);
-      setErrors({ submit: 'Failed to submit form. Please try again.' });
+      setFormData({ title: '', message: '', emergency_level: '', needs: '' });
+    } catch {
+      setErrors({ submit: victimRequestStore.error || 'Failed to submit form. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -205,8 +173,8 @@ function VictimRequest() {
                 </CardHeader>
                 <CardContent>
                   <p className="mb-4">Your request has been received and will be processed as soon as possible.</p>
-                  <Button onClick={() => setSubmitSuccess(false)}>
-                    Submit Another Request
+                  <Button onClick={() => window.location.href = '/dashboard'} className="bg-blue-600 hover:bg-blue-700">
+                    Go Back to Home
                   </Button>
                 </CardContent>
               </Card>
@@ -245,239 +213,89 @@ function VictimRequest() {
                         </div>
                       </div>
                     </CardHeader>
-                    
                     <CardContent className="space-y-6">
                       {errors.submit && (
                         <div className="p-3 bg-red-50 text-red-600 rounded-md">
                           {errors.submit}
                         </div>
                       )}
-
-                      {/* Personal Information Section */}
-                      <div className="space-y-4">
-                        <h3 className="flex items-center gap-2 text-lg font-semibold">
-                          <User className="h-5 w-5" />
-                          Personal Information
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="fullName">Full Name *</Label>
-                            <Input 
-                              id="fullName" 
-                              value={formData.fullName}
-                              onChange={handleChange}
-                              placeholder="John Doe" 
-                              required 
-                            />
-                            {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number *</Label>
-                            <div className="flex">
-                              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm">
-                                <Phone className="h-4 w-4" />
-                              </span>
-                              <Input
-                                id="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="+94 77 123 4567"
-                                className="rounded-l-none"
-                                required
-                              />
-                            </div>
-                            {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email Address</Label>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm">
-                              <Mail className="h-4 w-4" />
-                            </span>
-                            <Input
-                              id="email"
-                              type="email"
-                              value={formData.email}
-                              onChange={handleChange}
-                              placeholder="your@email.com"
-                              className="rounded-l-none"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="familyMembers">Number of Family Members Affected</Label>
-                          <Input
-                            id="familyMembers"
-                            type="number"
-                            value={formData.familyMembers}
-                            onChange={handleChange}
-                            min="1"
-                            placeholder="e.g. 4"
-                          />
-                        </div>
+                      {/* Request Title */}
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Request Title *</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={handleChange}
+                          placeholder="Short summary (e.g. Need urgent rescue)"
+                          required
+                        />
+                        {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
                       </div>
-                      
-                      {/* Location Information Section */}
-                      <div className="space-y-4">
-                        <h3 className="flex items-center gap-2 text-lg font-semibold">
-                          <MapPin className="h-5 w-5" />
-                          Location Information
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="district">District *</Label>
-                            <Input 
-                              id="district" 
-                              value={formData.district}
-                              onChange={handleChange}
-                              placeholder="e.g. Colombo" 
-                              required 
-                            />
-                            {errors.district && <p className="text-sm text-red-500">{errors.district}</p>}
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="city">City/Town *</Label>
-                            <Input 
-                              id="city" 
-                              value={formData.city}
-                              onChange={handleChange}
-                              placeholder="e.g. Dehiwala" 
-                              required 
-                            />
-                            {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="address">Full Address *</Label>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm">
-                              <Home className="h-4 w-4" />
-                            </span>
-                            <Input
-                              id="address"
-                              value={formData.address}
-                              onChange={handleChange}
-                              placeholder="House No, Street Name"
-                              className="rounded-l-none"
-                              required
-                            />
-                          </div>
-                          {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="landmarks">Nearby Landmarks</Label>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm">
-                              <Map className="h-4 w-4" />
-                            </span>
-                            <Input
-                              id="landmarks"
-                              value={formData.landmarks}
-                              onChange={handleChange}
-                              placeholder="e.g. Near Temple, Behind School"
-                              className="rounded-l-none"
-                            />
-                          </div>
-                        </div>
+                      {/* Request Description */}
+                      <div className="space-y-2">
+                        <Label htmlFor="message">Description *</Label>
+                        <Textarea
+                          id="message"
+                          value={formData.message}
+                          onChange={handleChange}
+                          placeholder="Describe your situation in detail (current conditions, special needs, etc.)"
+                          className="min-h-[120px]"
+                          required
+                        />
+                        {errors.message && <p className="text-sm text-red-500">{errors.message}</p>}
                       </div>
-                      
-                      {/* Assistance Details Section */}
-                      <div className="space-y-4">
-                        <h3 className="flex items-center gap-2 text-lg font-semibold">
-                          <AlertCircle className="h-5 w-5" />
-                          Assistance Details
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="urgency">Urgency Level *</Label>
-                            <Select 
-                              value={formData.urgency}
-                              onValueChange={(value) => handleSelectChange('urgency', value)}
-                              required
-                            >
-                              <SelectTrigger id="urgency">
-                                <SelectValue placeholder="Select urgency level" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {urgencyLevels.map((level) => (
-                                  <SelectItem key={level.value} value={level.value}>
-                                    {level.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.urgency && <p className="text-sm text-red-500">{errors.urgency}</p>}
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="assistanceType">Type of Assistance Needed *</Label>
-                            <Select 
-                              value={formData.assistanceType}
-                              onValueChange={(value) => handleSelectChange('assistanceType', value)}
-                              required
-                            >
-                              <SelectTrigger id="assistanceType">
-                                <SelectValue placeholder="Select assistance type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {assistanceTypes.map((type) => (
-                                  <SelectItem key={type.value} value={type.value}>
-                                    {type.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.assistanceType && <p className="text-sm text-red-500">{errors.assistanceType}</p>}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="details">Additional Details *</Label>
-                          <Textarea
-                            id="details"
-                            value={formData.details}
-                            onChange={handleChange}
-                            placeholder="Please describe your situation in detail (current conditions, special needs, etc.)"
-                            className="min-h-[120px]"
-                            required
-                          />
-                          {errors.details && <p className="text-sm text-red-500">{errors.details}</p>}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="medicalConditions">Medical Conditions/Disabilities (if any)</Label>
-                          <Textarea
-                            id="medicalConditions"
-                            value={formData.medicalConditions}
-                            onChange={handleChange}
-                            placeholder="List any medical conditions, disabilities, or special needs for your family members"
-                            className="min-h-[80px]"
-                          />
-                        </div>
+                      {/* Urgency Level */}
+                      <div className="space-y-2">
+                        <Label htmlFor="emergency_level">Urgency Level *</Label>
+                        <Select
+                          value={formData.emergency_level}
+                          onValueChange={value => handleSelectChange('emergency_level', value)}
+                          required
+                        >
+                          <SelectTrigger id="emergency_level">
+                            <SelectValue placeholder="Select urgency level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {urgencyLevels.map(level => (
+                              <SelectItem key={level.value} value={level.value}>
+                                {level.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.emergency_level && <p className="text-sm text-red-500">{errors.emergency_level}</p>}
+                      </div>
+                      {/* Assistance Type */}
+                      <div className="space-y-2">
+                        <Label htmlFor="needs">Type of Assistance Needed *</Label>
+                        <Select
+                          value={formData.needs}
+                          onValueChange={value => handleSelectChange('needs', value)}
+                          required
+                        >
+                          <SelectTrigger id="needs">
+                            <SelectValue placeholder="Select assistance type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {assistanceTypes.map(type => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.needs && <p className="text-sm text-red-500">{errors.needs}</p>}
                       </div>
                     </CardContent>
-                    
                     <CardFooter className="flex flex-col gap-4">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <ClipboardList className="h-4 w-4" />
                         <span>By submitting this form, you agree to share this information with emergency services.</span>
                       </div>
-                      
                       <div className="flex justify-end gap-3">
                         <Button type="button" variant="outline">Cancel</Button>
-                        <Button 
-                          type="submit" 
+                        <Button
+                          type="submit"
                           className="bg-blue-600 hover:bg-blue-700"
                           disabled={isSubmitting}
                         >
@@ -488,7 +306,6 @@ function VictimRequest() {
                   </Card>
                 </form>
               </ErrorBoundary>
-              
               {/* Information Card */}
               <Card className="mt-6 border border-green-200 dark:border-green-800">
                 <CardHeader className="pb-4">
