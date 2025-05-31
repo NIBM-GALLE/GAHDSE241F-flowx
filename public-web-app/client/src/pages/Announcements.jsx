@@ -175,18 +175,67 @@ import {
                   ) : error ? (
                     <div className="py-8 text-center text-red-500">{error}</div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[100px]">ID</TableHead>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Priority</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    <>
+                      {/* Desktop Table View */}
+                      <div className="hidden md:block">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[100px]">ID</TableHead>
+                              <TableHead>Title</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Priority</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {announcements
+                              .filter((a) => {
+                                const title = (a.title || "").toLowerCase();
+                                const message = (a.message || "").toLowerCase();
+                                const searchTerm = (search || "").toLowerCase();
+                                const matchesSearch =
+                                  title.includes(searchTerm) || message.includes(searchTerm);
+                                if (filter === "all") return matchesSearch;
+                                return matchesSearch && a.emergency_level === filter;
+                              })
+                              .map((a) => (
+                                <TableRow key={a.id} className="transition hover:bg-accent/50">
+                                  <TableCell className="font-medium">{a.id}</TableCell>
+                                  <TableCell>
+                                    <div className="font-medium">{a.title}</div>
+                                    <div className="text-sm text-muted-foreground line-clamp-1">
+                                      {a.message}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      {getTypeIcon(a.type)}
+                                      <span className="capitalize">{a.type}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge
+                                      variant="outline"
+                                      className={getPriorityColor(a.emergency_level) + " border font-semibold px-3 py-1 text-sm"}
+                                    >
+                                      {getPriorityLabel(a.emergency_level)}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>{formatDate(a.date)}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button variant="ghost" size="sm" onClick={() => setSelectedAnnouncement(a)}>
+                                      View
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      {/* Mobile Card View */}
+                      <div className="md:hidden space-y-4">
                         {announcements
                           .filter((a) => {
                             const title = (a.title || "").toLowerCase();
@@ -198,38 +247,33 @@ import {
                             return matchesSearch && a.emergency_level === filter;
                           })
                           .map((a) => (
-                            <TableRow key={a.id} className="transition hover:bg-accent/50">
-                              <TableCell className="font-medium">{a.id}</TableCell>
-                              <TableCell>
-                                <div className="font-medium">{a.title}</div>
-                                <div className="text-sm text-muted-foreground line-clamp-1">
-                                  {a.message}
+                            <Card key={a.id}>
+                              <CardHeader className="pb-2">
+                                <div className="flex justify-between items-start">
+                                  <CardTitle className="text-base">{a.title}</CardTitle>
+                                  <Badge
+                                    variant="outline"
+                                    className={getPriorityColor(a.emergency_level) + " text-xs"}
+                                  >
+                                    {getPriorityLabel(a.emergency_level)}
+                                  </Badge>
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
+                                <CardDescription>{formatDate(a.date)}</CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="flex items-center gap-2 mb-2">
                                   {getTypeIcon(a.type)}
-                                  <span className="capitalize">{a.type}</span>
+                                  <span className="capitalize text-xs text-muted-foreground">{a.type}</span>
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant="outline"
-                                  className={getPriorityColor(a.emergency_level) + " border font-semibold px-3 py-1 text-sm"}
-                                >
-                                  {getPriorityLabel(a.emergency_level)}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{formatDate(a.date)}</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="ghost" size="sm" onClick={() => setSelectedAnnouncement(a)}>
-                                  View
+                                <p className="text-sm mb-3 line-clamp-2">{a.message}</p>
+                                <Button variant="outline" size="sm" className="w-full" onClick={() => setSelectedAnnouncement(a)}>
+                                  View Details
                                 </Button>
-                              </TableCell>
-                            </TableRow>
+                              </CardContent>
+                            </Card>
                           ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -267,44 +311,6 @@ import {
                   </div>
                 </div>
               )}
-  
-              {/* Mobile View */}
-              <div className="mt-6 md:hidden">
-                <h2 className="text-lg font-semibold mb-4">Announcements</h2>
-                <div className="space-y-4">
-                  {announcements.map((a) => (
-                    <Card key={a.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-base">{a.title}</CardTitle>
-                          <Badge
-                            variant={a.status === "active" ? "default" : "secondary"}
-                            className="text-xs"
-                          >
-                            {a.status}
-                          </Badge>
-                        </div>
-                        <CardDescription>{formatDate(a.date)}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-2 mb-2">
-                          {getTypeIcon(a.type)}
-                          <Badge
-                            variant="outline"
-                            className={getPriorityColor(a.priority) + " text-xs"}
-                          >
-                            {a.priority} priority
-                          </Badge>
-                        </div>
-                        <p className="text-sm mb-3">{a.message}</p>
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Details
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
             </div>
           </main>
         </SidebarInset>
