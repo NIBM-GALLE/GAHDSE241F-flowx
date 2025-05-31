@@ -3,12 +3,13 @@ import {
   getCurrentFloodAnnouncementsForUser,
   getAllCurrentFloodAnnouncements
 } from '../controllers/announcement.controller.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
+import { protect } from '../middlewares/authMiddleware.js';
+
 
 const router = express.Router();
 
 //user-specific announcements
-router.get('/all', verifyToken, getCurrentFloodAnnouncementsForUser);
-router.get('/all-for-flood', verifyToken, getAllCurrentFloodAnnouncements);
+router.get('/all', protect, getCurrentFloodAnnouncementsForUser);
+router.get('/all-for-flood', protect, getAllCurrentFloodAnnouncements);
 
 export default router;
