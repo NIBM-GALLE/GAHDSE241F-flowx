@@ -17,6 +17,7 @@ import { ModeToggle } from "../components/ui/mode-toggle";
 import signUpImage from "../assets/Signup.png";
 import { useUserStore } from "../stores/useUserStore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 //user details and password
 const step1Schema = z.object({
@@ -51,6 +52,8 @@ function SignUp() {
   const [districts, setDistricts] = useState([]);
   const [divSecs, setDivSecs] = useState([]);
   const [gnDivs, setGnDivs] = useState([]);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   //form for user details
   const step1Form = useForm({
@@ -144,20 +147,41 @@ function SignUp() {
         {step === 1 && (
           <Form {...step1Form}>
             <form onSubmit={step1Form.handleSubmit(handleStep1Submit)} className="space-y-6">
-              {["firstName", "lastName", "email", "phone", "homeId", "password", "confirmPassword"].map((fieldName) => (
+              {['firstName', 'lastName', 'email', 'phone', 'homeId', 'password', 'confirmPassword'].map((fieldName) => (
                 <FormField
                   key={fieldName}
                   control={step1Form.control}
                   name={fieldName}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{fieldName.replace(/([A-Z])/g, " $1")}</FormLabel>
+                      <FormLabel>{fieldName.replace(/([A-Z])/g, ' $1')}</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder={`Enter your ${fieldName}`}
-                          {...field}
-                          type={fieldName.toLowerCase().includes("password") ? "password" : "text"}
-                        />
+                        {fieldName.toLowerCase().includes('password') ? (
+                          <div className="relative">
+                            <Input
+                              placeholder={`Enter your ${fieldName}`}
+                              type={fieldName === 'password' ? (showPassword ? 'text' : 'password') : (fieldName === 'confirmPassword' ? (showConfirmPassword ? 'text' : 'password') : 'text')}
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              tabIndex={-1}
+                              onClick={() => fieldName === 'password' ? setShowPassword((v) => !v) : setShowConfirmPassword((v) => !v)}
+                            >
+                              {fieldName === 'password'
+                                ? (showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />)
+                                : (showConfirmPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />)
+                              }
+                            </button>
+                          </div>
+                        ) : (
+                          <Input
+                            placeholder={`Enter your ${fieldName}`}
+                            {...field}
+                            type="text"
+                          />
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>
