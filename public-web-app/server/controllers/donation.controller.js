@@ -36,12 +36,13 @@ export const createDonation = async (req, res, next) => {
     donation_email,
     donation_phone_number,
     category,
-    message
+    message,
+    divisional_secretariat_id
   } = req.body;
 
   //validate required fields
-  if (!fullname || !donation_email || !category || !message) {
-    return next(errorHandler(400, "Full name, email, category and message are required"));
+  if (!fullname || !donation_email || !category || !message || !divisional_secretariat_id) {
+    return next(errorHandler(400, "Full name, email, category, message, and divisional_secretariat_id are required"));
   }
 
   //validate email format
@@ -51,18 +52,26 @@ export const createDonation = async (req, res, next) => {
   }
 
   try {
+    //get current or latest flood id
+    const currentFloodId = await getCurrentOrLatestFloodId();
+    if (!currentFloodId) {
+      return next(errorHandler(400, "No active or recent flood event found"));
+    }
+
     //insert new donation
     const [result] = await pool.query(
       `INSERT INTO donations 
-      (fullname, donation_email, donation_phone_number, category, message, donations_status)
-      VALUES (?, ?, ?, ?, ?, ?)`,
+      (fullname, donation_email, donation_phone_number, category, message, donations_status, flood_id, divisional_secretariat_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fullname,
         donation_email,
         donation_phone_number || null,
         category,
         message,
-        'pending' //default status
+        'pending', //default status
+        currentFloodId,
+        divisional_secretariat_id
       ]
     );
 
