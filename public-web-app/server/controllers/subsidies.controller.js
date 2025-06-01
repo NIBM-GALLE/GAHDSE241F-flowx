@@ -145,17 +145,17 @@ export const getSubsidiesHistory = async (req, res, next) => {
 
 //function to get all subsidies for a specific flood
 export const getAllSubsidiesForFlood = async (req, res, next) => {
-    //get current or latest flood ID
-    const floodId = await getCurrentOrLatestFloodId();
-    if (!floodId) {
-        return res.status(200).json({
-            success: true,
-            message: "No flood events found",
-            subsidies: []
-        });
-    }
-
     try {
+        //get current or latest flood ID
+        const floodId = await getCurrentOrLatestFloodId();
+        if (!floodId) {
+            return res.status(200).json({
+                success: true,
+                message: "No flood events found",
+                subsidies: []
+            });
+        }
+        
         //get all subsidies for the specified flood
         const [subsidies] = await pool.query(`
             SELECT sh.*, s.subsidy_name, s.category as subsidy_category, s.flood_id, 
