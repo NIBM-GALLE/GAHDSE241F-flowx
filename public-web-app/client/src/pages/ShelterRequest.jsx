@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Home,
   MapPin,
@@ -8,7 +8,12 @@ import {
   CalendarDays,
   AlertCircle,
   ClipboardList,
-  Info
+  Info,
+  History,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Badge
 } from "lucide-react";
 import {
   Card,
@@ -35,94 +40,102 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useState } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { useShelterStore } from "@/stores/useShelterStore";
 
 function ShelterRequest() {
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    familyMembers: '',
-    district: '',
-    city: '',
-    currentLocation: '',
-    specialNeeds: '',
-    urgentRequirement: 'no',
-    notes: ''
+    shelter_request_title: '',
+    shelter_request_message: '',
+    shelter_request_needs: '',
+    emergency_level: 'medium',
   });
-
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [expandedShelter, setExpandedShelter] = useState(null);
 
-  const districts = [
-    "Colombo", "Gampaha", "Kalutara", "Galle", "Matara",
-    "Hambantota", "Kandy", "Matale", "Nuwara Eliya", "Ratnapura",
-    "Kegalle", "Anuradhapura", "Polonnaruwa", "Badulla", "Monaragala",
-    "Trincomalee", "Batticaloa", "Ampara", "Jaffna", "Kilinochchi",
-    "Mannar", "Vavuniya", "Mullaitivu", "Puttalam", "Kurunegala"
-  ];
+  const {
+    requestShelter,
+    isRequesting,
+    requestStatus,
+    requestError,
+    fetchRelatedShelters,
+    relatedShelters,
+    loadingRelated,
+    errorRelated
+  } = useShelterStore();
+
+  useEffect(() => {
+    fetchRelatedShelters();
+    // eslint-disable-next-line
+  }, []);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
+    setFormData(prev => ({ ...prev, [id]: value }));
   };
-
   const handleSelectChange = (id, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
+    setFormData(prev => ({ ...prev, [id]: value }));
   };
-
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.fullName) newErrors.fullName = 'Full name is required';
-    if (!formData.phone) newErrors.phone = 'Phone number is required';
-    if (!formData.district) newErrors.district = 'District is required';
-    if (!formData.city) newErrors.city = 'City is required';
-    if (!formData.currentLocation) newErrors.currentLocation = 'Current location is required';
-    if (!formData.familyMembers) newErrors.familyMembers = 'Number of family members is required';
-    
+    if (!formData.shelter_request_title) newErrors.shelter_request_title = 'Title is required';
+    if (!formData.shelter_request_message) newErrors.shelter_request_message = 'Message is required';
+    if (!formData.shelter_request_needs) newErrors.shelter_request_needs = 'Needs are required';
+    if (!formData.emergency_level) newErrors.emergency_level = 'Emergency level is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // Here you would typically make an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSubmitSuccess(true);
-    } catch (error) {
-      console.error('Submission error:', error);
-      setErrors({ submit: 'Failed to submit form. Please try again.' });
-    } finally {
-      setIsSubmitting(false);
+    if (!validateForm()) return;
+    await requestShelter(formData);
+  };
+  const toggleExpandShelter = (id) => {
+    setExpandedShelter(expandedShelter === id ? null : id);
+  };
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "active":
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</Badge>;
+      case "full":
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Full</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  if (submitSuccess) {
+  if (requestStatus) {
     return (
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="flex h-16 items-center gap-2 px-4 bg-blue-600 text-white">
-            <SidebarTrigger className="-ml-1 text-white" />
-            <h1 className="text-xl font-semibold">
-              Shelter Request
-            </h1>
-          </header>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Dashboard
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Request Shelter</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
           <main className="p-4 bg-white dark:bg-gray-900">
             <div className="max-w-3xl mx-auto">
               <Card className="border border-blue-200 dark:border-blue-800">
@@ -132,7 +145,7 @@ function ShelterRequest() {
                     <div>
                       <CardTitle>Request Submitted Successfully</CardTitle>
                       <CardDescription>
-                        Thank you for your shelter request. Emergency services will contact you soon.
+                        {requestStatus.message || 'Thank you for your shelter request. Emergency services will contact you soon.'}
                       </CardDescription>
                     </div>
                   </div>
@@ -142,8 +155,8 @@ function ShelterRequest() {
                     Your request has been received and will be processed as soon as possible. 
                     Please keep your phone nearby for updates.
                   </p>
-                  <Button onClick={() => setSubmitSuccess(false)}>
-                    Submit Another Request
+                  <Button onClick={() => window.location.href = '/dashboard'} className="bg-blue-600 hover:bg-blue-700">
+                      Go Back to Home
                   </Button>
                 </CardContent>
               </Card>
@@ -158,11 +171,24 @@ function ShelterRequest() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 px-4 bg-blue-200 text-white">
-          <SidebarTrigger className="-ml-1 text-white" />
-          <h1 className="text-xl font-semibold">
-            Shelter Request
-          </h1>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Dashboard
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Request Shelter</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
         </header>
 
         <main className="p-4 bg-white dark:bg-gray-900">
@@ -173,212 +199,134 @@ function ShelterRequest() {
                   <div className="flex items-center gap-3">
                     <Home className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                     <div>
-                      <CardTitle>Emergency Shelter Request Form</CardTitle>
+                      <CardTitle>Emergency Shelter Request</CardTitle>
                       <CardDescription>
-                        Please fill out this form to request temporary shelter assistance
+                        Fill out this form to request shelter assistance
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                
                 <form onSubmit={handleSubmit}>
                   <CardContent className="space-y-6">
-                    {errors.submit && (
+                    {requestError && (
                       <div className="p-3 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300 rounded-md">
-                        {errors.submit}
+                        {requestError}
                       </div>
                     )}
-
-                    {/* Personal Information Section */}
                     <div className="space-y-4">
-                      <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                        <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        Personal Information
-                      </h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="fullName">Full Name *</Label>
-                          <Input 
-                            id="fullName" 
-                            value={formData.fullName}
-                            onChange={handleChange}
-                            placeholder="John Doe" 
-                            className="border-gray-300 dark:border-gray-600"
-                            required 
-                          />
-                          {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Phone Number *</Label>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm">
-                              <Phone className="h-4 w-4" />
-                            </span>
-                            <Input
-                              id="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={handleChange}
-                              placeholder="+94 77 123 4567"
-                              className="rounded-l-none border-gray-300 dark:border-gray-600"
-                              required
-                            />
-                          </div>
-                          {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="familyMembers">Number of Family Members *</Label>
-                        <Input
-                          id="familyMembers"
-                          type="number"
-                          value={formData.familyMembers}
-                          onChange={handleChange}
-                          min="1"
-                          placeholder="Including yourself"
-                          className="border-gray-300 dark:border-gray-600"
-                          required
-                        />
-                        {errors.familyMembers && <p className="text-sm text-red-500">{errors.familyMembers}</p>}
-                      </div>
+                      <Label htmlFor="shelter_request_title">Title *</Label>
+                      <Input 
+                        id="shelter_request_title" 
+                        value={formData.shelter_request_title}
+                        onChange={handleChange}
+                        placeholder="e.g. Flooded house, need urgent help" 
+                        required 
+                      />
+                      {errors.shelter_request_title && <p className="text-sm text-red-500">{errors.shelter_request_title}</p>}
                     </div>
-                    
-                    {/* Location Information Section */}
                     <div className="space-y-4">
-                      <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                        <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        Location Information
-                      </h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="district">District *</Label>
-                          <Select 
-                            value={formData.district}
-                            onValueChange={(value) => handleSelectChange('district', value)}
-                            required
-                          >
-                            <SelectTrigger id="district" className="border-gray-300 dark:border-gray-600">
-                              <SelectValue placeholder="Select your district" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {districts.map((district) => (
-                                <SelectItem key={district} value={district}>
-                                  {district}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {errors.district && <p className="text-sm text-red-500">{errors.district}</p>}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="city">City/Town *</Label>
-                          <Input 
-                            id="city" 
-                            value={formData.city}
-                            onChange={handleChange}
-                            placeholder="e.g. Dehiwala" 
-                            className="border-gray-300 dark:border-gray-600"
-                            required 
-                          />
-                          {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="currentLocation">Current Location Details *</Label>
-                        <div className="flex">
-                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-sm">
-                            <MapPin className="h-4 w-4" />
-                          </span>
-                          <Input
-                            id="currentLocation"
-                            value={formData.currentLocation}
-                            onChange={handleChange}
-                            placeholder="Exact address or nearby landmarks"
-                            className="rounded-l-none border-gray-300 dark:border-gray-600"
-                            required
-                          />
-                        </div>
-                        {errors.currentLocation && <p className="text-sm text-red-500">{errors.currentLocation}</p>}
-                      </div>
+                      <Label htmlFor="shelter_request_message">Message *</Label>
+                      <Textarea
+                        id="shelter_request_message"
+                        value={formData.shelter_request_message}
+                        onChange={handleChange}
+                        placeholder="Describe your situation..."
+                        required
+                      />
+                      {errors.shelter_request_message && <p className="text-sm text-red-500">{errors.shelter_request_message}</p>}
                     </div>
-                    
-                    {/* Special Requirements Section */}
                     <div className="space-y-4">
-                      <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                        <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        Special Requirements
-                      </h3>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="urgentRequirement">Is this an urgent life-threatening situation? *</Label>
-                        <Select 
-                          value={formData.urgentRequirement}
-                          onValueChange={(value) => handleSelectChange('urgentRequirement', value)}
-                          required
-                        >
-                          <SelectTrigger id="urgentRequirement" className="border-gray-300 dark:border-gray-600">
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="yes">Yes - Need immediate evacuation</SelectItem>
-                            <SelectItem value="no">No - But need shelter soon</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="specialNeeds">Special Needs in Your Group</Label>
-                        <Textarea
-                          id="specialNeeds"
-                          value={formData.specialNeeds}
-                          onChange={handleChange}
-                          placeholder="Elderly, disabled, pregnant women, infants, medical conditions, etc."
-                          className="min-h-[80px] border-gray-300 dark:border-gray-600"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="notes">Additional Notes</Label>
-                        <Textarea
-                          id="notes"
-                          value={formData.notes}
-                          onChange={handleChange}
-                          placeholder="Any other important information about your situation"
-                          className="min-h-[100px] border-gray-300 dark:border-gray-600"
-                        />
-                      </div>
+                      <Label htmlFor="shelter_request_needs">Needs *</Label>
+                      <Input
+                        id="shelter_request_needs"
+                        value={formData.shelter_request_needs}
+                        onChange={handleChange}
+                        placeholder="e.g. Temporary shelter for 4, medical help"
+                        required
+                      />
+                      {errors.shelter_request_needs && <p className="text-sm text-red-500">{errors.shelter_request_needs}</p>}
+                    </div>
+                    <div className="space-y-4">
+                      <Label htmlFor="emergency_level">Emergency Level *</Label>
+                      <Select value={formData.emergency_level} onValueChange={v => handleSelectChange('emergency_level', v)} required>
+                        <SelectTrigger id="emergency_level">
+                          <SelectValue placeholder="Select emergency level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="critical">Critical</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.emergency_level && <p className="text-sm text-red-500">{errors.emergency_level}</p>}
                     </div>
                   </CardContent>
-                  
                   <CardFooter className="flex flex-col gap-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <ClipboardList className="h-4 w-4" />
                       <span>By submitting this form, you agree to share this information with emergency services.</span>
                     </div>
-                    
                     <div className="flex justify-end gap-3">
-                      <Button type="button" variant="outline" className="border-gray-300 dark:border-gray-600">
-                        Cancel
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        className="bg-blue-400 hover:bg-blue-700"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                      <Button type="submit" className="bg-blue-400 hover:bg-blue-700" disabled={isRequesting}>
+                        {isRequesting ? 'Submitting...' : 'Submit Request'}
                       </Button>
                     </div>
                   </CardFooter>
                 </form>
               </Card>
-              
-              {/* Information Card */}
+              {/* Related Shelters Section */}
+              <Card className="mt-6 border border-blue-200 dark:border-blue-800">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <CardTitle className="text-lg text-gray-900 dark:text-white">Related Shelters Near You</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loadingRelated ? (
+                    <div className="flex items-center gap-2 text-blue-600"><Loader2 className="animate-spin" /> Loading shelters...</div>
+                  ) : errorRelated ? (
+                    <div className="text-red-600">{errorRelated}</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {relatedShelters && relatedShelters.length > 0 ? (
+                        relatedShelters.map((shelter) => (
+                          <Card key={shelter.shelter_id} className="border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => toggleExpandShelter(shelter.shelter_id)}>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-medium text-gray-900 dark:text-white">{shelter.shelter_name}</h3>
+                                  {getStatusBadge(shelter.shelter_status)}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{shelter.shelter_address}</div>
+                              </div>
+                              <div>
+                                {expandedShelter === shelter.shelter_id ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
+                              </div>
+                            </div>
+                            {expandedShelter === shelter.shelter_id && (
+                              <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  <div><b>Capacity:</b> {shelter.shelter_size}</div>
+                                  <div><b>Available:</b> {shelter.available}</div>
+                                  <div><b>Status:</b> {shelter.shelter_status}</div>
+                                  {shelter.flood_name && <div><b>Flood:</b> {shelter.flood_name} ({shelter.start_date} - {shelter.end_date || 'Ongoing'})</div>}
+                                  <div><b>Divisional Secretariat ID:</b> {shelter.divisional_secretariat_id}</div>
+                                  {shelter.shelter_house_id && <div><b>Assigned to your house</b></div>}
+                                </div>
+                              </div>
+                            )}
+                          </Card>
+                        ))
+                      ) : (
+                        <div className="text-gray-500">No related shelters found.</div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              {/* Information Card (unchanged) */}
               <Card className="mt-6 border border-blue-200 dark:border-blue-800">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2">
