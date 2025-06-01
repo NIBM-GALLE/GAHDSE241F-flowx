@@ -11,6 +11,10 @@ export const useShelterStore = create((set) => ({
   relatedShelters: [],
   loadingRelated: false,
   errorRelated: null,
+  assignedShelter: null,
+  allShelters: [],
+  loadingShelterInfo: false,
+  errorShelterInfo: null,
 
   requestShelter: async (payload) => {
     set({ isRequesting: true, requestError: null, requestStatus: null });
@@ -48,6 +52,28 @@ export const useShelterStore = create((set) => ({
       set({ relatedShelters: res.data.data.relatedShelters, loadingRelated: false });
     } catch (error) {
       set({ relatedShelters: [], loadingRelated: false, errorRelated: error.response?.data?.message || error.message });
+    }
+  },
+
+  fetchShelterInfo: async () => {
+    set({ loadingShelterInfo: true, errorShelterInfo: null });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/shelters/info", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      set({
+        assignedShelter: res.data.data.assignedShelter,
+        allShelters: res.data.data.allShelters,
+        loadingShelterInfo: false
+      });
+    } catch (error) {
+      set({
+        assignedShelter: null,
+        allShelters: [],
+        loadingShelterInfo: false,
+        errorShelterInfo: error.response?.data?.message || error.message
+      });
     }
   },
 }));
