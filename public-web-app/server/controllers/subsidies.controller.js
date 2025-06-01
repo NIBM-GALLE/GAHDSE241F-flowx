@@ -145,10 +145,14 @@ export const getSubsidiesHistory = async (req, res, next) => {
 
 //function to get all subsidies for a specific flood
 export const getAllSubsidiesForFlood = async (req, res, next) => {
-    const floodId = req.params.floodId;
-
+    //get current or latest flood ID
+    const floodId = await getCurrentOrLatestFloodId();
     if (!floodId) {
-        return next(errorHandler(400, "Flood ID is required"));
+        return res.status(200).json({
+            success: true,
+            message: "No flood events found",
+            subsidies: []
+        });
     }
 
     try {
