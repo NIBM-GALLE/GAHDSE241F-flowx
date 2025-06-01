@@ -10,6 +10,9 @@ export const useSubsidiesStore = create((set) => ({
   loadingAll: false,
   errorNew: null,
   errorAll: null,
+  subsidiesHistory: [],
+  loadingHistory: false,
+  errorHistory: null,
 
   fetchNewSubsidies: async () => {
     set({ loadingNew: true, errorNew: null });
@@ -45,6 +48,27 @@ export const useSubsidiesStore = create((set) => ({
       }
     } catch (error) {
       set({ allSubsidies: [], loadingAll: false, errorAll: error.message });
+    }
+  },
+
+  fetchSubsidiesHistory: async () => {
+    set({ loadingHistory: true, errorHistory: null });
+    try {
+      // Get token from localStorage (or your auth context)
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/subsidies/history", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.data.success) {
+        set({
+          subsidiesHistory: res.data.data.subsidiesHistory,
+          loadingHistory: false,
+        });
+      } else {
+        set({ subsidiesHistory: [], loadingHistory: false, errorHistory: res.data.message });
+      }
+    } catch (error) {
+      set({ subsidiesHistory: [], loadingHistory: false, errorHistory: error.message });
     }
   },
 }));
