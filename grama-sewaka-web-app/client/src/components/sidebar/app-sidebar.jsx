@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useUserStore } from "@/stores/useUserStore";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { BiDonateHeart } from "react-icons/bi";
 import { LiaDonateSolid } from "react-icons/lia";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 
 export function AppSidebar({ ...props }) {
-  const { user } = useAuth();
+  const { user } = useUserStore();
 
   // Role-specific navigation
   const navMain = {

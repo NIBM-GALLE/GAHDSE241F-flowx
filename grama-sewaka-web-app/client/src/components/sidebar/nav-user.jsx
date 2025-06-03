@@ -21,17 +21,38 @@ import {
 export function NavUser({ user }) {
   const { logout } = useAuth();
 
+  if (!user) {
+    return (
+      <SidebarMenuButton size="lg" className="group opacity-60 cursor-not-allowed" disabled>
+        <Avatar>
+          <AvatarFallback>?</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 text-left">
+          <p className="font-medium">Guest</p>
+          <p className="text-xs text-muted-foreground">Not signed in</p>
+        </div>
+      </SidebarMenuButton>
+    );
+  }
+
+  const displayName = user.name || user.firstname || user.firstName || user.email || "User";
+  const displayEmail = user.email || "No email";
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton size="lg" className="group">
           <Avatar>
-            <AvatarImage src={user.avatar} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            {user.avatar ? (
+              <AvatarImage src={user.avatar} />
+            ) : (
+              <AvatarFallback>{initial}</AvatarFallback>
+            )}
           </Avatar>
           <div className="flex-1 text-left">
-            <p className="font-medium">{user.name}</p>
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+            <p className="font-medium">{displayName}</p>
+            <p className="text-xs text-muted-foreground">{displayEmail}</p>
           </div>
         </SidebarMenuButton>
       </DropdownMenuTrigger>

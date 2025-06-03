@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
-import React, { useState } from "react";
+import React from "react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -10,10 +10,13 @@ import FloodSummary from "@/components/dashboard/FloodSummary";
 import Donation from "@/components/dashboard/Donation";
 import VictimRequests from "@/components/dashboard/VictimRequests";
 import Subsidies from "@/components/dashboard/Subsidies";
+import { useUserStore } from "@/stores/useUserStore";
 
 function Page() {
-    const [userRole] = useState("gramasewaka");
-    
+  const { user } = useUserStore();
+  // user?.role should be one of: 'admin', 'government_officer', 'grama_sevaka'
+  const userRole = user?.role;
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -28,15 +31,36 @@ function Page() {
         </header>
         <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-900">
           <div className="flex-1 overflow-auto px-4 py-6 md:px-8 md:py-8 space-y-6">
-            <FloodSummary />
-            {userRole !== "gramasewaka" && <Donation />}
-            <Subsidies />
-            <VictimRequests />
+            {/* Admin: show empty state or message */}
+            {userRole === "admin" && (
+              <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 dark:text-gray-300">
+                <h2 className="text-2xl font-bold mb-2">Welcome, Admin!</h2>
+                <p className="mb-4">Admin dashboard is coming soon. You will be able to add, view, and update flood and flood details here.</p>
+                <span className="text-4xl">🚧</span>
+              </div>
+            )}
+            {/* Government Officer: show all widgets */}
+            {userRole === "government_officer" && (
+              <>
+                <FloodSummary />
+                <Donation />
+                <Subsidies />
+                <VictimRequests />
+              </>
+            )}
+            {/* Grama Niladhari: hide Donation */}
+            {userRole === "grama_sevaka" && (
+              <>
+                <FloodSummary />
+                <Subsidies />
+                <VictimRequests />
+              </>
+            )}
           </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
 
 export default Page;
