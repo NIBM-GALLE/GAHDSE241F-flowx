@@ -28,6 +28,25 @@ export function AppSidebar({ ...props }) {
   const navMain = {
     admin: [
       {
+        title: "Dashboard",
+        icon: MdOutlineAnnouncement,
+        items: [
+          { title: "Overview", url: "/admin/dashboard" },
+          { title: "Statistics", url: "/admin/statistics" },
+        ],
+      },
+      {
+        title: "Flood Management",
+        icon: MdOutlineAnnouncement,
+        items: [
+          { title: "Flood Reports", url: "/admin/floods/reports" },
+          { title: "Flood Alerts", url: "/admin/floods/alerts" },
+          { title: "Flood History", url: "/admin/floods/history" },
+        ],
+      },
+    ],
+    government_officer: [
+      {
         title: "Subsidies",
         icon: BiDonateHeart,
         items: [
@@ -72,7 +91,7 @@ export function AppSidebar({ ...props }) {
         ],
       },
     ],
-    grama_sewaka: [
+    grama_sevaka: [
       {
         title: "Victims",
         icon: MdOutlineAnnouncement,
