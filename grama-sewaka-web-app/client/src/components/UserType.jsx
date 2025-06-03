@@ -34,10 +34,11 @@ const UserType = ({ onSelect }) => {
           SignUp
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby="user-type-description">
         <DialogHeader>
           <DialogTitle>Select Your Role</DialogTitle>
         </DialogHeader>
+        <span id="user-type-description" className="sr-only">Choose your user type to continue registration</span>
         <div className="grid gap-4 py-4">
           {userTypes.map((type) => (
             <div 

@@ -20,11 +20,14 @@ import { FcGoogle } from "react-icons/fc";
 
 //lottie
 import LottieAnimation from "../../Lottie";
-import signIn from "../assets/animation/signin.json";
+import signInImage from "../assets/animation/signin.json";
+import { useUserStore } from "../stores/useUserStore";
 
 
 function SignIn() {
   const navigate = useNavigate();
+  const { signIn } = useUserStore();
+  const [role, setRole] = React.useState("");
   // schema for form validation
   const formSchema = z.object({
     email: z.string().email({
@@ -45,14 +48,22 @@ function SignIn() {
   });
 
   //handle submission
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
+  const onSubmit = async (data) => {
+    if (!role) {
+      alert("Please select a role");
+      return;
+    }
+    try {
+      await signIn({ ...data, role }, navigate);
+    } catch (err) {
+      alert(err.message || "Sign in failed");
+    }
   };
 
   return (
     <div className="min-h-screen grid sm:grid-cols-2 mx-auto justify-center items-center px-4">
       <div className="mx-auto hidden sm:block">
-        <LottieAnimation lotti={signIn} width={400} height={400} />
+        <LottieAnimation lotti={signInImage} width={400} height={400} />
       </div>
 
       <div className="mx-auto w-full max-w-md">
@@ -68,6 +79,20 @@ function SignIn() {
         <div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div>
+                <label className="block mb-1 font-medium">Role</label>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={role}
+                  onChange={e => setRole(e.target.value)}
+                  required
+                >
+                  <option value="">Select Role</option>
+                  <option value="admin">Admin</option>
+                  <option value="government_officer">Government Officer</option>
+                  <option value="grama_sevaka">Grama Sevaka</option>
+                </select>
+              </div>
               <FormField
                 control={form.control}
                 name="email"
@@ -88,7 +113,7 @@ function SignIn() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your Password" {...field} />
+                      <Input placeholder="Enter your Password" type="password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
