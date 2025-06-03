@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 
 export function NavUser({ user }) {
-  const { logout, clearNotifications } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <DropdownMenu>

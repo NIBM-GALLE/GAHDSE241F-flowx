@@ -4,19 +4,21 @@ import { useNavigate } from "react-router-dom";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState({
-    name: "Grama Sewaka",
-    email: "grama@example.com",
-    role: "admin",
-    avatar: "/avatars/grama.jpg",
-    notifications: 3,
-  });
-
+  //start with no user (null) for real authentication
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  //map roles to dashboard paths
+  const roleToPath = {
+    admin: "/admin/dashboard",
+    government_officer: "/officer/dashboard",
+    grama_sevaka: "/gs/dashboard",
+  };
 
   const login = (userData) => {
     setUser(userData);
-    navigate(userData.role === "admin" ? "/admin/dashboard" : "/dashboard");
+    const path = roleToPath[userData.role] || "/dashboard";
+    navigate(path);
   };
 
   const logout = () => {
@@ -25,7 +27,7 @@ export function AuthProvider({ children }) {
   };
 
   const clearNotifications = () => {
-    setUser(prev => ({ ...prev, notifications: 0 }));
+    setUser((prev) => (prev ? { ...prev, notifications: 0 } : prev));
   };
 
   return (

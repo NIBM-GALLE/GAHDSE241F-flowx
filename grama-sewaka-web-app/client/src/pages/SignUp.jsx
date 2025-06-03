@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -22,8 +22,10 @@ import {
 } from "@/components/ui/select";
 import { ModeToggle } from "../components/ui/mode-toggle";
 import LottieAnimation from "../../Lottie";
-import signUp from "../assets/animation/signup.json";
+import signUpImage from "../assets/animation/signup.json";
 import UserType from "@/components/UserType";
+import { useAreaStore } from "../stores/useAreaStore";
+import { useUserStore } from "../stores/useUserStore";
 
 // Schema definitions
 const adminSchema = z.object({
@@ -94,10 +96,8 @@ const gramaSevakaSchema = z.object({
 function SignUp() {
   const navigate = useNavigate();
   const [userType, setUserType] = useState(null);
-  const [districts, setDistricts] = useState([]);
-  const [divisionalSecretariats, setDivisionalSecretariats] = useState([]);
-  const [gramaNiladhariDivisions, setGramaNiladhariDivisions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useUserStore();
 
   // Initialize form
   const form = useForm({
@@ -122,56 +122,11 @@ function SignUp() {
     }
   });
 
-  // Watch district and divisional secretariat changes
+  // Use custom hook for area data
+  const { districts, divisionalSecretariats, gramaNiladhariDivisions } = useAreaStore(form);
+
   const selectedDistrict = form.watch("district_id");
   const selectedDivisionalSecretariat = form.watch("divisional_secretariat_id");
-
-  // Fetch districts on component mount
-  useEffect(() => {
-    const fetchDistricts = async () => {
-      try {
-        const response = await fetch('/api/districts');
-        const data = await response.json();
-        setDistricts(data);
-      } catch (error) {
-        console.error("Failed to fetch districts:", error);
-      }
-    };
-    fetchDistricts();
-  }, []);
-
-  // Fetch divisional secretariats when district changes
-  useEffect(() => {
-    const fetchDivisionalSecretariats = async () => {
-      if (!selectedDistrict) return;
-      try {
-        const response = await fetch(`/api/divisional-secretariats?district_id=${selectedDistrict}`);
-        const data = await response.json();
-        setDivisionalSecretariats(data);
-        form.setValue("divisional_secretariat_id", "");
-        form.setValue("grama_niladhari_division_id", "");
-      } catch (error) {
-        console.error("Failed to fetch divisional secretariats:", error);
-      }
-    };
-    fetchDivisionalSecretariats();
-  }, [selectedDistrict]);
-
-  // Fetch grama niladhari divisions when divisional secretariat changes
-  useEffect(() => {
-    const fetchGramaNiladhariDivisions = async () => {
-      if (!selectedDivisionalSecretariat) return;
-      try {
-        const response = await fetch(`/api/grama-niladhari-divisions?divisional_secretariat_id=${selectedDivisionalSecretariat}`);
-        const data = await response.json();
-        setGramaNiladhariDivisions(data);
-        form.setValue("grama_niladhari_division_id", "");
-      } catch (error) {
-        console.error("Failed to fetch grama niladhari divisions:", error);
-      }
-    };
-    fetchGramaNiladhariDivisions();
-  }, [selectedDivisionalSecretariat]);
 
   const handleUserTypeSelect = (type) => {
     setUserType(type);
@@ -181,24 +136,8 @@ function SignUp() {
     setIsLoading(true);
     try {
       // Remove confirmPassword before sending to backend
-      const { confirmPassword, ...userData } = data;
-      
-      const endpoint = `/api/auth/register/${userType}`;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Registration failed");
-      }
-
-      const result = await response.json();
-      console.log("Registration successful:", result);
-      navigate("/signin");
+      const {  ...userData } = data;
+      await signUp(userData, userType, navigate);
     } catch (error) {
       console.error("Registration error:", error);
       // Handle error (show toast, etc.)
@@ -211,7 +150,7 @@ function SignUp() {
     return (
       <div className="min-h-screen grid sm:grid-cols-2 mx-auto justify-center items-center px-4">
         <div className="mx-auto hidden sm:block">
-          <LottieAnimation lotti={signUp} width={500} height={500} />
+          <LottieAnimation lotti={signUpImage} width={500} height={500} />
         </div>
         <div className="mx-auto w-full max-w-md">
           <div className="text-center mb-6">
@@ -243,7 +182,7 @@ function SignUp() {
   return (
     <div className="min-h-screen grid sm:grid-cols-2 mx-auto justify-center items-center px-4">
       <div className="mx-auto hidden sm:block">
-        <LottieAnimation lotti={signUp} width={500} height={500} />
+        <LottieAnimation lotti={signUpImage} width={500} height={500} />
       </div>
 
       <div className="mx-auto w-full max-w-md">
@@ -383,8 +322,8 @@ function SignUp() {
                         </FormControl>
                         <SelectContent>
                           {districts.map((district) => (
-                            <SelectItem key={district.id} value={district.id}>
-                              {district.name}
+                            <SelectItem key={district.district_id} value={String(district.district_id)}>
+                              {district.district_name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -415,8 +354,8 @@ function SignUp() {
                         </FormControl>
                         <SelectContent>
                           {divisionalSecretariats.map((secretariat) => (
-                            <SelectItem key={secretariat.id} value={secretariat.id}>
-                              {secretariat.name}
+                            <SelectItem key={secretariat.divisional_secretariat_id} value={String(secretariat.divisional_secretariat_id)}>
+                              {secretariat.divisional_secretariat_name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -447,8 +386,8 @@ function SignUp() {
                         </FormControl>
                         <SelectContent>
                           {gramaNiladhariDivisions.map((division) => (
-                            <SelectItem key={division.id} value={division.id}>
-                              {division.name}
+                            <SelectItem key={division.grama_niladhari_division_id} value={String(division.grama_niladhari_division_id)}>
+                              {division.grama_niladhari_division_name}
                             </SelectItem>
                           ))}
                         </SelectContent>

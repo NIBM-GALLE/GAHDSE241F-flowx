@@ -12,7 +12,7 @@ import VictimRequests from "@/components/dashboard/VictimRequests";
 import Subsidies from "@/components/dashboard/Subsidies";
 
 function Page() {
-    const [userRole, setUserRole] = useState("gramasewaka");
+    const [userRole] = useState("gramasewaka");
     
   return (
     <SidebarProvider>

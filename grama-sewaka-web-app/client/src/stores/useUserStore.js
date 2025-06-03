@@ -30,6 +30,25 @@ export function useUserStore() {
     return data.user;
   }
 
+  // Sign up (updated: navigate to /signin after successful registration)
+  async function signUp(userData, userType, navigate) {
+    const res = await fetch(`/api/auth/register/${userType}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Server error: Invalid response");
+    }
+    if (!res.ok) throw new Error(data?.message || "Sign up failed");
+    // Do not set user/token or auto-login; just navigate to signin
+    if (navigate) navigate("/signin");
+    return data.user;
+  }
+
   // Logout
   function logout() {
     setUser(null);
@@ -38,5 +57,5 @@ export function useUserStore() {
     localStorage.removeItem("token");
   }
 
-  return { user, token, signIn, logout };
+  return { user, token, signIn, signUp, logout };
 }
