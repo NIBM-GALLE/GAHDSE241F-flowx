@@ -92,7 +92,7 @@ export const gramaSevaka = {
     try {
       const gramaSevakaId = req.user.grama_sevaka_id;
       const { victim_request_id } = req.params;
-      const { status, remarks } = req.body;
+      const { status } = req.body;
 
       //validate status
       const validStatuses = ['approved', 'rejected', 'pending'];
@@ -123,8 +123,7 @@ export const gramaSevaka = {
       //update the request status
       await pool.query(`
         UPDATE victim_request 
-        SET victim_request_status = ?,
-            updated_at = CURRENT_TIMESTAMP
+        SET victim_request_status = ?
         WHERE victim_request_id = ?
       `, [status, victim_request_id]);
       
