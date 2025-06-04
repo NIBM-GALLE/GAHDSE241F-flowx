@@ -6,9 +6,9 @@ import { ThemeProvider } from "./components/ui/theme-provider";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
-import NewVictim from "./pages/NewVictimReq"; 
-import ApprovedVictimsReq from "./pages/ApprovedVictimsReq";
-import VictimHistory from "./pages/VictimsHistory"; 
+import NewVictimRequests from "./pages/NewVictimRequests";
+import ApprovedVictimRequests from "./pages/ApprovedVictimRequests";
+import VictimRequestsHistory from "./pages/VictimRequestsHistory";
 import CreateAnnouncement from "./pages/CreateAnnouncement";
 import PendingDonations from "./pages/PendingDonations";
 import NewDonation from "./pages/NewDonation";
@@ -29,9 +29,9 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
-           <Route path="/victims/new" element={<NewVictim />} /> 
-          <Route path="/victims/approved" element={<ApprovedVictimsReq />} />
-          <Route path="/victims/history" element={<VictimHistory />} />
+          <Route path="/victims/new" element={<NewVictimRequests />} />
+          <Route path="/victims/approved" element={<ApprovedVictimRequests />} />
+          <Route path="/victims/history" element={<VictimRequestsHistory />} />
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
           <Route path="/donations/pending" element={<PendingDonations />} />
           <Route path="/donations/new" element={<NewDonation />} />
@@ -43,9 +43,6 @@ function App() {
           <Route path="/create-shelter" element={<CreateShelter />} />
           <Route path="/admin-profile" element={<AdminProfile />} />
           <Route path="/admin" element={<Admin />} />
-          
-        
-
         </Routes>
     </ThemeProvider>
   );

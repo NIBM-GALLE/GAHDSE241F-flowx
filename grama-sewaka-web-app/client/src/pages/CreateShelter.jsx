@@ -44,50 +44,37 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useShelterStore } from "@/stores/useShelterStore";
 
 function CreateShelter() {
-  // Sample divisional secretariats - you would fetch these from your database
-  const divisionalSecretariats = [
-    { id: 1, name: "Colombo" },
-    { id: 2, name: "Dehiwala" },
-    { id: 3, name: "Moratuwa" },
-    { id: 4, name: "Kaduwela" },
-    { id: 5, name: "Homagama" }
-  ];
+  const {
+    shelters,
+    loading,
+    error,
+    fetchShelters,
+    createShelter,
+    updateShelter,
+  } = useShelterStore();
 
-  // State for shelters data
-  const [shelters, setShelters] = useState([
-    {
-      shelter_id: 1,
-      shelter_name: "Colombo Public School",
-      shelter_size: 250,
-      available: 180,
-      shelter_status: "active",
-      divisional_secretariat_id: 1
-    },
-    {
-      shelter_id: 2,
-      shelter_name: "Gampaha Community Hall",
-      shelter_size: 150,
-      available: 90,
-      shelter_status: "active",
-      divisional_secretariat_id: 2
-    },
-    {
-      shelter_id: 3,
-      shelter_name: "Kalutara Temple Grounds",
-      shelter_size: 300,
-      available: 250,
-      shelter_status: "full",
-      divisional_secretariat_id: 3
-    }
-  ]);
+  // Compute divisionalSecretariats from shelters
+  const divisionalSecretariats = useMemo(() =>
+    Array.from(new Set(shelters.map((s) => s.divisional_secretariat_id)))
+      .map((id) => {
+        const shelter = shelters.find((s) => s.divisional_secretariat_id === id);
+        return shelter
+          ? { id, name: shelter.divisional_secretariat_name || `DS ${id}` }
+          : { id, name: `DS ${id}` };
+      })
+      .filter(ds => ds.id),
+    [shelters]
+  );
 
   // State for form
   const [formData, setFormData] = useState({
     shelter_name: '',
     shelter_size: '',
+    shelter_address: '',
     available: '',
     shelter_status: 'active',
     divisional_secretariat_id: ''
@@ -98,16 +85,18 @@ function CreateShelter() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  useEffect(() => {
+    fetchShelters();
+  }, [fetchShelters]);
+
   // Filter shelters based on search and status
   const filteredShelters = shelters.filter(shelter => {
-    const matchesSearch = 
-      shelter.shelter_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shelter.shelter_id.toString().includes(searchTerm);
-    
-    const matchesStatus = 
-      statusFilter === "all" || 
+    const matchesSearch =
+      (shelter.shelter_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (shelter.shelter_id + '').includes(searchTerm);
+    const matchesStatus =
+      statusFilter === "all" ||
       shelter.shelter_status === statusFilter;
-    
     return matchesSearch && matchesStatus;
   });
 
@@ -138,32 +127,17 @@ function CreateShelter() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     if (editingId) {
-      // Update existing shelter
-      setShelters(shelters.map(shelter => 
-        shelter.shelter_id === editingId 
-          ? { ...formData, shelter_id: editingId } 
-          : shelter
-      ));
+      updateShelter(editingId, formData);
       setEditingId(null);
     } else {
-      // Add new shelter
-      const newShelter = {
-        ...formData,
-        shelter_id: Math.max(...shelters.map(s => s.shelter_id), 0) + 1
-      };
-      setShelters([...shelters, newShelter]);
+      createShelter(formData);
     }
-
-    // Reset form
     setFormData({
       shelter_name: '',
       shelter_size: '',
+      shelter_address: '',
       available: '',
       shelter_status: 'active',
       divisional_secretariat_id: ''
@@ -174,6 +148,7 @@ function CreateShelter() {
     setFormData({
       shelter_name: shelter.shelter_name,
       shelter_size: shelter.shelter_size,
+      shelter_address: shelter.shelter_address,
       available: shelter.available,
       shelter_status: shelter.shelter_status,
       divisional_secretariat_id: shelter.divisional_secretariat_id
@@ -186,14 +161,11 @@ function CreateShelter() {
     setFormData({
       shelter_name: '',
       shelter_size: '',
+      shelter_address: '',
       available: '',
       shelter_status: 'active',
       divisional_secretariat_id: ''
     });
-  };
-
-  const handleDelete = (id) => {
-    setShelters(shelters.filter(shelter => shelter.shelter_id !== id));
   };
 
   const getStatusBadge = (status) => {
@@ -219,6 +191,10 @@ function CreateShelter() {
     const location = divisionalSecretariats.find(ds => ds.id === id);
     return location ? location.name : "Unknown";
   };
+
+  // Show loading or error state
+  if (loading) return <div>Loading shelters...</div>;
+  if (error) return <div>Error loading shelters: {error.message}</div>;
 
   return (
     <SidebarProvider>
@@ -469,14 +445,6 @@ function CreateShelter() {
                                     onClick={() => handleEdit(shelter)}
                                   >
                                     <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                    onClick={() => handleDelete(shelter.shelter_id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </td>

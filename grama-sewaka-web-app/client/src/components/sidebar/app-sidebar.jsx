@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useUserStore } from "@/stores/useUserStore";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { BiDonateHeart } from "react-icons/bi";
 import { LiaDonateSolid } from "react-icons/lia";
@@ -22,11 +22,30 @@ import {
 } from "@/components/ui/sidebar";
 
 export function AppSidebar({ ...props }) {
-  const { user } = useAuth();
+  const { user } = useUserStore();
 
   // Role-specific navigation
   const navMain = {
     admin: [
+      {
+        title: "Dashboard",
+        icon: MdOutlineAnnouncement,
+        items: [
+          { title: "Overview", url: "/admin/dashboard" },
+          { title: "Statistics", url: "/admin/statistics" },
+        ],
+      },
+      {
+        title: "Flood Management",
+        icon: MdOutlineAnnouncement,
+        items: [
+          { title: "Flood Reports", url: "/admin/floods/reports" },
+          { title: "Flood Alerts", url: "/admin/floods/alerts" },
+          { title: "Flood History", url: "/admin/floods/history" },
+        ],
+      },
+    ],
+    government_officer: [
       {
         title: "Subsidies",
         icon: BiDonateHeart,
@@ -72,7 +91,7 @@ export function AppSidebar({ ...props }) {
         ],
       },
     ],
-    grama_sewaka: [
+    grama_sevaka: [
       {
         title: "Victims",
         icon: MdOutlineAnnouncement,
