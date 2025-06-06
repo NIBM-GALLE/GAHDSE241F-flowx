@@ -18,7 +18,10 @@ import SubsidyNotes from "./pages/SubsidyNotes";
 import Profile from "./pages/Profile";
 import ShelterRequest from "./pages/ShelterRequest";
 import CreateShelter from "./pages/CreateShelter";
+import AdminProfile from "./pages/AdminProfilePage";
+import Admin from "./components/dashboard/Admin";
 import AnnouncementList from "./pages/AnnouncementList";
+
 
 function App() {
   return (
@@ -41,6 +44,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/shelter-request" element={<ShelterRequest />} />
           <Route path="/create-shelter" element={<CreateShelter />} />
+          <Route path="/admin-profile" element={<AdminProfile />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
     </ThemeProvider>
   );
