@@ -11,7 +11,7 @@ import ApprovedVictimRequests from "./pages/ApprovedVictimRequests";
 import VictimRequestsHistory from "./pages/VictimRequestsHistory";
 import CreateAnnouncement from "./pages/CreateAnnouncement";
 import PendingDonations from "./pages/PendingDonations";
-import NewDonation from "./pages/NewDonation";
+import NewDonationRequests from "./pages/NewDonationRequests";
 import DonationHistory from "./pages/DonationHistory";
 import SubsidyGivers from "./pages/SubsidyGivers";
 import SubsidyNotes from "./pages/SubsidyNotes";
@@ -21,7 +21,6 @@ import CreateShelter from "./pages/CreateShelter";
 import AdminProfile from "./pages/AdminProfilePage";
 import Admin from "./components/dashboard/Admin";
 import AnnouncementList from "./pages/AnnouncementList";
-
 
 function App() {
   return (
@@ -37,7 +36,7 @@ function App() {
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
           <Route path="/announcements/list" element={<AnnouncementList />} />
           <Route path="/donations/pending" element={<PendingDonations />} />
-          <Route path="/donations/new" element={<NewDonation />} />
+          <Route path="/donations/new-requests" element={<NewDonationRequests />} />
           <Route path="/donations/history" element={<DonationHistory />} />
           <Route path="/subsidy-givers" element={<SubsidyGivers />} />
           <Route path="/subsidy-notes" element={<SubsidyNotes />} />
