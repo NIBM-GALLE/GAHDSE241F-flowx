@@ -5,7 +5,8 @@ import {
   getSubsidyRequestsByGramaSevaka,
   updateSubsidyRequestStatus,
   getSubsidiesForCurrentFlood,
-  getSubsidyRequestsByDivisionalSecretariat
+  getSubsidyRequestsByDivisionalSecretariat,
+  updateSubsidy
 } from '../controllers/subsidy.controller.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -22,6 +23,7 @@ router.put('/requests/:subsidy_house_id/status', authorize('grama_sevaka'), upda
 
 // Government officer only
 router.post('/new', authorize('government_officer'), createSubsidy);
+router.put('/:subsidy_id', authorize('government_officer'), updateSubsidy);
 router.get('/division-requests', authorize('government_officer'), getSubsidyRequestsByDivisionalSecretariat);
 
 export default router;

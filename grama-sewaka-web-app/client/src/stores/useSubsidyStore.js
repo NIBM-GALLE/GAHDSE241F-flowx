@@ -37,5 +37,22 @@ export const useSubsidyStore = create((set) => ({
     }
   },
 
+  async updateSubsidy(subsidy_id, updateFields) {
+    set({ loading: true, error: null, success: null });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `/api/subsidy/${subsidy_id}`,
+        updateFields,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      set({ success: res.data.message || "Subsidy updated successfully!", loading: false });
+      return res.data;
+    } catch (err) {
+      set({ error: err.response?.data?.error || err.message, loading: false });
+      throw err;
+    }
+  },
+
   clearStatus: () => set({ error: null, success: null }),
 }));

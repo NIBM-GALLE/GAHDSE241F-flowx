@@ -44,18 +44,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+
 import { Edit } from "lucide-react";
 import { toast } from 'sonner';
 import { useSubsidyStore } from "@/stores/useSubsidyStore";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 function AddSubsidy() {
   const { 
@@ -98,7 +91,7 @@ function AddSubsidy() {
       (subsidy.subsidy_id + '').includes(searchTerm);
     const matchesStatus =
       statusFilter === "all" ||
-      subsidy.status === statusFilter;
+      (subsidy.subsidies_status || subsidy.status) === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -129,10 +122,18 @@ function AddSubsidy() {
     if (!validate()) return;
     try {
       if (editingId) {
-        await updateSubsidy(editingId, { ...form, quantity: Number(form.quantity) });
+        await updateSubsidy(editingId, { 
+          ...form, 
+          quantity: Number(form.quantity), 
+          subsidies_status: form.status || "active" 
+        });
         toast.success("Subsidy updated successfully!");
       } else {
-        await createSubsidy({ ...form, quantity: Number(form.quantity) });
+        await createSubsidy({ 
+          ...form, 
+          quantity: Number(form.quantity), 
+          subsidies_status: form.status || "active" 
+        });
         toast.success("Subsidy created successfully!");
       }
       setForm({ 
@@ -155,8 +156,8 @@ function AddSubsidy() {
       subsidy_name: subsidy.subsidy_name,
       category: subsidy.category,
       quantity: subsidy.quantity,
-      status: subsidy.status || "active"
-    });
+      status: subsidy.subsidies_status || subsidy.status || "active"
+    }); 
     setEditErrors({});
     setEditModalOpen(true);
   };
@@ -185,15 +186,21 @@ function AddSubsidy() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!validateEdit()) return;
+    if (!editingSubsidy || !editingSubsidy.subsidy_id) {
+      toast.error("No subsidy selected for editing. Please try again.");
+      return;
+    }
     try {
       await updateSubsidy(editingSubsidy.subsidy_id, {
-        ...editingSubsidy,
-        ...editForm,
-        quantity: Number(editForm.quantity)
+        subsidy_name: editForm.subsidy_name,
+        category: editForm.category,
+        quantity: Number(editForm.quantity),
+        subsidies_status: editForm.status || "active"
       });
       toast.success("Subsidy updated successfully!");
       setEditModalOpen(false);
       setEditingSubsidy(null);
+      fetchSubsidies(); // Refresh the list after update
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
       toast.error("Failed to update subsidy");
@@ -423,20 +430,20 @@ function AddSubsidy() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          filteredSubsidies.map((subsidy) => (
-                            <TableRow key={subsidy.subsidy_id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          filteredSubsidies.map((subsidy, idx) => (
+                            <TableRow key={subsidy.subsidy_id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                                 <TableCell>{subsidy.subsidy_name}</TableCell>
                                 <TableCell>{subsidy.category}</TableCell>
                                 <TableCell>{subsidy.quantity}</TableCell>
                                 <TableCell>{subsidy.current_quantity || subsidy.quantity}</TableCell>
                               <TableCell>
-                                {getStatusBadge(subsidy.subsidies_status)}
+                                {getStatusBadge(subsidy.subsidies_status || subsidy.status)}
                               </TableCell>
                               <TableCell className="text-right">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleEdit(subsidy)}
+                                  onClick={() => handleEdit()}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -458,6 +465,9 @@ function AddSubsidy() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Subsidy</DialogTitle>
+              <DialogDescription>
+                Update the details of the selected subsidy. All fields marked with * are required.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="space-y-2">
