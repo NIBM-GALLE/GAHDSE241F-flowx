@@ -8,6 +8,8 @@ export const useDonationStore = create((set) => ({
   error: null,
   success: null,
   selectedDonation: null,
+  donationHistory: [],
+  donationStats: null,
 
   async fetchNewDonations() {
     set({ loading: true, error: null });
@@ -61,6 +63,32 @@ export const useDonationStore = create((set) => ({
       // Optionally refetch new donations
     } catch (err) {
       set({ error: err.response?.data?.error || err.message, loading: false });
+    }
+  },
+
+  async fetchDonationHistory() {
+    set({ loading: true, error: null });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/donation/history", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      set({ donationHistory: res.data.donations || [], loading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.error || err.message, loading: false, donationHistory: [] });
+    }
+  },
+
+  async fetchDonationStats() {
+    set({ loading: true, error: null });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/donation/stats/overview", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      set({ donationStats: res.data, loading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.error || err.message, loading: false, donationStats: null });
     }
   },
 
