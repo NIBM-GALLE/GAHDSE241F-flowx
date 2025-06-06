@@ -21,6 +21,7 @@ import CreateShelter from "./pages/CreateShelter";
 import AdminProfile from "./pages/AdminProfilePage";
 import Admin from "./components/dashboard/Admin";
 import AnnouncementList from "./pages/AnnouncementList";
+import AddSubsidy from "./pages/AddSubsidy";
 
 function App() {
   return (
@@ -29,20 +30,28 @@ function App() {
           <Route path="/" element={<SignIn />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/profile" element={<Profile />} />
+
           <Route path="/dashboard" element={<Dashboard />} />
+
           <Route path="/victims/new" element={<NewVictimRequests />} />
           <Route path="/victims/approved" element={<ApprovedVictimRequests />} />
           <Route path="/victims/history" element={<VictimRequestsHistory />} />
+
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
           <Route path="/announcements/list" element={<AnnouncementList />} />
+
           <Route path="/donations/pending" element={<PendingDonations />} />
           <Route path="/donations/new-requests" element={<NewDonationRequests />} />
           <Route path="/donations/history" element={<DonationHistory />} />
+
           <Route path="/subsidy-givers" element={<SubsidyGivers />} />
           <Route path="/subsidy-notes" element={<SubsidyNotes />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/subsidy/add" element={<AddSubsidy />} />
+
           <Route path="/shelter-request" element={<ShelterRequest />} />
           <Route path="/create-shelter" element={<CreateShelter />} />
+
           <Route path="/admin-profile" element={<AdminProfile />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
