@@ -3,6 +3,7 @@ import axios from "axios";
 
 export const useDonationStore = create((set) => ({
   newDonations: [],
+  pendingDonations: [],
   loading: false,
   error: null,
   success: null,
@@ -18,6 +19,19 @@ export const useDonationStore = create((set) => ({
       set({ newDonations: res.data.donations || [], loading: false });
     } catch (err) {
       set({ error: err.response?.data?.error || err.message, loading: false, newDonations: [] });
+    }
+  },
+
+  async fetchPendingDonations() {
+    set({ loading: true, error: null });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/donation/pending", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      set({ pendingDonations: res.data.donations || [], loading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.error || err.message, loading: false, pendingDonations: [] });
     }
   },
 
