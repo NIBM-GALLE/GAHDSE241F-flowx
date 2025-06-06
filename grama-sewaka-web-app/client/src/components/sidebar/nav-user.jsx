@@ -1,6 +1,7 @@
 "use client";
 import { LogOut, CircleUserRound } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link"; 
 
 import {
   DropdownMenu,
@@ -59,9 +60,11 @@ export function NavUser({ user }) {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuItem>
-          <CircleUserRound className="mr-2 size-4" />
-          Profile
-        </DropdownMenuItem>
+          <Link href="/profile" className="w-full flex items-center">
+            <CircleUserRound className="mr-2 size-4" />
+            Profile
+          </Link>
+         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 size-4" />
