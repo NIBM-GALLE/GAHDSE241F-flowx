@@ -18,6 +18,7 @@ import SubsidyNotes from "./pages/SubsidyNotes";
 import Profile from "./pages/Profile";
 import ShelterRequest from "./pages/ShelterRequest";
 import CreateShelter from "./pages/CreateShelter";
+import AnnouncementList from "./pages/AnnouncementList";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="/victims/approved" element={<ApprovedVictimRequests />} />
           <Route path="/victims/history" element={<VictimRequestsHistory />} />
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
+          <Route path="/announcements/list" element={<AnnouncementList />} />
           <Route path="/donations/pending" element={<PendingDonations />} />
           <Route path="/donations/new" element={<NewDonation />} />
           <Route path="/donations/history" element={<DonationHistory />} />
