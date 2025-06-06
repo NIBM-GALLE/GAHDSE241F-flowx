@@ -1,64 +1,58 @@
 import React, { useState } from "react"
+import { useAnnouncementStore } from "@/stores/useAnnouncementStore"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"     
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-
-
-import { format } from "date-fns"
 
 function CreateAnnouncement() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [type, setType] = useState("")
-  const [date, setDate] = useState(new Date())
+  const [emergencyLevel, setEmergencyLevel] = useState("")
+  const { loading, error, success, createAnnouncement, clearStatus } = useAnnouncementStore()
 
-  const handleSubmit = (e) => {
+  //get user info
+  const user = JSON.parse(localStorage.getItem("user")) || { id: 0, role: "government_officer" }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-
-    const announcement = {
+    clearStatus()
+    if (!title || !description || !emergencyLevel) {
+      useAnnouncementStore.setState({ error: "All fields are required." })
+      return
+    }
+    await createAnnouncement({
       title,
       description,
-      type,
-      date: format(date, "yyyy-MM-dd"),
+      emergency_level: emergencyLevel,
+      user_id: user.id,
+      userType: user.role || "government_officer"
+    })
+    if (useAnnouncementStore.getState().success) {
+      setTitle("")
+      setDescription("")
+      setEmergencyLevel("")
     }
-
-    console.log("New Announcement:", announcement)
-
-    // TODO: Post to backend
-    // await axios.post("/api/announcements", announcement)
-
-    // Clear form
-    setTitle("")
-    setDescription("")
-    setType("")
-    setDate(new Date())
   }
 
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 px-4 border-b dark:border-gray-800">
+        <header className="flex h-16 items-center gap-2 px-4 border-b dark:border-gray-800 bg-gradient-to-r from-blue-600 to-blue-400 text-white">
           <SidebarTrigger />
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Create Announcement
-          </h1>
+          <h1 className="text-xl font-semibold">Create Announcement</h1>
         </header>
-
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8 bg-gray-50 dark:bg-gray-900">
-          <Card className="max-w-2xl mx-auto bg-white dark:bg-gray-800 border dark:border-gray-700">
+          <Card className="max-w-2xl mx-auto bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-lg">
             <CardHeader>
               <CardTitle>Create New Announcement</CardTitle>
             </CardHeader>
@@ -85,40 +79,22 @@ function CreateAnnouncement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={type} onValueChange={setType} required>
+                  <Label>Emergency Level</Label>
+                  <Select value={emergencyLevel} onValueChange={setEmergencyLevel} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select emergency level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Important">Important</SelectItem>
-                      <SelectItem value="Notice">Notice</SelectItem>
-                      <SelectItem value="Update">Update</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        {date ? format(date, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                {error && <div className="text-red-600 text-sm font-medium">{error}</div>}
+                {success && <div className="text-green-600 text-sm font-medium">{success}</div>}
 
                 <div className="flex justify-end gap-4 pt-4">
                   <Button
@@ -127,13 +103,15 @@ function CreateAnnouncement() {
                     onClick={() => {
                       setTitle("")
                       setDescription("")
-                      setType("")
-                      setDate(new Date())
+                      setEmergencyLevel("")
+                      clearStatus()
                     }}
                   >
                     Reset
                   </Button>
-                  <Button type="submit">Create</Button>
+                  <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+                    {loading ? "Creating..." : "Create"}
+                  </Button>
                 </div>
               </form>
             </CardContent>
