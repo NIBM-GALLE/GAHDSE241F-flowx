@@ -67,17 +67,17 @@ export function AppSidebar({ ...props }) {
         title: "Victims",
         icon: MdOutlineAnnouncement,
         items: [
-          { title: "New Requests", url: "/admin/victims/new" },
-          { title: "Approved Requests", url: "/admin/victims/approved" },
-          { title: "History", url: "/admin/victims/history" },
+          { title: "New Requests", url: "/victims/new" },
+          { title: "Approved Requests", url: "/victims/approved" },
+          { title: "History", url: "/victims/history" },
         ],
       },
       {
         title: "Announcements",
         icon: TfiAnnouncement,
         items: [
-          { title: "New Announcements", url: "/admin/announcements/new" },
-          { title: "Pending Announcements", url: "/admin/announcements/pending" },
+          { title: "New Announcements", url: "/announcements/create" },
+          { title: "Pending Announcements", url: "/announcements/pending" },
         ],
       },
       {
@@ -85,9 +85,9 @@ export function AppSidebar({ ...props }) {
         icon: LiaDonateSolid,
         badge: user?.notifications,
         items: [
-          { title: "New Donations", url: "/admin/donations/new" },
-          { title: "Pending Donations", url: "/admin/donations/pending" },
-          { title: "Donations History", url: "/admin/donations/history" },
+          { title: "New Donations", url: "/donations/new" },
+          { title: "Pending Donations", url: "/donations/pending" },
+          { title: "Donations History", url: "/donations/history" },
         ],
       },
     ],
