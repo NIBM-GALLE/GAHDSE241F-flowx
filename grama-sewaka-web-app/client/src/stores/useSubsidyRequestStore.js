@@ -69,6 +69,19 @@ export const useSubsidyRequestStore = create((set) => ({
     }
   },
 
+  async fetchDivisionSubsidyRequests() {
+    set({ loading: true, error: null });
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/subsidy/division-requests", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      set({ requests: res.data.requests || [], loading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.error || err.message, loading: false });
+    }
+  },
+
   clearStatus: () => set({ error: null, success: null }),
 })
 );
