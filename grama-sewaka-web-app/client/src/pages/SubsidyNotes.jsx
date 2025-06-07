@@ -121,6 +121,11 @@ function SubsidyNotes() {
     }
   };
 
+  // Summary calculations
+  const totalTypes = subsidies.length;
+  const totalAllocated = subsidies.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+  const totalRemaining = subsidies.reduce((sum, s) => sum + (Number(s.current_quantity) || 0), 0);
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -136,31 +141,37 @@ function SubsidyNotes() {
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
+              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Total Subsidies</CardTitle>
-                  <CardDescription>This year</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Total Subsidy Types
+                  </CardTitle>
+                  <CardDescription>Types available for this flood</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">6</p>
+                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalTypes}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
+              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Approved Amount</CardTitle>
-                  <CardDescription>Total disbursed</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-500" /> Total Allocated
+                  </CardTitle>
+                  <CardDescription>All subsidy units allocated</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">LKR 83,000</p>
+                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">{totalAllocated}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
+              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Pending Approvals</CardTitle>
-                  <CardDescription>Requiring action</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-yellow-500" /> Total Remaining
+                  </CardTitle>
+                  <CardDescription>Units still available</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">2</p>
+                  <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">{totalRemaining}</p>
                 </CardContent>
               </Card>
             </div>
