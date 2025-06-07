@@ -16,7 +16,7 @@ import DonationHistory from "./pages/DonationHistory";
 import SubsidyGivers from "./pages/SubsidyGivers";
 import SubsidyNotes from "./pages/SubsidyNotes";
 import Profile from "./pages/Profile";
-import ShelterRequest from "./pages/ShelterRequest";
+import ShelterRequest from "./pages/ShelterRequests";
 import CreateShelter from "./pages/CreateShelter";
 import AdminProfile from "./pages/AdminProfilePage";
 import Admin from "./components/dashboard/Admin";
