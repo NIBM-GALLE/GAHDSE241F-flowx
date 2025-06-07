@@ -25,10 +25,39 @@ export const useShelterStore = create((set, get) => ({
   createShelter: async (payload) => {
     set({ createStatus: null, error: null });
     try {
+      // Ensure all required fields are present and valid
+      const {
+        shelter_name,
+        shelter_size,
+        shelter_address,
+        available,
+        shelter_status,
+      } = payload;
+      if (
+        !shelter_name ||
+        !shelter_size ||
+        !shelter_address ||
+        available === undefined ||
+        available === null ||
+        !shelter_status
+      ) {
+        set({ createStatus: null, error: "All fields are required" });
+        return;
+      }
       const token = localStorage.getItem("token");
-      const res = await axios.post("/api/shelter/create", payload, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await axios.post(
+        "/api/shelter/create",
+        {
+          shelter_name,
+          shelter_size,
+          shelter_address,
+          available,
+          shelter_status,
+        },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
       set({ createStatus: res.data, error: null });
       get().fetchShelters();
     } catch (error) {

@@ -77,7 +77,7 @@ function CreateShelter() {
     shelter_address: '',
     available: '',
     shelter_status: 'active',
-    divisional_secretariat_id: ''
+    // divisional_secretariat_id is NOT needed for createShelter, backend gets it from user
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -119,8 +119,9 @@ function CreateShelter() {
     const newErrors = {};
     if (!formData.shelter_name) newErrors.shelter_name = 'Shelter name is required';
     if (!formData.shelter_size) newErrors.shelter_size = 'Capacity is required';
-    if (!formData.divisional_secretariat_id) newErrors.divisional_secretariat_id = 'Location is required';
-    
+    if (!formData.shelter_address) newErrors.shelter_address = 'Address is required';
+    if (formData.available === '' || formData.available === null || formData.available === undefined) newErrors.available = 'Available is required';
+    if (!formData.shelter_status) newErrors.shelter_status = 'Status is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -132,7 +133,14 @@ function CreateShelter() {
       updateShelter(editingId, formData);
       setEditingId(null);
     } else {
-      createShelter(formData);
+      // Only send fields required by backend
+      createShelter({
+        shelter_name: formData.shelter_name,
+        shelter_size: formData.shelter_size,
+        shelter_address: formData.shelter_address,
+        available: formData.available,
+        shelter_status: formData.shelter_status,
+      });
     }
     setFormData({
       shelter_name: '',
@@ -140,7 +148,6 @@ function CreateShelter() {
       shelter_address: '',
       available: '',
       shelter_status: 'active',
-      divisional_secretariat_id: ''
     });
   };
 
@@ -151,7 +158,6 @@ function CreateShelter() {
       shelter_address: shelter.shelter_address,
       available: shelter.available,
       shelter_status: shelter.shelter_status,
-      divisional_secretariat_id: shelter.divisional_secretariat_id
     });
     setEditingId(shelter.shelter_id);
   };
@@ -164,7 +170,6 @@ function CreateShelter() {
       shelter_address: '',
       available: '',
       shelter_status: 'active',
-      divisional_secretariat_id: ''
     });
   };
 
@@ -243,26 +248,16 @@ function CreateShelter() {
                         />
                         {errors.shelter_name && <p className="text-sm text-red-500">{errors.shelter_name}</p>}
                       </div>
-
                       <div className="space-y-2">
-                        <Label htmlFor="divisional_secretariat_id">Location *</Label>
-                        <Select
-                          value={formData.divisional_secretariat_id}
-                          onValueChange={(value) => handleSelectChange('divisional_secretariat_id', value)}
+                        <Label htmlFor="shelter_address">Address *</Label>
+                        <Input
+                          id="shelter_address"
+                          value={formData.shelter_address}
+                          onChange={handleChange}
+                          placeholder="e.g. 123 Main St, Colombo"
                           required
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select location" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {divisionalSecretariats.map(ds => (
-                              <SelectItem key={ds.id} value={ds.id}>
-                                {ds.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.divisional_secretariat_id && <p className="text-sm text-red-500">{errors.divisional_secretariat_id}</p>}
+                        />
+                        {errors.shelter_address && <p className="text-sm text-red-500">{errors.shelter_address}</p>}
                       </div>
                     </div>
 
