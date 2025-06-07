@@ -11,88 +11,120 @@ import {
   CardTitle,
   CardContent,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, PlusCircle, Download } from "lucide-react"
-
-const initialNotes = [
-  {
-    id: 1,
-    name: "Kamal Perera",
-    nic: "951234567V",
-    note: "Approved for fertilizer subsidy due to consistent crop yield.",
-    date: "2025-03-15",
-    status: "approved",
-    amount: "LKR 15,000",
-  },
-  {
-    id: 2,
-    name: "Nimal Silva",
-    nic: "902345678V",
-    note: "Subsidy granted for irrigation improvement.",
-    date: "2025-02-28",
-    status: "approved",
-    amount: "LKR 25,000",
-  },
-  {
-    id: 3,
-    name: "Sunil Rathnayake",
-    nic: "871122334V",
-    note: "Pending follow-up on land ownership verification.",
-    date: "2025-01-10",
-    status: "pending",
-    amount: "LKR 10,000",
-  },
-  {
-    id: 4,
-    name: "Anjali Fernando",
-    nic: "981234567V",
-    note: "Subsidy application under review.",
-    date: "2025-03-01",
-    status: "review",
-    amount: "LKR 12,000",
-  },
-  {
-    id: 5,
-    name: "Dilani Jayasinghe",
-    nic: "891234567V",
-    note: "Approved for seed subsidy for next planting season.",
-    date: "2025-02-20",
-    status: "approved",
-    amount: "LKR 8,000",
-  },
-  {
-    id: 6,
-    name: "Ravi Kumara",
-    nic: "781234567V",
-    note: "Subsidy granted for equipment purchase.",
-    date: "2025-01-15",
-    status: "approved",
-    amount: "LKR 35,000",
-  },
-]
+import { Search, PlusCircle } from "lucide-react"
+import { useSubsidyRequestStore } from "@/stores/useSubsidyRequestStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 const statusVariantMap = {
   approved: "success",
   pending: "warning",
   review: "secondary",
-}
+  rejected: "destructive",
+  distributed: "success",
+};
 
 function SubsidyNotes() {
-  const [search, setSearch] = useState("")
-  const [isAddingNote, setIsAddingNote] = useState(false)
-  
-  const filteredNotes = initialNotes.filter(
+  const [search, setSearch] = useState("");
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [addForm, setAddForm] = useState({
+    house_id: "",
+    subsidies_id: "",
+    category: "",
+    quantity: "",
+    collection_place: "",
+  });
+  const [addErrors, setAddErrors] = useState({});
+  const [viewNote, setViewNote] = useState(null);
+  const [updateStatusNote, setUpdateStatusNote] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  const {
+    requests,
+    subsidies,
+    loading,
+    error,
+    success,
+    fetchSubsidyRequests,
+    fetchAvailableSubsidies,
+    createSubsidyRequest,
+    updateSubsidyRequestStatus,
+    clearStatus,
+  } = useSubsidyRequestStore();
+
+  React.useEffect(() => {
+    fetchSubsidyRequests();
+    fetchAvailableSubsidies();
+  }, [fetchSubsidyRequests, fetchAvailableSubsidies]);
+
+  const filteredNotes = requests.filter(
     (note) =>
-      note.name.toLowerCase().includes(search.toLowerCase()) ||
-      note.nic.toLowerCase().includes(search.toLowerCase()) ||
-      note.note.toLowerCase().includes(search.toLowerCase())
-  )
+      (note.householder_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (note.nic?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (note.note?.toLowerCase() || "").includes(search.toLowerCase())
+  );
+
+  const handleAddChange = (e) => {
+    const { name, value } = e.target;
+    setAddForm((prev) => ({ ...prev, [name]: value }));
+    if (addErrors[name]) setAddErrors((prev) => ({ ...prev, [name]: null }));
+    if (error || success) clearStatus();
+  };
+
+  const validateAdd = () => {
+    const errs = {};
+    if (!addForm.house_id) errs.house_id = "House is required";
+    if (!addForm.subsidies_id) errs.subsidies_id = "Subsidy is required";
+    if (!addForm.category) errs.category = "Category is required";
+    if (!addForm.quantity || isNaN(addForm.quantity) || Number(addForm.quantity) <= 0) {
+      errs.quantity = "Valid quantity is required";
+    }
+    if (!addForm.collection_place) errs.collection_place = "Collection place is required";
+    setAddErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateAdd()) return;
+    try {
+      await createSubsidyRequest({
+        ...addForm,
+        quantity: Number(addForm.quantity),
+      });
+      setIsAddingNote(false);
+      setAddForm({ house_id: "", subsidies_id: "", category: "", quantity: "", collection_place: "" });
+      fetchSubsidyRequests();
+    } catch {
+      // error handled in store
+    }
+  };
+
+  const handleView = (note) => setViewNote(note);
+  const handleUpdateStatus = (note) => setUpdateStatusNote(note);
+  const handleStatusSubmit = async () => {
+    if (!updateStatusNote) return;
+    setStatusLoading(true);
+    try {
+      await updateSubsidyRequestStatus(updateStatusNote.subsidy_house_id, "collected");
+      setUpdateStatusNote(null);
+      fetchSubsidyRequests();
+    } catch {
+      // error handled in store
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  // Summary calculations
+  const totalTypes = subsidies.length;
+  const totalAllocated = subsidies.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+  const totalRemaining = subsidies.reduce((sum, s) => sum + (Number(s.current_quantity) || 0), 0);
 
   return (
     <SidebarProvider>
@@ -109,31 +141,37 @@ function SubsidyNotes() {
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
+              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Total Subsidies</CardTitle>
-                  <CardDescription>This year</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500" /> Total Subsidy Types
+                  </CardTitle>
+                  <CardDescription>Types available for this flood</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">6</p>
+                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalTypes}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
+              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Approved Amount</CardTitle>
-                  <CardDescription>Total disbursed</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-500" /> Total Allocated
+                  </CardTitle>
+                  <CardDescription>All subsidy units allocated</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">LKR 83,000</p>
+                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">{totalAllocated}</p>
                 </CardContent>
               </Card>
-              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
+              <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Pending Approvals</CardTitle>
-                  <CardDescription>Requiring action</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-yellow-500" /> Total Remaining
+                  </CardTitle>
+                  <CardDescription>Units still available</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">2</p>
+                  <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">{totalRemaining}</p>
                 </CardContent>
               </Card>
             </div>
@@ -170,28 +208,31 @@ function SubsidyNotes() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Farmer</TableHead>
-                      <TableHead>NIC</TableHead>
-                      <TableHead>Details</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>House ID</TableHead>
+                      <TableHead>Subsidy</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Quantity</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredNotes.length > 0 ? (
                       filteredNotes.map((note) => (
-                        <TableRow key={note.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <TableCell className="font-medium">{note.name}</TableCell>
-                          <TableCell>{note.nic}</TableCell>
-                          <TableCell className="max-w-[300px] truncate">{note.note}</TableCell>
-                          <TableCell>{note.amount}</TableCell>
+                        <TableRow key={note.subsidy_house_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                          <TableCell>{note.house_id}</TableCell>
+                          <TableCell>{note.subsidy_name}</TableCell>
+                          <TableCell>{note.category || note.subsidy_category}</TableCell>
+                          <TableCell>{note.quantity}</TableCell>
                           <TableCell>
-                            <Badge variant={statusVariantMap[note.status]}>
-                              {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
+                            <Badge variant={statusVariantMap[note.subsidies_status] || "secondary"}>
+                              {note.subsidies_status?.charAt(0).toUpperCase() + note.subsidies_status?.slice(1)}
                             </Badge>
                           </TableCell>
-                          <TableCell>{note.date}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button size="sm" variant="outline" onClick={() => handleView(note)}>View</Button>
+                            <Button size="sm" variant="default" onClick={() => handleUpdateStatus(note)}>Update Status</Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -210,29 +251,170 @@ function SubsidyNotes() {
                   </TableBody>
                 </Table>
               </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t px-6 py-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{filteredNotes.length}</span> of <span className="font-medium">{initialNotes.length}</span> records
-                </div>
-                <div className="space-x-3">
-                  <Button variant="outline" size="sm">
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    <Download className="h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              </CardFooter>
             </Card>
           </div>
+          {/* Add Record Modal */}
+          <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Subsidy Request</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="house_id">House ID *</Label>
+                  <Input
+                    id="house_id"
+                    name="house_id"
+                    value={addForm.house_id}
+                    onChange={handleAddChange}
+                    className={addErrors.house_id ? "border-red-500" : ""}
+                  />
+                  {addErrors.house_id && <p className="text-sm text-red-500">{addErrors.house_id}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subsidies_id">Subsidy *</Label>
+                  <select
+                    id="subsidies_id"
+                    name="subsidies_id"
+                    value={addForm.subsidies_id}
+                    onChange={handleAddChange}
+                    className={`w-full border rounded px-2 py-2 ${addErrors.subsidies_id ? "border-red-500" : ""}`}
+                  >
+                    <option value="">Select subsidy</option>
+                    {subsidies.map((s) => (
+                      <option key={s.subsidies_id} value={s.subsidies_id}>
+                        {s.subsidy_name} ({s.category})
+                      </option>
+                    ))}
+                  </select>
+                  {addErrors.subsidies_id && <p className="text-sm text-red-500">{addErrors.subsidies_id}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Input
+                    id="category"
+                    name="category"
+                    value={addForm.category}
+                    onChange={handleAddChange}
+                    className={addErrors.category ? "border-red-500" : ""}
+                  />
+                  {addErrors.category && <p className="text-sm text-red-500">{addErrors.category}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity *</Label>
+                  <Input
+                    id="quantity"
+                    name="quantity"
+                    type="number"
+                    value={addForm.quantity}
+                    onChange={handleAddChange}
+                    className={addErrors.quantity ? "border-red-500" : ""}
+                    min="1"
+                  />
+                  {addErrors.quantity && <p className="text-sm text-red-500">{addErrors.quantity}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="collection_place">Collection Place *</Label>
+                  <Input
+                    id="collection_place"
+                    name="collection_place"
+                    value={addForm.collection_place}
+                    onChange={handleAddChange}
+                    className={addErrors.collection_place ? "border-red-500" : ""}
+                  />
+                  {addErrors.collection_place && <p className="text-sm text-red-500">{addErrors.collection_place}</p>}
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                    {loading ? "Saving..." : "Add Request"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* View Modal */}
+          <Dialog open={!!viewNote} onOpenChange={() => setViewNote(null)}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Subsidy Request Details</DialogTitle>
+              </DialogHeader>
+              {viewNote && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">House ID</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.house_id}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Subsidy</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.subsidy_name}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Category</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.category || viewNote.subsidy_category}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Quantity</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.quantity}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Collection Place</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.collection_place}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Status</span>
+                    <span className="font-semibold">
+                      <Badge variant={statusVariantMap[viewNote.subsidies_status] || "secondary"}>
+                        {viewNote.subsidies_status?.charAt(0).toUpperCase() + viewNote.subsidies_status?.slice(1)}
+                      </Badge>
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 sm:col-span-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Address</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.house_address}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Flood</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.flood_name}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Grama Sevaka ID</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.grama_sevaka_id}</span>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Close</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Update Status Modal */}
+          <Dialog open={!!updateStatusNote} onOpenChange={() => setUpdateStatusNote(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Update Status</DialogTitle>
+              </DialogHeader>
+              <div>Are you sure you want to mark this request as <b>collected</b>?</div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="button" className="bg-blue-600 hover:bg-blue-700" onClick={handleStatusSubmit} disabled={statusLoading}>
+                  {statusLoading ? "Updating..." : "Mark as Collected"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
 
 export default SubsidyNotes;

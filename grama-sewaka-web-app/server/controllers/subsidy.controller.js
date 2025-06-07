@@ -55,7 +55,7 @@ export const createSubsidyRequest = async (req, res) => {
       return res.status(404).json({ error: 'Subsidy not found' });
     }
 
-    if (subsidyCheck[0].subsidies_status !== 'available') {
+    if (subsidyCheck[0].subsidies_status !== 'active') {
       return res.status(400).json({ error: 'Subsidy is not active' });
     }
 
@@ -156,8 +156,8 @@ export const updateSubsidyRequestStatus = async (req, res) => {
 
     const oldStatus = existingRequest[0].subsidies_status;
 
-    //if changing from approved/distributed back to rejected, restore quantity
-    if ((oldStatus === 'approved' || oldStatus === 'distributed') && subsidies_status === 'rejected') {
+    //if changing from pending to collected
+    if ((oldStatus === 'pending') && subsidies_status === 'rejected') {
       await connection.query(
         'UPDATE subsidies SET current_quantity = current_quantity + ? WHERE subsidies_id = ?',
         [existingRequest[0].quantity, existingRequest[0].subsidies_id]
@@ -343,6 +343,50 @@ export const getSubsidyRequestsByDivisionalSecretariat = async (req, res) => {
 
   } catch (error) {
     logger.error('Error getting subsidy requests by divisional secretariat:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+//update subsidy
+export const updateSubsidy = async (req, res) => {
+  try {
+    const { subsidy_id } = req.params;
+    const { subsidy_name, category, quantity, subsidies_status } = req.body;
+
+    //get current subsidy
+    const [rows] = await pool.query('SELECT subsidy_name, category, quantity, current_quantity, subsidies_status FROM subsidies WHERE subsidies_id = ?', [subsidy_id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Subsidy not found' });
+    }
+    const old = rows[0];
+
+    //use new value if provided, else old value
+    const newSubsidyName = subsidy_name !== undefined ? subsidy_name : old.subsidy_name;
+    const newCategory = category !== undefined ? category : old.category;
+    const newStatus = subsidies_status !== undefined ? subsidies_status : old.subsidies_status;
+    let newQuantity = old.quantity;
+    let newCurrentQuantity = old.current_quantity;
+
+    //only update quantity if provided
+    if (quantity !== undefined) {
+      newQuantity = Number(quantity);
+      //if new quantity < current_quantity, reject
+      if (newQuantity < old.current_quantity) {
+        return res.status(400).json({ error: 'New quantity cannot be less than current available quantity' });
+      }
+      //calculate new current_quantity
+      const quantityDiff = newQuantity - old.quantity;
+      newCurrentQuantity = old.current_quantity + quantityDiff;
+    }
+
+    await pool.query(
+      'UPDATE subsidies SET subsidy_name = ?, category = ?, quantity = ?, current_quantity = ?, subsidies_status = ? WHERE subsidies_id = ?',
+      [newSubsidyName, newCategory, newQuantity, newCurrentQuantity, newStatus, subsidy_id]
+    );
+
+    res.json({ message: 'Subsidy updated successfully' });
+  } catch (error) {
+    logger.error('Error updating subsidy:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
