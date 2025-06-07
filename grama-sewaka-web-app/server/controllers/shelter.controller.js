@@ -350,20 +350,38 @@ export const approveShelterRequest = async (req, res, next) => {
     const { shelter_id } = req.body;
 
     try {
-        //get government officer's divisional secretariat ID
-        const [officer] = await pool.query(
-            'SELECT divisional_secretariat_id FROM government_officer WHERE government_officer_id = ?',
-            [req.user.id]
-        );
-
-        if (officer.length === 0) {
-            return res.status(404).json({
+        // Determine user role and divisional_secretariat_id
+        let divisionalSecretariatId;
+        if (req.user.role === 'government_officer') {
+            const [officer] = await pool.query(
+                'SELECT divisional_secretariat_id FROM government_officer WHERE government_officer_id = ?',
+                [req.user.id]
+            );
+            if (officer.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Government officer not found"
+                });
+            }
+            divisionalSecretariatId = officer[0].divisional_secretariat_id;
+        } else if (req.user.role === 'grama_sevaka') {
+            const [gs] = await pool.query(
+                'SELECT divisional_secretariat_id FROM grama_sevaka WHERE grama_sevaka_id = ?',
+                [req.user.id]
+            );
+            if (gs.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Grama Sevaka not found"
+                });
+            }
+            divisionalSecretariatId = gs[0].divisional_secretariat_id;
+        } else {
+            return res.status(403).json({
                 success: false,
-                message: "Government officer not found"
+                message: "Unauthorized role"
             });
         }
-
-        const divisionalSecretariatId = officer[0].divisional_secretariat_id;
 
         //check if shelter request exists and is pending
         const [request] = await pool.query(
@@ -453,3 +471,4 @@ export const approveShelterRequest = async (req, res, next) => {
         next(error);
     }
 };
+
