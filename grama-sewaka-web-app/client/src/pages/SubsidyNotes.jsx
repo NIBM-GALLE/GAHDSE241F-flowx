@@ -11,14 +11,13 @@ import {
   CardTitle,
   CardContent,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, PlusCircle, Download } from "lucide-react"
+import { Search, PlusCircle } from "lucide-react"
 import { useSubsidyRequestStore } from "@/stores/useSubsidyRequestStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
@@ -178,28 +177,31 @@ function SubsidyNotes() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Farmer</TableHead>
-                      <TableHead>NIC</TableHead>
-                      <TableHead>Details</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>House ID</TableHead>
+                      <TableHead>Subsidy</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Quantity</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredNotes.length > 0 ? (
                       filteredNotes.map((note) => (
                         <TableRow key={note.subsidy_house_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <TableCell className="font-medium">{note.householder_name}</TableCell>
-                          <TableCell>{note.nic}</TableCell>
-                          <TableCell className="max-w-[300px] truncate">{note.note || note.collection_place}</TableCell>
-                          <TableCell>{note.amount ? `LKR ${note.amount}` : "-"}</TableCell>
+                          <TableCell>{note.house_id}</TableCell>
+                          <TableCell>{note.subsidy_name}</TableCell>
+                          <TableCell>{note.category || note.subsidy_category}</TableCell>
+                          <TableCell>{note.quantity}</TableCell>
                           <TableCell>
                             <Badge variant={statusVariantMap[note.subsidies_status] || "secondary"}>
                               {note.subsidies_status?.charAt(0).toUpperCase() + note.subsidies_status?.slice(1)}
                             </Badge>
                           </TableCell>
-                          <TableCell>{note.created_at ? note.created_at.split("T")[0] : "-"}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button size="sm" variant="outline" onClick={() => {/* TODO: view handler */}}>View</Button>
+                            <Button size="sm" variant="default" onClick={() => {/* TODO: update status handler */}}>Update Status</Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -218,23 +220,6 @@ function SubsidyNotes() {
                   </TableBody>
                 </Table>
               </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t px-6 py-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{filteredNotes.length}</span> of <span className="font-medium">{requests.length}</span> records
-                </div>
-                <div className="space-x-3">
-                  <Button variant="outline" size="sm">
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    <Download className="h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              </CardFooter>
             </Card>
           </div>
           {/* Add Record Modal */}
