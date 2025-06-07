@@ -1,7 +1,7 @@
 "use client";
 import { LogOut, CircleUserRound } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import Link from "next/link"; 
+import { Link } from "react-router-dom"; 
 
 import {
   DropdownMenu,

@@ -22,6 +22,8 @@ import AdminProfile from "./pages/AdminProfilePage";
 import Admin from "./components/dashboard/Admin";
 import AnnouncementList from "./pages/AnnouncementList";
 import AddSubsidy from "./pages/AddSubsidy";
+import CreateFloodEvent from "./pages/CreateFloodEvent";
+import FloodDetails from "./pages/FloodDetails";
 
 function App() {
   return (
@@ -54,6 +56,11 @@ function App() {
 
           <Route path="/admin-profile" element={<AdminProfile />} />
           <Route path="/admin" element={<Admin />} />
+
+          <Route path="/create-flood-event" element={<CreateFloodEvent />} />
+
+          <Route path="/flood-details" element={<FloodDetails />} />
+            
         </Routes>
     </ThemeProvider>
   );
