@@ -46,6 +46,14 @@ import {
 } from "@/components/ui/sidebar";
 import { useEffect, useMemo, useState } from "react";
 import { useShelterStore } from "@/stores/useShelterStore";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 function CreateShelter() {
   const {
@@ -84,6 +92,9 @@ function CreateShelter() {
   const [errors, setErrors] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [editErrors, setEditErrors] = useState({});
 
   useEffect(() => {
     fetchShelters();
@@ -152,25 +163,56 @@ function CreateShelter() {
   };
 
   const handleEdit = (shelter) => {
-    setFormData({
-      shelter_name: shelter.shelter_name,
-      shelter_size: shelter.shelter_size,
-      shelter_address: shelter.shelter_address,
-      available: shelter.available,
-      shelter_status: shelter.shelter_status,
-    });
+    setEditForm({ ...shelter });
     setEditingId(shelter.shelter_id);
+    setEditModalOpen(true);
+    setEditErrors({});
+  };
+
+  const handleEditChange = (e) => {
+    const { id, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [id]: value }));
+    if (editErrors[id]) setEditErrors((prev) => ({ ...prev, [id]: null }));
+  };
+
+  const handleEditSelectChange = (id, value) => {
+    setEditForm((prev) => ({ ...prev, [id]: value }));
+    if (editErrors[id]) setEditErrors((prev) => ({ ...prev, [id]: null }));
+  };
+
+  const validateEdit = () => {
+    const errs = {};
+    if (!editForm.shelter_name) errs.shelter_name = 'Shelter name is required';
+    if (!editForm.shelter_size) errs.shelter_size = 'Capacity is required';
+    if (!editForm.shelter_address) errs.shelter_address = 'Address is required';
+    if (editForm.available === '' || editForm.available === null || editForm.available === undefined) errs.available = 'Available is required';
+    if (!editForm.shelter_status) errs.shelter_status = 'Status is required';
+    setEditErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    if (!validateEdit()) return;
+    // Only send changed fields
+    const changedFields = {};
+    Object.keys(editForm).forEach((key) => {
+      if (editForm[key] !== undefined && editForm[key] !== null && editForm[key] !== '' && editForm[key] !== shelters.find(s => s.shelter_id === editingId)?.[key]) {
+        changedFields[key] = editForm[key];
+      }
+    });
+    if (Object.keys(changedFields).length > 0) {
+      updateShelter(editingId, changedFields);
+    }
+    setEditModalOpen(false);
+    setEditingId(null);
   };
 
   const handleCancelEdit = () => {
+    setEditModalOpen(false);
     setEditingId(null);
-    setFormData({
-      shelter_name: '',
-      shelter_size: '',
-      shelter_address: '',
-      available: '',
-      shelter_status: 'active',
-    });
+    setEditForm({});
+    setEditErrors({});
   };
 
   const getStatusBadge = (status) => {
@@ -455,6 +497,95 @@ function CreateShelter() {
           </div>
         </main>
       </SidebarInset>
+
+      {/* Edit Shelter Dialog */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-xl p-0">
+          <DialogHeader className="px-6 py-4 rounded-t-xl">
+            <DialogTitle className="text-black text-lg flex items-center gap-2">
+              <Edit className="h-5 w-5" /> Edit Shelter
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-6 px-6 py-6 bg-white dark:bg-gray-900 rounded-b-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="shelter_name">Shelter Name *</Label>
+                <Input
+                  id="shelter_name"
+                  value={editForm.shelter_name || ''}
+                  onChange={handleEditChange}
+                  required
+                  className="focus:ring-2 focus:ring-blue-500"
+                />
+                {editErrors.shelter_name && <p className="text-sm text-red-500">{editErrors.shelter_name}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shelter_address">Address *</Label>
+                <Input
+                  id="shelter_address"
+                  value={editForm.shelter_address || ''}
+                  onChange={handleEditChange}
+                  required
+                  className="focus:ring-2 focus:ring-blue-500"
+                />
+                {editErrors.shelter_address && <p className="text-sm text-red-500">{editErrors.shelter_address}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="shelter_size">Total Capacity *</Label>
+                <Input
+                  id="shelter_size"
+                  type="number"
+                  value={editForm.shelter_size || ''}
+                  onChange={handleEditChange}
+                  min="1"
+                  required
+                  className="focus:ring-2 focus:ring-blue-500"
+                />
+                {editErrors.shelter_size && <p className="text-sm text-red-500">{editErrors.shelter_size}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="available">Currently Available</Label>
+                <Input
+                  id="available"
+                  type="number"
+                  value={editForm.available || ''}
+                  onChange={handleEditChange}
+                  min="0"
+                  className="focus:ring-2 focus:ring-blue-500"
+                />
+                {editErrors.available && <p className="text-sm text-red-500">{editErrors.available}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shelter_status">Status</Label>
+                <Select
+                  value={editForm.shelter_status || ''}
+                  onValueChange={(value) => handleEditSelectChange('shelter_status', value)}
+                >
+                  <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="full">Full</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editErrors.shelter_status && <p className="text-sm text-red-500">{editErrors.shelter_status}</p>}
+              </div>
+            </div>
+            <DialogFooter className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <DialogClose asChild>
+                <Button type="button" variant="outline" className="border-gray-300 dark:border-gray-700">Cancel</Button>
+              </DialogClose>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow">
+                <Save className="h-4 w-4 mr-2" /> Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

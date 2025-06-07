@@ -69,7 +69,7 @@ export const useShelterStore = create((set, get) => ({
     set({ updateStatus: null, error: null });
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`/api/shelters/update/${shelter_id}`, payload, {
+      const res = await axios.put(`/api/shelter/update/${shelter_id}`, payload, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       set({ updateStatus: res.data, error: null });
