@@ -19,80 +19,88 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Search, PlusCircle, Download } from "lucide-react"
-
-const initialNotes = [
-  {
-    id: 1,
-    name: "Kamal Perera",
-    nic: "951234567V",
-    note: "Approved for fertilizer subsidy due to consistent crop yield.",
-    date: "2025-03-15",
-    status: "approved",
-    amount: "LKR 15,000",
-  },
-  {
-    id: 2,
-    name: "Nimal Silva",
-    nic: "902345678V",
-    note: "Subsidy granted for irrigation improvement.",
-    date: "2025-02-28",
-    status: "approved",
-    amount: "LKR 25,000",
-  },
-  {
-    id: 3,
-    name: "Sunil Rathnayake",
-    nic: "871122334V",
-    note: "Pending follow-up on land ownership verification.",
-    date: "2025-01-10",
-    status: "pending",
-    amount: "LKR 10,000",
-  },
-  {
-    id: 4,
-    name: "Anjali Fernando",
-    nic: "981234567V",
-    note: "Subsidy application under review.",
-    date: "2025-03-01",
-    status: "review",
-    amount: "LKR 12,000",
-  },
-  {
-    id: 5,
-    name: "Dilani Jayasinghe",
-    nic: "891234567V",
-    note: "Approved for seed subsidy for next planting season.",
-    date: "2025-02-20",
-    status: "approved",
-    amount: "LKR 8,000",
-  },
-  {
-    id: 6,
-    name: "Ravi Kumara",
-    nic: "781234567V",
-    note: "Subsidy granted for equipment purchase.",
-    date: "2025-01-15",
-    status: "approved",
-    amount: "LKR 35,000",
-  },
-]
+import { useSubsidyRequestStore } from "@/stores/useSubsidyRequestStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 const statusVariantMap = {
   approved: "success",
   pending: "warning",
   review: "secondary",
-}
+  rejected: "destructive",
+  distributed: "success",
+};
 
 function SubsidyNotes() {
-  const [search, setSearch] = useState("")
-  const [isAddingNote, setIsAddingNote] = useState(false)
-  
-  const filteredNotes = initialNotes.filter(
+  const [search, setSearch] = useState("");
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [addForm, setAddForm] = useState({
+    house_id: "",
+    subsidies_id: "",
+    category: "",
+    quantity: "",
+    collection_place: "",
+  });
+  const [addErrors, setAddErrors] = useState({});
+
+  const {
+    requests,
+    subsidies,
+    loading,
+    error,
+    success,
+    fetchSubsidyRequests,
+    fetchAvailableSubsidies,
+    createSubsidyRequest,
+    clearStatus,
+  } = useSubsidyRequestStore();
+
+  React.useEffect(() => {
+    fetchSubsidyRequests();
+    fetchAvailableSubsidies();
+  }, [fetchSubsidyRequests, fetchAvailableSubsidies]);
+
+  const filteredNotes = requests.filter(
     (note) =>
-      note.name.toLowerCase().includes(search.toLowerCase()) ||
-      note.nic.toLowerCase().includes(search.toLowerCase()) ||
-      note.note.toLowerCase().includes(search.toLowerCase())
-  )
+      (note.householder_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (note.nic?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (note.note?.toLowerCase() || "").includes(search.toLowerCase())
+  );
+
+  const handleAddChange = (e) => {
+    const { name, value } = e.target;
+    setAddForm((prev) => ({ ...prev, [name]: value }));
+    if (addErrors[name]) setAddErrors((prev) => ({ ...prev, [name]: null }));
+    if (error || success) clearStatus();
+  };
+
+  const validateAdd = () => {
+    const errs = {};
+    if (!addForm.house_id) errs.house_id = "House is required";
+    if (!addForm.subsidies_id) errs.subsidies_id = "Subsidy is required";
+    if (!addForm.category) errs.category = "Category is required";
+    if (!addForm.quantity || isNaN(addForm.quantity) || Number(addForm.quantity) <= 0) {
+      errs.quantity = "Valid quantity is required";
+    }
+    if (!addForm.collection_place) errs.collection_place = "Collection place is required";
+    setAddErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateAdd()) return;
+    try {
+      await createSubsidyRequest({
+        ...addForm,
+        quantity: Number(addForm.quantity),
+      });
+      setIsAddingNote(false);
+      setAddForm({ house_id: "", subsidies_id: "", category: "", quantity: "", collection_place: "" });
+      fetchSubsidyRequests();
+    } catch {
+      // error handled in store
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -181,17 +189,17 @@ function SubsidyNotes() {
                   <TableBody>
                     {filteredNotes.length > 0 ? (
                       filteredNotes.map((note) => (
-                        <TableRow key={note.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <TableCell className="font-medium">{note.name}</TableCell>
+                        <TableRow key={note.subsidy_house_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                          <TableCell className="font-medium">{note.householder_name}</TableCell>
                           <TableCell>{note.nic}</TableCell>
-                          <TableCell className="max-w-[300px] truncate">{note.note}</TableCell>
-                          <TableCell>{note.amount}</TableCell>
+                          <TableCell className="max-w-[300px] truncate">{note.note || note.collection_place}</TableCell>
+                          <TableCell>{note.amount ? `LKR ${note.amount}` : "-"}</TableCell>
                           <TableCell>
-                            <Badge variant={statusVariantMap[note.status]}>
-                              {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
+                            <Badge variant={statusVariantMap[note.subsidies_status] || "secondary"}>
+                              {note.subsidies_status?.charAt(0).toUpperCase() + note.subsidies_status?.slice(1)}
                             </Badge>
                           </TableCell>
-                          <TableCell>{note.date}</TableCell>
+                          <TableCell>{note.created_at ? note.created_at.split("T")[0] : "-"}</TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -212,7 +220,7 @@ function SubsidyNotes() {
               </CardContent>
               <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t px-6 py-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{filteredNotes.length}</span> of <span className="font-medium">{initialNotes.length}</span> records
+                  Showing <span className="font-medium">{filteredNotes.length}</span> of <span className="font-medium">{requests.length}</span> records
                 </div>
                 <div className="space-x-3">
                   <Button variant="outline" size="sm">
@@ -229,10 +237,92 @@ function SubsidyNotes() {
               </CardFooter>
             </Card>
           </div>
+          {/* Add Record Modal */}
+          <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Subsidy Request</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="house_id">House ID *</Label>
+                  <Input
+                    id="house_id"
+                    name="house_id"
+                    value={addForm.house_id}
+                    onChange={handleAddChange}
+                    className={addErrors.house_id ? "border-red-500" : ""}
+                  />
+                  {addErrors.house_id && <p className="text-sm text-red-500">{addErrors.house_id}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subsidies_id">Subsidy *</Label>
+                  <select
+                    id="subsidies_id"
+                    name="subsidies_id"
+                    value={addForm.subsidies_id}
+                    onChange={handleAddChange}
+                    className={`w-full border rounded px-2 py-2 ${addErrors.subsidies_id ? "border-red-500" : ""}`}
+                  >
+                    <option value="">Select subsidy</option>
+                    {subsidies.map((s) => (
+                      <option key={s.subsidies_id} value={s.subsidies_id}>
+                        {s.subsidy_name} ({s.category})
+                      </option>
+                    ))}
+                  </select>
+                  {addErrors.subsidies_id && <p className="text-sm text-red-500">{addErrors.subsidies_id}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Input
+                    id="category"
+                    name="category"
+                    value={addForm.category}
+                    onChange={handleAddChange}
+                    className={addErrors.category ? "border-red-500" : ""}
+                  />
+                  {addErrors.category && <p className="text-sm text-red-500">{addErrors.category}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity *</Label>
+                  <Input
+                    id="quantity"
+                    name="quantity"
+                    type="number"
+                    value={addForm.quantity}
+                    onChange={handleAddChange}
+                    className={addErrors.quantity ? "border-red-500" : ""}
+                    min="1"
+                  />
+                  {addErrors.quantity && <p className="text-sm text-red-500">{addErrors.quantity}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="collection_place">Collection Place *</Label>
+                  <Input
+                    id="collection_place"
+                    name="collection_place"
+                    value={addForm.collection_place}
+                    onChange={handleAddChange}
+                    className={addErrors.collection_place ? "border-red-500" : ""}
+                  />
+                  {addErrors.collection_place && <p className="text-sm text-red-500">{addErrors.collection_place}</p>}
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                    {loading ? "Saving..." : "Add Request"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
 
 export default SubsidyNotes;

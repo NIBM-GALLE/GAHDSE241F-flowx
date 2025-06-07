@@ -55,7 +55,7 @@ export const createSubsidyRequest = async (req, res) => {
       return res.status(404).json({ error: 'Subsidy not found' });
     }
 
-    if (subsidyCheck[0].subsidies_status !== 'available') {
+    if (subsidyCheck[0].subsidies_status !== 'active') {
       return res.status(400).json({ error: 'Subsidy is not active' });
     }
 
