@@ -87,23 +87,41 @@ export const createShelter = async (req, res, next) => {
     }
 };
 
-//get pending shelter requests
+//get pending shelter requests (supports both government officer and grama sevaka roles)
 export const getShelterRequests = async (req, res, next) => {
     try {
-        //get government officer's divisional secretariat ID
-        const [officer] = await pool.query(
-            'SELECT divisional_secretariat_id FROM government_officer WHERE government_officer_id = ?',
-            [req.user.id]
-        );
-
-        if (officer.length === 0) {
-            return res.status(404).json({
+        // Determine user role and divisional_secretariat_id
+        let divisionalSecretariatId;
+        if (req.user.role === 'government_officer') {
+            const [officer] = await pool.query(
+                'SELECT divisional_secretariat_id FROM government_officer WHERE government_officer_id = ?',
+                [req.user.id]
+            );
+            if (officer.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Government officer not found"
+                });
+            }
+            divisionalSecretariatId = officer[0].divisional_secretariat_id;
+        } else if (req.user.role === 'grama_sevaka') {
+            const [gs] = await pool.query(
+                'SELECT divisional_secretariat_id FROM grama_sevaka WHERE grama_sevaka_id = ?',
+                [req.user.id]
+            );
+            if (gs.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Grama Sevaka not found"
+                });
+            }
+            divisionalSecretariatId = gs[0].divisional_secretariat_id;
+        } else {
+            return res.status(403).json({
                 success: false,
-                message: "Government officer not found"
+                message: "Unauthorized role"
             });
         }
-
-        const divisionalSecretariatId = officer[0].divisional_secretariat_id;
 
         //get current flood ID
         const floodId = await getCurrentOrLatestFloodId();
@@ -468,6 +486,111 @@ export const approveShelterRequest = async (req, res, next) => {
 
     } catch (error) {
         console.error("Approve shelter request error:", error);
+        next(error);
+    }
+};
+
+//get pending shelter requests for Grama Sevaka
+export const getShelterRequestsByGS = async (req, res, next) => {
+    try {
+        //get grama sevaka's division
+        const [gs] = await pool.query(
+            'SELECT grama_niladhari_division_id FROM grama_sevaka WHERE grama_sevaka_id = ?',
+            [req.user.id]
+        );
+        if (gs.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Grama Sevaka not found"
+            });
+        }
+        const divisionId = gs[0].grama_niladhari_division_id;
+        //get current flood ID
+        const floodId = await getCurrentOrLatestFloodId();
+        if (!floodId) {
+            return res.status(200).json({
+                success: true,
+                message: "No active flood found",
+                data: []
+            });
+        }
+        //get pending shelter requests for this GS's division
+        const [requests] = await pool.query(
+            `SELECT sr.*, h.address as house_address, h.members as house_members,
+                    h.latitude, h.longitude, h.distance_to_river,
+                    m.first_name, m.last_name, m.member_email, m.member_phone_number,
+                    f.flood_name, f.start_date, f.end_date
+             FROM shelter_request sr
+             JOIN house h ON sr.house_id = h.house_id
+             JOIN member m ON h.house_id = m.house_id
+             JOIN flood f ON sr.flood_id = f.flood_id
+             WHERE sr.flood_id = ? 
+             AND sr.shelter_request_status = 'pending'
+             AND h.grama_niladhari_division_id = ?
+             ORDER BY sr.emergency_level DESC, sr.shelter_request_id ASC`,
+            [floodId, divisionId]
+        );
+        res.status(200).json({
+            success: true,
+            message: requests.length > 0 ? "Pending shelter requests found" : "No pending shelter requests",
+            data: requests
+        });
+    } catch (error) {
+        console.error("Get GS shelter requests error:", error);
+        next(error);
+    }
+};
+
+//get approved shelter requests for Grama Sevaka
+export const getApprovedRequestsByGS = async (req, res, next) => {
+    try {
+        //get grama sevaka's division
+        const [gs] = await pool.query(
+            'SELECT grama_niladhari_division_id FROM grama_sevaka WHERE grama_sevaka_id = ?',
+            [req.user.id]
+        );
+        if (gs.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Grama Sevaka not found"
+            });
+        }
+        const divisionId = gs[0].grama_niladhari_division_id;
+        //get current flood ID
+        const floodId = await getCurrentOrLatestFloodId();
+        if (!floodId) {
+            return res.status(200).json({
+                success: true,
+                message: "No active flood found",
+                data: []
+            });
+        }
+        //get approved shelter requests for this GS's division
+        const [requests] = await pool.query(
+            `SELECT sr.*, h.address as house_address, h.members as house_members,
+                    h.latitude, h.longitude, h.distance_to_river,
+                    m.first_name, m.last_name, m.member_email, m.member_phone_number,
+                    f.flood_name, f.start_date, f.end_date,
+                    s.shelter_name, s.shelter_address, s.shelter_size
+             FROM shelter_request sr
+             JOIN house h ON sr.house_id = h.house_id
+             JOIN member m ON h.house_id = m.house_id
+             JOIN flood f ON sr.flood_id = f.flood_id
+             LEFT JOIN shelter_house sh ON sr.house_id = sh.house_id AND sr.flood_id = sh.flood_id
+             LEFT JOIN shelter s ON sh.shelter_id = s.shelter_id
+             WHERE sr.flood_id = ? 
+             AND sr.shelter_request_status = 'approved'
+             AND h.grama_niladhari_division_id = ?
+             ORDER BY sr.shelter_request_id DESC`,
+            [floodId, divisionId]
+        );
+        res.status(200).json({
+            success: true,
+            message: requests.length > 0 ? "Approved shelter requests found" : "No approved shelter requests",
+            data: requests
+        });
+    } catch (error) {
+        console.error("Get GS approved requests error:", error);
         next(error);
     }
 };
