@@ -156,8 +156,8 @@ export const updateSubsidyRequestStatus = async (req, res) => {
 
     const oldStatus = existingRequest[0].subsidies_status;
 
-    //if changing from approved/distributed back to rejected, restore quantity
-    if ((oldStatus === 'approved' || oldStatus === 'distributed') && subsidies_status === 'rejected') {
+    //if changing from pending to collected
+    if ((oldStatus === 'pending') && subsidies_status === 'rejected') {
       await connection.query(
         'UPDATE subsidies SET current_quantity = current_quantity + ? WHERE subsidies_id = ?',
         [existingRequest[0].quantity, existingRequest[0].subsidies_id]

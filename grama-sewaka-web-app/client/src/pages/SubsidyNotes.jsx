@@ -40,6 +40,9 @@ function SubsidyNotes() {
     collection_place: "",
   });
   const [addErrors, setAddErrors] = useState({});
+  const [viewNote, setViewNote] = useState(null);
+  const [updateStatusNote, setUpdateStatusNote] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const {
     requests,
@@ -50,6 +53,7 @@ function SubsidyNotes() {
     fetchSubsidyRequests,
     fetchAvailableSubsidies,
     createSubsidyRequest,
+    updateSubsidyRequestStatus,
     clearStatus,
   } = useSubsidyRequestStore();
 
@@ -98,6 +102,22 @@ function SubsidyNotes() {
       fetchSubsidyRequests();
     } catch {
       // error handled in store
+    }
+  };
+
+  const handleView = (note) => setViewNote(note);
+  const handleUpdateStatus = (note) => setUpdateStatusNote(note);
+  const handleStatusSubmit = async () => {
+    if (!updateStatusNote) return;
+    setStatusLoading(true);
+    try {
+      await updateSubsidyRequestStatus(updateStatusNote.subsidy_house_id, "collected");
+      setUpdateStatusNote(null);
+      fetchSubsidyRequests();
+    } catch {
+      // error handled in store
+    } finally {
+      setStatusLoading(false);
     }
   };
 
@@ -199,8 +219,8 @@ function SubsidyNotes() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right space-x-2">
-                            <Button size="sm" variant="outline" onClick={() => {/* TODO: view handler */}}>View</Button>
-                            <Button size="sm" variant="default" onClick={() => {/* TODO: update status handler */}}>Update Status</Button>
+                            <Button size="sm" variant="outline" onClick={() => handleView(note)}>View</Button>
+                            <Button size="sm" variant="default" onClick={() => handleUpdateStatus(note)}>Update Status</Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -302,6 +322,82 @@ function SubsidyNotes() {
                   </Button>
                 </DialogFooter>
               </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* View Modal */}
+          <Dialog open={!!viewNote} onOpenChange={() => setViewNote(null)}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Subsidy Request Details</DialogTitle>
+              </DialogHeader>
+              {viewNote && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">House ID</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.house_id}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Subsidy</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.subsidy_name}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Category</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.category || viewNote.subsidy_category}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Quantity</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.quantity}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Collection Place</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.collection_place}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Status</span>
+                    <span className="font-semibold">
+                      <Badge variant={statusVariantMap[viewNote.subsidies_status] || "secondary"}>
+                        {viewNote.subsidies_status?.charAt(0).toUpperCase() + viewNote.subsidies_status?.slice(1)}
+                      </Badge>
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 sm:col-span-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Address</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.house_address}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Flood</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.flood_name}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Grama Sevaka ID</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{viewNote.grama_sevaka_id}</span>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Close</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Update Status Modal */}
+          <Dialog open={!!updateStatusNote} onOpenChange={() => setUpdateStatusNote(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Update Status</DialogTitle>
+              </DialogHeader>
+              <div>Are you sure you want to mark this request as <b>collected</b>?</div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="button" className="bg-blue-600 hover:bg-blue-700" onClick={handleStatusSubmit} disabled={statusLoading}>
+                  {statusLoading ? "Updating..." : "Mark as Collected"}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </main>

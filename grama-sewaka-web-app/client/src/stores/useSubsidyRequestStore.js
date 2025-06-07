@@ -57,7 +57,7 @@ export const useSubsidyRequestStore = create((set) => ({
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `/api/subsidy/request/${subsidy_house_id}/status`,
+        `/api/subsidy/requests/${subsidy_house_id}/status`,
         { subsidies_status },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
