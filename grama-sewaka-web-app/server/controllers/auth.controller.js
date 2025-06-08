@@ -192,3 +192,32 @@ export const loginUser = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get user details by role and id
+export const getUserDetails = async (req, res, next) => {
+  const { role, id } = req.params;
+  try {
+    let query, params;
+    if (role === 'admin') {
+      query = 'SELECT * FROM admin WHERE admin_id = ?';
+      params = [id];
+    } else if (role === 'government_officer') {
+      query = 'SELECT * FROM government_officer WHERE government_officer_id = ?';
+      params = [id];
+    } else if (role === 'grama_sevaka') {
+      query = 'SELECT * FROM grama_sevaka WHERE grama_sevaka_id = ?';
+      params = [id];
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+    const [users] = await pool.query(query, params);
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.status(200).json({ success: true, data: users[0] });
+  } catch (error) {
+    console.error('Get user details error:', error);
+    next(error);
+  }
+};
+
