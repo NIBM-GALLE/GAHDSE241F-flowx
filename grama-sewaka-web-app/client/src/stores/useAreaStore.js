@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function useAreaStore(form) {
   const [districts, setDistricts] = useState([]);
@@ -59,4 +59,33 @@ export function useAreaStore(form) {
   }, [selectedDivisionalSecretariat, form]);
 
   return { districts, divisionalSecretariats, gramaNiladhariDivisions };
+}
+
+// Area name caching and fetch utilities
+export function useAreaNameStore() {
+  const districtCache = useRef({});
+  const dsCache = useRef({});
+  const gndCache = useRef({});
+
+  const fetchAreaName = async (type, id, cache) => {
+    if (!id) return "";
+    if (cache.current[id]) return cache.current[id];
+    try {
+      const res = await fetch(`/api/area/name?type=${type}&id=${id}`);
+      const data = await res.json();
+      if (data.success) {
+        cache.current[id] = data.name;
+        return data.name;
+      }
+    } catch {
+      // ignore
+    }
+    return "";
+  };
+
+  const getDistrictNameById = (id) => fetchAreaName("district", id, districtCache);
+  const getDSNameById = (id) => fetchAreaName("divisional_secretariat", id, dsCache);
+  const getGNDNameById = (id) => fetchAreaName("grama_niladhari_division", id, gndCache);
+
+  return { getDistrictNameById, getDSNameById, getGNDNameById };
 }
