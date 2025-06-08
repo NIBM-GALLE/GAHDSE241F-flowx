@@ -23,6 +23,21 @@ export function useFloodStore() {
     }
   }
 
+  // Create new flood details
+  async function createFloodDetails(data, token) {
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/flood/details", data, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setLoading(false);
+      return res.data;
+    } catch (err) {
+      setLoading(false);
+      throw err.response?.data || err;
+    }
+  }
+
   // Get all floods
   async function getAllFloods(token) {
     setLoading(true);
@@ -137,6 +152,7 @@ export function useFloodStore() {
     floodDetails,
     loading,
     createFloodEvent,
+    createFloodDetails,
     getAllFloods,
     getFloodDetails,
     updateFloodStatus,

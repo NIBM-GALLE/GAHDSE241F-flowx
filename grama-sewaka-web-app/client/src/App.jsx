@@ -25,6 +25,7 @@ import AddSubsidy from "./pages/AddSubsidy";
 import CreateFloodEvent from "./pages/CreateFloodEvent";
 import FloodDetails from "./pages/FloodDetails";
 import FloodEvents from "./pages/FloodEvents";
+import CreateFloodDetails from "./pages/CreateFloodDetails";
 
 function App() {
   return (
@@ -61,6 +62,8 @@ function App() {
           <Route path="/create-flood-event" element={<CreateFloodEvent />} />
           <Route path="/flood-details" element={<FloodDetails />} />
           <Route path="/flood-events" element={<FloodEvents />} />
+
+          <Route path="/create-flood-details" element={<CreateFloodDetails />} />
             
         </Routes>
     </ThemeProvider>
