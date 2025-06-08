@@ -71,15 +71,25 @@ export function useUserStore() {
     return data;
   }
 
-  // Update user details by role and id
+  // Update user details by role and id (only changed fields)
   async function updateUserDetails(role, id, updates, tokenArg) {
+    // Only send changed fields
+    const allowedFields = {
+      admin: ['nic', 'first_name', 'last_name', 'address', 'admin_phone_number', 'admin_email'],
+      government_officer: ['nic', 'first_name', 'last_name', 'government_officer_email', 'government_officer_phone_number', 'address', 'district_id', 'divisional_secretariat_id'],
+      grama_sevaka: ['nic', 'first_name', 'last_name', 'grama_sevaka_phone_number', 'address', 'grama_sevaka_email', 'grama_niladhari_division_id', 'divisional_secretariat_id', 'district_id']
+    };
+    const filtered = {};
+    for (const key of allowedFields[role] || []) {
+      if (updates[key] !== undefined) filtered[key] = updates[key];
+    }
     const res = await fetch(`/api/auth/user/${role}/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         ...(tokenArg ? { Authorization: `Bearer ${tokenArg}` } : {}),
       },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(filtered),
     });
     let data;
     try {
