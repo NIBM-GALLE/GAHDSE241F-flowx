@@ -60,11 +60,11 @@ function App() {
           <Route path="/admin" element={<Admin />} />
 
           <Route path="/create-flood-event" element={<CreateFloodEvent />} />
-          <Route path="/flood-details" element={<FloodDetails />} />
           <Route path="/flood-events" element={<FloodEvents />} />
 
           <Route path="/create-flood-details" element={<CreateFloodDetails />} />
-            
+          <Route path="/flood-details" element={<FloodDetails />} />
+          
         </Routes>
     </ThemeProvider>
   );

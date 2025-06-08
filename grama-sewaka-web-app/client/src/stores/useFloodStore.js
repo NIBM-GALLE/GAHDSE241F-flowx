@@ -147,6 +147,53 @@ export function useFloodStore() {
     }
   }
 
+  // Get current flood details (from new endpoint)
+  async function getCurrentFloodDetails(token) {
+    setLoading(true);
+    try {
+      const res = await axios.get("/api/flood/details/current", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setFloodDetails(res.data.data ? [res.data.data] : []);
+      setLoading(false);
+      return res.data.data || null;
+    } catch (err) {
+      setLoading(false);
+      throw err.response?.data || err;
+    }
+  }
+
+  // Get all past flood details (excluding current)
+  async function getPastFloodDetails(token) {
+    setLoading(true);
+    try {
+      const res = await axios.get("/api/flood/details/past", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setFloodDetails(res.data.data || []);
+      setLoading(false);
+      return res.data.data || [];
+    } catch (err) {
+      setLoading(false);
+      throw err.response?.data || err;
+    }
+  }
+
+  // Update only changed fields for flood_details
+  async function updateFloodDetailsFields(flood_details_id, details, token) {
+    setLoading(true);
+    try {
+      const res = await axios.put(`/api/flood/details/${flood_details_id}/fields`, details, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setLoading(false);
+      return res.data;
+    } catch (err) {
+      setLoading(false);
+      throw err.response?.data || err;
+    }
+  }
+
   return {
     floods,
     floodDetails,
@@ -162,5 +209,9 @@ export function useFloodStore() {
     getPastFloods,
     currentFlood,
     pastFloods,
+    // New flood_details methods
+    getCurrentFloodDetails,
+    getPastFloodDetails,
+    updateFloodDetailsFields,
   };
 }
