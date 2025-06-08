@@ -222,23 +222,40 @@ export const getApprovedRequests = async (req, res, next) => {
     }
 };
 
-//get all shelters in officer's divisional secretariat
+//get all shelters in officer's or grama sevaka's divisional secretariat
 export const getShelters = async (req, res, next) => {
     try {
-        //get government officer's divisional secretariat ID
-        const [officer] = await pool.query(
-            'SELECT divisional_secretariat_id FROM government_officer WHERE government_officer_id = ?',
-            [req.user.id]
-        );
-
-        if (officer.length === 0) {
-            return res.status(404).json({
+        let divisionalSecretariatId;
+        if (req.user.role === 'government_officer') {
+            const [officer] = await pool.query(
+                'SELECT divisional_secretariat_id FROM government_officer WHERE government_officer_id = ?',
+                [req.user.id]
+            );
+            if (officer.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Government officer not found"
+                });
+            }
+            divisionalSecretariatId = officer[0].divisional_secretariat_id;
+        } else if (req.user.role === 'grama_sevaka') {
+            const [gs] = await pool.query(
+                'SELECT divisional_secretariat_id FROM grama_sevaka WHERE grama_sevaka_id = ?',
+                [req.user.id]
+            );
+            if (gs.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Grama Sevaka not found"
+                });
+            }
+            divisionalSecretariatId = gs[0].divisional_secretariat_id;
+        } else {
+            return res.status(403).json({
                 success: false,
-                message: "Government officer not found"
+                message: "Unauthorized role"
             });
         }
-
-        const divisionalSecretariatId = officer[0].divisional_secretariat_id;
 
         //get all shelters
         const [shelters] = await pool.query(
@@ -486,6 +503,43 @@ export const approveShelterRequest = async (req, res, next) => {
 
     } catch (error) {
         console.error("Approve shelter request error:", error);
+        next(error);
+    }
+};
+
+// Update shelter request status (e.g., reject)
+export const updateShelterRequestStatus = async (req, res, next) => {
+    const { shelter_request_id } = req.params;
+    const { status } = req.body;
+    try {
+        if (!status || !["rejected", "pending", "review"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or missing status"
+            });
+        }
+        // Only allow update if request exists and is pending
+        const [request] = await pool.query(
+            `SELECT * FROM shelter_request WHERE shelter_request_id = ? AND shelter_request_status = 'pending'`,
+            [shelter_request_id]
+        );
+        if (request.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Shelter request not found or not pending"
+            });
+        }
+        await pool.query(
+            `UPDATE shelter_request SET shelter_request_status = ? WHERE shelter_request_id = ?`,
+            [status, shelter_request_id]
+        );
+        res.status(200).json({
+            success: true,
+            message: `Shelter request status updated to ${status}`,
+            data: { shelter_request_id, status }
+        });
+    } catch (error) {
+        console.error("Update shelter request status error:", error);
         next(error);
     }
 };
