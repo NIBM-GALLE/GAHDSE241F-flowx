@@ -1,6 +1,18 @@
 import { create } from "zustand";
 import axios from "axios";
 
+// Helper to decode JWT and extract role
+function getRoleFromToken() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
 export const useShelterStore = create((set, get) => ({
   shelters: [],
   loading: false,
@@ -17,6 +29,7 @@ export const useShelterStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
+      // Always use the endpoint that returns all shelters for the user's divisional secretariat
       const res = await axios.get("/api/shelter/all", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -31,8 +44,8 @@ export const useShelterStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
-      // Determine role from token or localStorage (assume role is stored)
-      const role = localStorage.getItem("role");
+      // Use JWT to determine role
+      const role = getRoleFromToken() || localStorage.getItem("role");
       let url = "/api/shelter/officer/requests/pending";
       if (role === "grama_sevaka") {
         url = "/api/shelter/gs/requests/pending";
@@ -53,7 +66,7 @@ export const useShelterStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
+      const role = getRoleFromToken() || localStorage.getItem("role");
       let url = "/api/shelter/officer/requests/approved";
       if (role === "grama_sevaka") {
         url = "/api/shelter/gs/requests/approved";
@@ -148,19 +161,29 @@ export const useShelterStore = create((set, get) => ({
     }
   },
 
-  updateShelterRequestStatus: async (shelter_request_id, newStatus) => {
+  updateShelterRequestStatus: async (shelter_request_id, shelter_id, status) => {
     set({ updateStatus: null, error: null });
     try {
       const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role");
-      let url = `/api/shelter/officer/approve/${shelter_request_id}`;
-      if (role === "grama_sevaka") {
-        url = `/api/shelter/gs/approve/${shelter_request_id}`;
+      const role = getRoleFromToken() || localStorage.getItem("role");
+      let url;
+      let body;
+      if (shelter_id) {
+        url = role === "grama_sevaka"
+          ? `/api/shelter/gs/approve/${shelter_request_id}`
+          : `/api/shelter/officer/approve/${shelter_request_id}`;
+        body = { shelter_id };
+      } else if (status === "rejected") {
+        url = role === "grama_sevaka"
+          ? `/api/shelter/gs/update-status/${shelter_request_id}`
+          : `/api/shelter/officer/update-status/${shelter_request_id}`;
+        body = { status: "rejected" };
+      } else {
+        throw new Error("Invalid arguments for updateShelterRequestStatus");
       }
-      // For status update, send { status: newStatus }
       const res = await axios.post(
         url,
-        { status: newStatus },
+        body,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       set({ updateStatus: res.data, error: null });
