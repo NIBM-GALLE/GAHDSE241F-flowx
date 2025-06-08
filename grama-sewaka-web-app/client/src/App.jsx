@@ -24,6 +24,7 @@ import AnnouncementList from "./pages/AnnouncementList";
 import AddSubsidy from "./pages/AddSubsidy";
 import CreateFloodEvent from "./pages/CreateFloodEvent";
 import FloodDetails from "./pages/FloodDetails";
+import FloodEvents from "./pages/FloodEvents";
 
 function App() {
   return (
@@ -58,8 +59,8 @@ function App() {
           <Route path="/admin" element={<Admin />} />
 
           <Route path="/create-flood-event" element={<CreateFloodEvent />} />
-
           <Route path="/flood-details" element={<FloodDetails />} />
+          <Route path="/flood-events" element={<FloodEvents />} />
             
         </Routes>
     </ThemeProvider>

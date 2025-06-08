@@ -26,8 +26,12 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { useFloodStore } from "@/stores/useFloodStore";
+import { useUserStore } from "@/stores/useUserStore";
 
 function CreateFloodEvent() {
+  const { token } = useUserStore();
+  const { createFloodEvent } = useFloodStore();
   const [formData, setFormData] = useState({
     floodName: "",
     severity: "medium",
@@ -41,6 +45,7 @@ function CreateFloodEvent() {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,33 +60,45 @@ function CreateFloodEvent() {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.floodName.trim()) newErrors.floodName = "Flood name is required";
-    if (!formData.affectedAreas.trim()) newErrors.affectedAreas = "Affected areas are required";
-    if (!formData.waterLevel || isNaN(formData.waterLevel)) newErrors.waterLevel = "Valid water level is required";
-    if (formData.casualties && isNaN(formData.casualties)) newErrors.casualties = "Must be a number";
+    if (!formData.description.trim()) newErrors.description = "Description is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form data before validation:', formData);
     if (validateForm()) {
-      // API call would go here
-      console.log("Flood event data:", formData);
-      toast.success("Flood event created successfully!");
-      
-      // Reset form
-      setFormData({
-        floodName: "",
-        severity: "medium",
-        startDate: new Date(),
-        endDate: null,
-        affectedAreas: "",
-        description: "",
-        waterLevel: "",
-        casualties: "",
-        status: "active",
-      });
+      setLoading(true);
+      try {
+        const payload = {
+          flood_name: formData.floodName,
+          start_date: formData.startDate ? format(formData.startDate, "yyyy-MM-dd") : undefined,
+          end_date: formData.endDate ? format(formData.endDate, "yyyy-MM-dd") : null, // send null if not set
+          flood_description: formData.description,
+          flood_status: formData.status,
+          // admin_id is set by backend from token
+        };
+        console.log('Payload to be sent:', payload);
+        const response = await createFloodEvent(payload, token);
+        console.log('Flood event creation response:', response);
+        toast.success("Flood event created successfully!");
+        setFormData({
+          floodName: "",
+          startDate: new Date(),
+          endDate: null,
+          description: "",
+          status: "active",
+        });
+      } catch (err) {
+        console.error('Flood event creation error:', err);
+        toast.error(err.message || "Failed to create flood event");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      console.log('Validation failed:', errors);
     }
   };
 
@@ -96,7 +113,7 @@ function CreateFloodEvent() {
           </h1>
         </header>
 
-        <main className="flex-1 px-4 py-8 bg-gradient-to-b from-blue-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <main className="flex-1 px-4 py-8 dark:from-gray-900 dark:to-gray-800">
           <div className="max-w-4xl mx-auto">
             <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl border dark:border-gray-700">
               <CardHeader>
@@ -125,49 +142,6 @@ function CreateFloodEvent() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Severity */}
-                    <div>
-                      <Label>Severity*</Label>
-                      <Select
-                        value={formData.severity}
-                        onValueChange={(value) => 
-                          setFormData(prev => ({ ...prev, severity: value }))
-                        }
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select severity" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="extreme">Extreme</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Status */}
-                    <div>
-                      <Label>Status*</Label>
-                      <Select
-                        value={formData.status}
-                        onValueChange={(value) => 
-                          setFormData(prev => ({ ...prev, status: value }))
-                        }
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="monitoring">Monitoring</SelectItem>
-                          <SelectItem value="resolved">Resolved</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Start Date */}
                     <div>
                       <Label>Start Date*</Label>
@@ -185,10 +159,9 @@ function CreateFloodEvent() {
                         </p>
                       )}
                     </div>
-
-                    {/* End Date */}
+                    {/* End Date (optional) */}
                     <div>
-                      <Label>End Date (if resolved)</Label>
+                      <Label>End Date</Label>
                       <div className="mt-1 border rounded-md p-2">
                         <Calendar
                           mode="single"
@@ -205,65 +178,49 @@ function CreateFloodEvent() {
                     </div>
                   </div>
 
-                  {/* Affected Areas */}
+                  {/* Flood Status */}
                   <div>
-                    <Label htmlFor="affectedAreas">Affected Areas*</Label>
-                    <Textarea
-                      id="affectedAreas"
-                      name="affectedAreas"
-                      value={formData.affectedAreas}
-                      onChange={handleChange}
-                      placeholder="List affected districts, cities, or regions"
-                      className={`mt-1 ${errors.affectedAreas ? "border-red-500" : ""}`}
-                      rows={2}
-                    />
-                    {errors.affectedAreas && (
-                      <p className="mt-1 text-sm text-red-500">{errors.affectedAreas}</p>
-                    )}
+                    <Label htmlFor="status">Status*</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={value => setFormData(prev => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="over">Over</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Description */}
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Description*</Label>
                     <Textarea
                       id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
                       placeholder="Detailed description of the flood event"
-                      className="mt-1"
+                      className={`mt-1 ${errors.description ? "border-red-500" : ""}`}
                       rows={3}
                     />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    {/* Casualties */}
-                    <div>
-                      <Label htmlFor="casualties">Casualties (if any)</Label>
-                      <Input
-                        id="casualties"
-                        name="casualties"
-                        type="number"
-                        value={formData.casualties}
-                        onChange={handleChange}
-                        className={`mt-1 ${errors.casualties ? "border-red-500" : ""}`}
-                      />
-                      {errors.casualties && (
-                        <p className="mt-1 text-sm text-red-500">{errors.casualties}</p>
-                      )}
-                    </div>
+                    {errors.description && (
+                      <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </CardContent>
 
                 <CardFooter className="flex justify-end gap-4 border-t px-6 py-4">
-                  <Button type="button" variant="outline">
+                  <Button type="button" variant="outline" disabled={loading}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                    Create Flood Event
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                    {loading ? "Creating..." : "Create Flood Event"}
                   </Button>
                 </CardFooter>
               </form>

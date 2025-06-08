@@ -9,6 +9,7 @@ export const insertFlood = async (req, res, next) => {
     flood_name,
     start_date,
     end_date,
+    flood_description,
     flood_status = 'ongoing'
   } = req.body;
 
@@ -16,10 +17,10 @@ export const insertFlood = async (req, res, next) => {
 
   try {
     //validate required fields
-    if (!flood_name || !start_date || !flood_status) {
+    if (!flood_name || !start_date || !flood_status || !flood_description) {
       return res.status(400).json({
         success: false,
-        message: "Flood name, start date, and flood status are required"
+        message: "Flood name, start date, description, and flood status are required"
       });
     }
     //validate date formats
@@ -33,10 +34,10 @@ export const insertFlood = async (req, res, next) => {
     //insert new flood
     const insertQuery = `
       INSERT INTO flood 
-      (flood_name, start_date, end_date, flood_status, admin_id)
-      VALUES (?, ?, ?, ?, ?)
+      (flood_name, start_date, end_date, flood_description, flood_status, admin_id)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-    const insertParams = [flood_name, start_date, end_date, flood_status, admin_id];
+    const insertParams = [flood_name, start_date, end_date, flood_description, flood_status, admin_id];
 
     const [result] = await pool.query(insertQuery, insertParams);
 
@@ -51,6 +52,7 @@ export const insertFlood = async (req, res, next) => {
         start_date,
         end_date,
         flood_status,
+        flood_description,
         admin_id
       }
     });
@@ -291,6 +293,56 @@ export const updateFloodDetails = async (req, res, next) => {
   }
 };
 
+// Update main flood event (name, status, end_date, description)
+export const updateFlood = async (req, res, next) => {
+  logger.info(`updateFlood called by admin_id=${req.user.id}, flood_id=${req.params.flood_id}, body=${JSON.stringify(req.body)}`);
+
+  const { flood_id } = req.params;
+  const admin_id = req.user.id;
+  const { flood_name, flood_status, end_date, flood_description } = req.body;
+
+  try {
+    // Check if flood exists
+    const [existing] = await pool.query(
+      `SELECT * FROM flood WHERE flood_id = ?`,
+      [flood_id]
+    );
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, message: "Flood not found" });
+    }
+    // Build dynamic update query
+    const updateFields = [];
+    const updateParams = [];
+    if (flood_name !== undefined) {
+      updateFields.push('flood_name = ?');
+      updateParams.push(flood_name);
+    }
+    if (flood_status !== undefined) {
+      updateFields.push('flood_status = ?');
+      updateParams.push(flood_status);
+    }
+    if (end_date !== undefined) {
+      updateFields.push('end_date = ?');
+      updateParams.push(end_date);
+    }
+    if (flood_description !== undefined) {
+      updateFields.push('flood_description = ?');
+      updateParams.push(flood_description);
+    }
+    if (updateFields.length === 0) {
+      return res.status(400).json({ success: false, message: "No fields to update" });
+    }
+    updateParams.push(flood_id);
+    const updateQuery = `UPDATE flood SET ${updateFields.join(', ')} WHERE flood_id = ?`;
+    await pool.query(updateQuery, updateParams);
+    logger.info(`Flood updated successfully: flood_id=${flood_id}`);
+    res.status(200).json({ success: true, message: "Flood updated successfully" });
+  } catch (error) {
+    logger.error("Update flood error:", error);
+    next(error);
+  }
+};
+
 //display all past floods
 export const getAllFloods = async (req, res, next) => {
   logger.info(`getAllFloods called by admin_id=${req.user.id}`);
@@ -346,6 +398,53 @@ export const getFloodDetails = async (req, res, next) => {
 
   } catch (error) {
     logger.error("Get flood details error:", error);
+    next(error);
+  }
+};
+
+// Get the current active flood event
+export const getCurrentFlood = async (req, res, next) => {
+  logger.info(`getCurrentFlood called by admin_id=${req.user.id}`);
+  try {
+    const query = `
+      SELECT * FROM flood WHERE flood_status = 'active' AND CURRENT_DATE BETWEEN start_date AND IFNULL(end_date, CURRENT_DATE)
+      ORDER BY start_date DESC LIMIT 1
+    `;
+    const [floods] = await pool.query(query);
+    if (floods.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No current flood event',
+        data: null
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: 'Current flood event retrieved',
+      data: floods[0]
+    });
+  } catch (error) {
+    logger.error('Get current flood error:', error);
+    next(error);
+  }
+};
+
+// Get all past flood events (status 'over')
+export const getPastFloods = async (req, res, next) => {
+  logger.info(`getPastFloods called by admin_id=${req.user.id}`);
+  try {
+    const query = `
+      SELECT * FROM flood
+    `;
+    const [floods] = await pool.query(query);
+    res.status(200).json({
+      success: true,
+      message: 'Past floods retrieved',
+      count: floods.length,
+      data: floods
+    });
+  } catch (error) {
+    logger.error('Get past floods error:', error);
     next(error);
   }
 };

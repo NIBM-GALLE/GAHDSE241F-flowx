@@ -23,7 +23,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 
 export default function FloodDetails() {
-  const { register, handleSubmit, formState: { errors }, control, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [date, setDate] = useState(new Date());
 
   const onSubmit = (data) => {
