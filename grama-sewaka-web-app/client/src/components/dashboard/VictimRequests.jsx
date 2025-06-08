@@ -1,49 +1,67 @@
-import { Card, CardContent, CardHeader, CardTitle, 
-    CardDescription, CardFooter
- } from "@/components/ui/card";
+import React, { useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-const newVictimRequests = [
-  {
-    id: 1,
-    name: "Nimal Perera",
-    nic: "902345678V",
-    date: "2025-05-01",
-    location: "Galle",
-    contact: "0771234567",
-    status: "pending",
-  },
-  {
-    id: 2,
-    name: "Sunethra Silva",
-    nic: "952349812V",
-    date: "2025-05-03",
-    location: "Matara",
-    contact: "0719876543",
-    status: "verified",
-  },
-  {
-    id: 3,
-    name: "Kamal Fernando",
-    nic: "902345678V",
-    date: "2025-05-02",
-    location: "Colombo",
-    contact: "0771234567",
-    status: "pending",
-  },
-  {
-    id: 4,
-    name: "Anjali Kumari",
-    nic: "952349812V",
-    date: "2025-05-04",
-    location: "Kandy",
-    contact: "0719876543",
-    status: "pending",
-  },
-];
+import { useDashboardStore } from "@/stores/useDashboardStore";
+import { useUserStore } from "@/stores/useUserStore";
 
 export default function VictimRequests() {
+  const { token } = useUserStore();
+  const {
+    victimRequests,
+    victimRequestsLoading,
+    victimRequestsError,
+    fetchVictimRequests,
+  } = useDashboardStore(token);
+
+  useEffect(() => {
+    fetchVictimRequests();
+    // eslint-disable-next-line
+  }, [token]);
+
+  if (victimRequestsLoading) {
+    return (
+      <Card className="border border-gray-200 dark:border-gray-800 animate-pulse">
+        <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+            Loading victim requests...
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6 h-24" />
+      </Card>
+    );
+  }
+
+  if (victimRequestsError) {
+    return (
+      <Card className="border border-red-200 dark:border-red-800">
+        <CardHeader className="bg-red-50 dark:bg-red-900/20 rounded-t-lg">
+          <CardTitle className="text-lg font-semibold text-red-700 dark:text-red-300">
+            Error loading victim requests
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6 text-red-600 dark:text-red-300">
+          {victimRequestsError}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!victimRequests || victimRequests.length === 0) {
+    return (
+      <Card className="border border-gray-200 dark:border-gray-800">
+        <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+          <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+            No new victim requests
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6 text-gray-500 dark:text-gray-400">
+          There are no new victim requests at the moment.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border border-gray-200 dark:border-gray-800">
       <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
@@ -58,9 +76,9 @@ export default function VictimRequests() {
       </CardHeader>
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {newVictimRequests.map((request) => (
+          {victimRequests.map((request) => (
             <Card 
-              key={request.id} 
+              key={request.id || request._id} 
               className="shadow-sm hover:shadow-md transition-shadow border-gray-200 dark:border-gray-700"
             >
               <CardHeader>

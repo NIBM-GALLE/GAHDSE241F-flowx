@@ -41,8 +41,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <FloodSummary />
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Flood Details</CardTitle>
