@@ -57,5 +57,38 @@ export function useUserStore() {
     localStorage.removeItem("token");
   }
 
-  return { user, token, signIn, signUp, logout };
+  // Get user details by role and id
+  async function getUserDetails(role, id, tokenArg) {
+    const res = await fetch(`/api/auth/user/${role}/${id}`, {
+      headers: tokenArg ? { Authorization: `Bearer ${tokenArg}` } : {},
+    });
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Server error: Invalid response");
+    }
+    return data;
+  }
+
+  // Update user details by role and id
+  async function updateUserDetails(role, id, updates, tokenArg) {
+    const res = await fetch(`/api/auth/user/${role}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(tokenArg ? { Authorization: `Bearer ${tokenArg}` } : {}),
+      },
+      body: JSON.stringify(updates),
+    });
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Server error: Invalid response");
+    }
+    return data;
+  }
+
+  return { user, token, signIn, signUp, logout, getUserDetails, updateUserDetails };
 }

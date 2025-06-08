@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import {
   SidebarInset,
@@ -18,20 +18,23 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { useUserStore } from "@/stores/useUserStore";
 
 function Profile() {
   const [isEditing, setIsEditing] = useState(false)
+  const { user, token, getUserDetails, updateUserDetails } = useUserStore();
+  const [profile, setProfile] = useState({});
 
-  const [profile, setProfile] = useState({
-    firstName: "Kamal",
-    lastName: "Perera",
-    idNumber: "123456789V",
-    age: "30",
-    address: "Colombo, Sri Lanka",
-    email: "kamal.perera@example.com",
-    phone: "+94 77 123 4567",
-    role: "Grama Sewaka",
-  })
+  //fetch user details from backend on mount
+  useEffect(() => {
+    if (user && user.role && user.id && typeof getUserDetails === 'function') {
+      getUserDetails(user.role, user.id, token).then((data) => {
+        if (data && data.success) {
+          setProfile(data.data);
+        }
+      });
+    }
+  }, [user, token, getUserDetails]);
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -41,10 +44,21 @@ function Profile() {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isEditing) return
-    setIsEditing(false)
-    toast.success("Profile updated successfully!")
+    try {
+      if (typeof updateUserDetails === 'function') {
+        const data = await updateUserDetails(user.role, user.id, profile, token);
+        if (data && data.success) {
+          setIsEditing(false);
+          toast.success("Profile updated successfully!");
+        } else {
+          throw new Error(data?.message || "Update failed");
+        }
+      }
+    } catch (err) {
+      toast.error(err.message);
+    }
   }
 
   const handleEdit = () => {
@@ -70,31 +84,35 @@ function Profile() {
                 <Avatar className="w-24 h-24 mb-4 border-4 border-blue-100 dark:border-gray-700">
                   <AvatarImage src="/default-avatar.png" />
                   <AvatarFallback className="text-3xl font-bold bg-blue-100 dark:bg-gray-700">
-                    {profile.firstName.charAt(0)}{profile.lastName.charAt(0)}
+                    {profile.first_name?.charAt(0)}{profile.last_name?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-center">
                   <CardTitle className="text-xl font-bold">
-                    {profile.firstName} {profile.lastName}
+                    {profile.first_name} {profile.last_name}
                   </CardTitle>
                   <Badge variant="outline" className="mt-2 bg-blue-100 dark:bg-gray-700">
-                    {profile.role}
+                    {user?.role?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Email</Label>
-                    <p className="text-sm font-medium">{profile.email}</p>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground w-24">NIC</Label>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{profile.nic}</span>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Phone</Label>
-                    <p className="text-sm font-medium">{profile.phone}</p>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground w-24">Email</Label>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{profile.admin_email || profile.government_officer_email || profile.grama_sevaka_email}</span>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Member Since</Label>
-                    <p className="text-sm font-medium">January 2023</p>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground w-24">Phone</Label>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{profile.admin_phone_number || profile.government_officer_phone_number || profile.grama_sevaka_phone_number}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground w-24">Address</Label>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{profile.address}</span>
                   </div>
                 </div>
               </CardContent>
@@ -112,12 +130,11 @@ function Profile() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { label: "First Name", key: "firstName" },
-                    { label: "Last Name", key: "lastName" },
-                    { label: "ID Number", key: "idNumber" },
-                    { label: "Age", key: "age" },
-                    { label: "Email", key: "email", colSpan: 2 },
-                    { label: "Phone", key: "phone" },
+                    { label: "First Name", key: "first_name" },
+                    { label: "Last Name", key: "last_name" },
+                    { label: "NIC", key: "nic" },
+                    { label: "Email", key: user?.role === 'admin' ? 'admin_email' : user?.role === 'government_officer' ? 'government_officer_email' : 'grama_sevaka_email', colSpan: 2 },
+                    { label: "Phone", key: user?.role === 'admin' ? 'admin_phone_number' : user?.role === 'government_officer' ? 'government_officer_phone_number' : 'grama_sevaka_phone_number' },
                     { label: "Address", key: "address", colSpan: 2 },
                   ].map((field) => (
                     <div
@@ -129,7 +146,7 @@ function Profile() {
                       </Label>
                       <Input
                         name={field.key}
-                        value={profile[field.key]}
+                        value={profile[field.key] || ""}
                         onChange={handleChange}
                         readOnly={!isEditing}
                         className={`mt-1 ${!isEditing ? "bg-gray-50 dark:bg-gray-700" : ""}`}
@@ -156,53 +173,6 @@ function Profile() {
                 )}
               </CardFooter>
             </Card>
-
-            {/* Additional Info Section */}
-            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl border dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">Project Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Flood Predictions</span>
-                      <span className="text-sm font-medium">42</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Accuracy Rate</span>
-                      <span className="text-sm font-medium">89.5%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Alerts Issued</span>
-                      <span className="text-sm font-medium">18</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl border dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium">Updated flood model parameters</p>
-                      <p className="text-xs text-muted-foreground">2 days ago</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Created new prediction for Colombo</p>
-                      <p className="text-xs text-muted-foreground">1 week ago</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Completed training session</p>
-                      <p className="text-xs text-muted-foreground">2 weeks ago</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </main>
       </SidebarInset>
