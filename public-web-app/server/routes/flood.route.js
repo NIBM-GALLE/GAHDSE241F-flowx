@@ -12,5 +12,8 @@ router.use(protect);
 
 router.get('/current', getCurrentFlood);
 router.get('/details/today', getTodayFloodDetails);
+router.post('/predict-ml', (req, res) => {
+  import('../controllers/flood.controller.js').then(({ predictFloodML }) => predictFloodML(req, res));
+});
 
 export default router;
