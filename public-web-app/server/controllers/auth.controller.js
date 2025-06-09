@@ -261,10 +261,7 @@ export const checkHouseId = async (req, res, next) => {
 export const getUserProfile = async (req, res, next) => {
   try {
     const [user] = await pool.query(
-      `SELECT m.member_id as id, m.first_name as firstName, 
-              m.last_name as lastName, m.member_email as email, 
-              m.member_phone_number as phone, h.house_id, 
-              h.address as house_address, h.latitude, h.longitude
+      `SELECT *
        FROM member m
        JOIN house h ON m.house_id = h.house_id
        WHERE m.member_id = ?`,
