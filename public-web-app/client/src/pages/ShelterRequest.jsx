@@ -13,7 +13,6 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
-  Badge
 } from "lucide-react";
 import {
   Card,
@@ -50,6 +49,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { useShelterStore } from "@/stores/useShelterStore";
+import { Badge } from "@/components/ui/badge";
 
 function ShelterRequest() {
   const [formData, setFormData] = useState({
@@ -59,7 +59,6 @@ function ShelterRequest() {
     emergency_level: 'medium',
   });
   const [errors, setErrors] = useState({});
-  const [expandedShelter, setExpandedShelter] = useState(null);
 
   const {
     requestShelter,
@@ -67,9 +66,6 @@ function ShelterRequest() {
     requestStatus,
     requestError,
     fetchRelatedShelters,
-    relatedShelters,
-    loadingRelated,
-    errorRelated
   } = useShelterStore();
 
   useEffect(() => {
@@ -97,19 +93,6 @@ function ShelterRequest() {
     e.preventDefault();
     if (!validateForm()) return;
     await requestShelter(formData);
-  };
-  const toggleExpandShelter = (id) => {
-    setExpandedShelter(expandedShelter === id ? null : id);
-  };
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</Badge>;
-      case "full":
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Full</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
   };
 
   if (requestStatus) {
@@ -275,57 +258,7 @@ function ShelterRequest() {
                   </CardFooter>
                 </form>
               </Card>
-              {/* Related Shelters Section */}
-              <Card className="mt-6 border border-blue-200 dark:border-blue-800">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    <CardTitle className="text-lg text-gray-900 dark:text-white">Related Shelters Near You</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {loadingRelated ? (
-                    <div className="flex items-center gap-2 text-blue-600"><Loader2 className="animate-spin" /> Loading shelters...</div>
-                  ) : errorRelated ? (
-                    <div className="text-red-600">{errorRelated}</div>
-                  ) : (
-                    <div className="space-y-3">
-                      {relatedShelters && relatedShelters.length > 0 ? (
-                        relatedShelters.map((shelter) => (
-                          <Card key={shelter.shelter_id} className="border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => toggleExpandShelter(shelter.shelter_id)}>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-medium text-gray-900 dark:text-white">{shelter.shelter_name}</h3>
-                                  {getStatusBadge(shelter.shelter_status)}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{shelter.shelter_address}</div>
-                              </div>
-                              <div>
-                                {expandedShelter === shelter.shelter_id ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
-                              </div>
-                            </div>
-                            {expandedShelter === shelter.shelter_id && (
-                              <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
-                                <div className="text-sm text-gray-700 dark:text-gray-300">
-                                  <div><b>Capacity:</b> {shelter.shelter_size}</div>
-                                  <div><b>Available:</b> {shelter.available}</div>
-                                  <div><b>Status:</b> {shelter.shelter_status}</div>
-                                  {shelter.flood_name && <div><b>Flood:</b> {shelter.flood_name} ({shelter.start_date} - {shelter.end_date || 'Ongoing'})</div>}
-                                  <div><b>Divisional Secretariat ID:</b> {shelter.divisional_secretariat_id}</div>
-                                  {shelter.shelter_house_id && <div><b>Assigned to your house</b></div>}
-                                </div>
-                              </div>
-                            )}
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="text-gray-500">No related shelters found.</div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              
               {/* Information Card (unchanged) */}
               <Card className="mt-6 border border-blue-200 dark:border-blue-800">
                 <CardHeader className="pb-4">

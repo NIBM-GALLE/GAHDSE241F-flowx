@@ -19,8 +19,8 @@ import {
   SidebarMenuButton 
 } from "@/components/ui/sidebar";
 
-export function NavUser({ user }) {
-  const { logout } = useUserStore();
+export function NavUser() {
+  const { user, logout } = useUserStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -28,23 +28,34 @@ export function NavUser({ user }) {
     navigate("/signin");
   };
 
+  // Use backend user fields, fallback to sensible defaults
+  const displayName = (user?.first_name || user?.firstName || "") && (user?.last_name || user?.lastName || "")
+    ? `${user.first_name || user.firstName} ${user.last_name || user.lastName}`
+    : user?.name || user?.member_name || user?.member_email || user?.email || "User";
+  const displayEmail = user?.email || user?.member_email || "No email";
+  const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl = user?.avatar || user?.profile_picture || null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton size="lg" className="group">
           <Avatar>
-            <AvatarImage src={user.avatar} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} />
+            ) : (
+              <AvatarFallback>{initial}</AvatarFallback>
+            )}
           </Avatar>
           <div className="flex-1 text-left">
-            <p className="font-medium">{user.name}</p>
-            <p className="text-xs text-muted-foreground">{user.email}</p>
+            <p className="font-medium">{displayName}</p>
+            <p className="text-xs text-muted-foreground">{displayEmail}</p>
           </div>
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/profile")}> 
           <CircleUserRound className="mr-2 size-4" />
           Profile
         </DropdownMenuItem>

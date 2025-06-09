@@ -26,7 +26,7 @@ import {
 export function AppSidebar({ ...props }) {
   const navMain = [
     {
-      title: "Flood Impact Prediction",
+      title: "Flood Prediction",
       icon: FaWater,
       items: [
         {
@@ -41,7 +41,7 @@ export function AppSidebar({ ...props }) {
     },
     {
       title: "Announcements",
-      icon: MdOutlineAnnouncement,
+      icon: TfiAnnouncement,
       items: [
         {
           title: "All Announcements",
@@ -50,16 +50,16 @@ export function AppSidebar({ ...props }) {
       ],
     },
     {
-      title: "Victims Requests",
+      title: "Victim Requests",
       icon: FaUsers,
       items: [
         {
           title: "Create Request",
-          url: "/victims/create",
+          url: "/victim-request",
         },
         {
           title: "Requests History",
-          url: "/victims/history",
+          url: "/victims-history",
         },
       ],
     },
@@ -69,11 +69,11 @@ export function AppSidebar({ ...props }) {
       items: [
         {
           title: "New Subsidy",
-          url: "/subsidies/new",
+          url: "/new-subsidies",
         },
         {
           title: "Subsidies History",
-          url: "/subsidies/history",
+          url: "/subsidy-history",
         },
       ],
     },
@@ -87,7 +87,11 @@ export function AppSidebar({ ...props }) {
         },
         {
           title: "Request Shelter",
-          url: "/shelters/requests",
+          url: "/shelter-request",
+        },
+        {
+          title: "Shelter Information",
+          url: "/shelter-information",
         },
       ],
     },
@@ -97,11 +101,17 @@ export function AppSidebar({ ...props }) {
       items: [
         {
           title: "Contactable Officials",
-          url: "/contact-info",
-        },
+          url: "/contact",
+        }
+      ],
+    },
+    {
+      title: "Profile",
+      icon: FaUsers,
+      items: [
         {
-          title: "Emergency Contacts",
-          url: "/emergency-contacts",
+          title: "My Profile",
+          url: "/user-profile",
         },
       ],
     },

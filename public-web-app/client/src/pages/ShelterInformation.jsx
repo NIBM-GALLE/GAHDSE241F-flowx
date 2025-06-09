@@ -1,14 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   Home,
   MapPin,
-  Users,
-  Phone,
   Clock,
-  Filter,
-  Search,
-  ChevronDown,
-  ChevronUp,
   Info
 } from "lucide-react";
 import {
@@ -18,14 +12,7 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
@@ -43,16 +30,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { useShelterStore } from "@/stores/useShelterStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 function ShelterInformation() {
-  const [expandedShelter, setExpandedShelter] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [districtFilter, setDistrictFilter] = useState("all");
-
   const {
     fetchShelterInfo,
     assignedShelter,
-    allShelters,
     loadingShelterInfo,
     errorShelterInfo,
     fetchShelterHistory,
@@ -61,33 +44,15 @@ function ShelterInformation() {
     errorHistory
   } = useShelterStore();
 
+  const [showShelterDialog, setShowShelterDialog] = React.useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = React.useState(false);
+  const [selectedHistory, setSelectedHistory] = React.useState(null);
+
   useEffect(() => {
     fetchShelterInfo();
     fetchShelterHistory();
     // eslint-disable-next-line
   }, []);
-
-  // Get unique districts from allShelters for filter
-  const districts = [
-    "All Districts",
-    ...Array.from(new Set(allShelters.map(s => s.divisional_secretariat_id || s.district)))
-  ];
-
-  const filteredShelters = allShelters.filter(shelter => {
-    const matchesSearch =
-      (shelter.shelter_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (shelter.shelter_address || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDistrict =
-      districtFilter === "all" ||
-      districtFilter === "All Districts" ||
-      (shelter.divisional_secretariat_id && shelter.divisional_secretariat_id.toString() === districtFilter) ||
-      (shelter.district && shelter.district === districtFilter);
-    return matchesSearch && matchesDistrict;
-  });
-
-  const toggleExpandShelter = (id) => {
-    setExpandedShelter(expandedShelter === id ? null : id);
-  };
 
   const getAvailabilityBadge = (available) => {
     return available > 0 ? (
@@ -160,29 +125,13 @@ function ShelterInformation() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Shelter Information</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10">
+          <SidebarTrigger className="-ml-1" />
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Shelter Information</h1>
         </header>
-
-        <main className="p-4 bg-white dark:bg-gray-900">
+        <main className="p-4 bg-white dark:bg-gray-900 min-h-screen">
           <div className="flex-1 p-4 md:p-8">
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Shelter Request History Section */}
               <Card className="border border-blue-200 dark:border-blue-800">
                 <CardHeader>
@@ -197,25 +146,31 @@ function ShelterInformation() {
                   ) : errorHistory ? (
                     <div className="text-red-600">{errorHistory}</div>
                   ) : shelterHistory && shelterHistory.length > 0 ? (
-                    <div className="space-y-3">
-                      {shelterHistory.map((item, idx) => (
-                        <Card key={idx} className="border border-gray-200 dark:border-gray-700">
-                          <CardHeader className="flex flex-row items-center gap-2">
-                            <Clock className="h-4 w-4 text-blue-500" />
-                            <span className="font-semibold">{item.flood_name || 'Flood'} ({item.start_date?.slice(0,10)})</span>
-                            {getStatusBadge(item.shelter_request_status)}
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-sm text-gray-700 dark:text-gray-300">
-                              <div><b>Title:</b> {item.shelter_request_title}</div>
-                              <div><b>Message:</b> {item.shelter_request_message}</div>
-                              <div><b>Needs:</b> {item.shelter_request_needs}</div>
-                              <div><b>Status:</b> {item.shelter_request_status}</div>
-                              <div><b>Address:</b> {item.house_address}</div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Flood</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                            <th className="px-4 py-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                          {shelterHistory.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{item.flood_name || 'Flood'} ({item.start_date?.slice(0,10)})</td>
+                              <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{item.shelter_request_title}</td>
+                              <td className="px-4 py-3">{getStatusBadge(item.shelter_request_status)}</td>
+                              <td className="px-4 py-3">
+                                <Button size="sm" variant="outline" onClick={() => { setSelectedHistory(item); setShowHistoryDialog(true); }}>
+                                  View
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   ) : (
                     <div className="text-gray-500">No previous shelter requests found.</div>
@@ -247,136 +202,13 @@ function ShelterInformation() {
                       {assignedShelter.flood_name && (
                         <div className="text-xs text-gray-500 mt-1">Flood: {assignedShelter.flood_name} ({assignedShelter.start_date} - {assignedShelter.end_date || 'Ongoing'})</div>
                       )}
+                      <Button size="sm" variant="outline" className="mt-2" onClick={() => setShowShelterDialog(true)}>
+                        View Details
+                      </Button>
                     </div>
                   ) : (
                     <div className="text-gray-500">No assigned shelter found.</div>
                   )}
-                </CardContent>
-              </Card>
-              {/* Search and Filter UI */}
-              <Card className="border border-blue-200 dark:border-blue-800">
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search shelters..."
-                        className="pl-8 border-gray-300 dark:border-gray-600"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="flex gap-2">
-                          <Filter className="h-4 w-4" />
-                          {districtFilter === "all" ? "Filter by District" : districtFilter}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56">
-                        {districts.map((district) => (
-                          <DropdownMenuItem
-                            key={district}
-                            onClick={() => setDistrictFilter(district)}
-                          >
-                            {district}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardContent>
-              </Card>
-              {/* All Shelters List */}
-              <Card className="border border-blue-200 dark:border-blue-800">
-                <CardHeader>
-                  <CardTitle className="text-gray-900 dark:text-white">Shelter List</CardTitle>
-                  <CardDescription className="text-gray-500 dark:text-gray-400">
-                    {filteredShelters.length} shelters found
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {loadingShelterInfo ? (
-                      <div className="text-center py-8 text-blue-600"><Clock className="animate-spin" /> Loading shelters...</div>
-                    ) : errorShelterInfo ? (
-                      <div className="text-red-600">{errorShelterInfo}</div>
-                    ) : filteredShelters.length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500 dark:text-gray-400">No shelters found matching your criteria</p>
-                      </div>
-                    ) : (
-                      filteredShelters.map((shelter) => (
-                        <Card
-                          key={shelter.shelter_id}
-                          className="overflow-hidden border border-gray-200 dark:border-gray-700"
-                        >
-                          <div
-                            className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 flex justify-between items-center"
-                            onClick={() => toggleExpandShelter(shelter.shelter_id)}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="hidden md:block">
-                                {expandedShelter === shelter.shelter_id ? (
-                                  <ChevronUp className="h-5 w-5 text-gray-500" />
-                                ) : (
-                                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-medium text-gray-900 dark:text-white">
-                                    {shelter.shelter_name}
-                                  </h3>
-                                  {getAvailabilityBadge(shelter.available)}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
-                                    {shelter.divisional_secretariat_id || shelter.district}
-                                  </Badge>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Capacity: {shelter.available}/{shelter.shelter_size}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {expandedShelter === shelter.shelter_id && (
-                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium flex items-center gap-2 text-gray-900 dark:text-white">
-                                      <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" /> Address
-                                    </h4>
-                                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                                      {shelter.shelter_address}
-                                    </p>
-                                  </div>
-                                  {/* Add more details if available from backend */}
-                                </div>
-                                <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium flex items-center gap-2 text-gray-900 dark:text-white">
-                                      <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" /> Current Status
-                                    </h4>
-                                    <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                                      <p>
-                                        <span className="font-medium">Capacity:</span> {shelter.available}/{shelter.shelter_size}
-                                      </p>
-                                      <p>
-                                        <span className="font-medium">Availability:</span> {shelter.available > 0 ? "Accepting people" : "At full capacity"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </Card>
-                      ))
-                    )}
-                  </div>
                 </CardContent>
               </Card>
               {/* Information Card */}
@@ -394,6 +226,61 @@ function ShelterInformation() {
                   <p>• Follow all safety instructions from shelter staff</p>
                 </CardContent>
               </Card>
+              {/* Dialogs */}
+              <Dialog open={showShelterDialog} onOpenChange={setShowShelterDialog}>
+                <DialogContent className="max-w-lg w-full rounded-2xl p-8 bg-white dark:bg-gray-900 shadow-2xl border dark:border-gray-700">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold mb-2 text-green-700 dark:text-green-200">Assigned Shelter Details</DialogTitle>
+                  </DialogHeader>
+                  {assignedShelter && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <span className="font-semibold text-lg text-gray-900 dark:text-white">{assignedShelter.shelter_name}</span>
+                      </div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300"><b>Address:</b> {assignedShelter.shelter_address}</div>
+                      <div className="flex gap-4 text-sm">
+                        <span><b>Status:</b> {getAvailabilityBadge(assignedShelter.available)}</span>
+                        <span><b>Capacity:</b> {assignedShelter.shelter_size}</span>
+                        <span><b>Available:</b> {assignedShelter.available}</span>
+                      </div>
+                      {assignedShelter.flood_name && (
+                        <div className="text-sm text-gray-700 dark:text-gray-300"><b>Flood:</b> {assignedShelter.flood_name} ({assignedShelter.start_date} - {assignedShelter.end_date || 'Ongoing'})</div>
+                      )}
+                    </div>
+                  )}
+                  <DialogFooter className="flex justify-end mt-6">
+                    <Button variant="outline" onClick={() => setShowShelterDialog(false)}>
+                      Close
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+                <DialogContent className="max-w-lg w-full rounded-2xl p-8 bg-white dark:bg-gray-900 border dark:border-gray-700">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold mb-2 text-blue-700 dark:text-blue-200">Shelter Request Details</DialogTitle>
+                  </DialogHeader>
+                  {selectedHistory && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <span className="font-semibold text-lg text-gray-900 dark:text-white">{selectedHistory.flood_name || 'Flood'} ({selectedHistory.start_date?.slice(0,10)})</span>
+                      </div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300"><b>Title:</b> {selectedHistory.shelter_request_title}</div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300"><b>Message:</b> {selectedHistory.shelter_request_message}</div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300"><b>Needs:</b> {selectedHistory.shelter_request_needs}</div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300"><b>Status:</b> {getStatusBadge(selectedHistory.shelter_request_status)}</div>
+                      <div className="text-sm text-gray-700 dark:text-gray-300"><b>Address:</b> {selectedHistory.house_address}</div>
+                    </div>
+                  )}
+                  <DialogFooter className="flex justify-end mt-6">
+                    <Button variant="outline" onClick={() => setShowHistoryDialog(false)}>
+                      Close
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </main>
