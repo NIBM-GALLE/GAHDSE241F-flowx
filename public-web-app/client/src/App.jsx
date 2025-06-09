@@ -68,7 +68,6 @@ function App() {
               <ShelterRequest />
             </ProtectedRoute>
           } />
-          <Route path="/contact" element={<Contact />} />
           <Route path="/shelter-information" element={
             <ProtectedRoute>
               <ShelterInformation />
@@ -79,6 +78,8 @@ function App() {
               <UserProfile />
             </ProtectedRoute>
           } />
+
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
