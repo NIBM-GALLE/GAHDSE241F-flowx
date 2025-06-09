@@ -3,7 +3,7 @@ import RainIcon from "@/assets/rain.png";
 import FloodIcon from "@/assets/flood.png";
 import SafeZoneIcon from "@/assets/safezone.png";
 import DurationIcon from "@/assets/duration.png";
-import axioInstance from "../../lib/axioInstance";
+import axios from "axios";
 
 function FloodImpactPrediction({ floodData }) {
   const [floodArea, setFloodArea] = useState(null);
@@ -22,65 +22,49 @@ function FloodImpactPrediction({ floodData }) {
           setLoading(false);
           return;
         }
-
-        // Extract input features
-        const { month, rain_fall, river_level, water_recession_level } =
-          floodData;
-
-        // Step 1: Fetch flood area prediction
-        const floodAreaResponse = await axioInstance.post("/flood_area", {
-          features: [month, rain_fall, river_level, water_recession_level],
-        });
-
+        // Ensure all required features are present
+        const { month, rain_fall, river_level, water_recession_level } = floodData;
         if (
-          !floodAreaResponse.data ||
-          !floodAreaResponse.data.prediction ||
-          !Array.isArray(floodAreaResponse.data.prediction) ||
-          floodAreaResponse.data.prediction.length === 0
+          month === undefined ||
+          rain_fall === undefined ||
+          river_level === undefined ||
+          water_recession_level === undefined
         ) {
-          throw new Error("Invalid response from /flood_area");
+          setError("Flood data is incomplete for prediction.");
+          setLoading(false);
+          return;
         }
-
+        // All fields are now numbers (from backend)
+        const features = [month, rain_fall, river_level, water_recession_level];
+        // Step 1: Fetch flood area prediction
+        const floodAreaResponse = await axios.post("/api/flood/predict-ml", {
+          model: "flood_area",
+          features,
+        });
+        if (!floodAreaResponse.data || !Array.isArray(floodAreaResponse.data.prediction) || floodAreaResponse.data.prediction.length === 0) {
+          throw new Error("Invalid response from flood_area");
+        }
         const floodAreaPrediction = floodAreaResponse.data.prediction[0];
         setFloodArea(floodAreaPrediction);
-
         // Step 2: Fetch safe zones prediction
-        const safeZonesResponse = await axioInstance.post("/flood_safe_area", {
-          features: [month, rain_fall, river_level, water_recession_level],
+        const safeZonesResponse = await axios.post("/api/flood/predict-ml", {
+          model: "flood_safe_area",
+          features,
         });
-
-        if (
-          !safeZonesResponse.data ||
-          !safeZonesResponse.data.prediction ||
-          !Array.isArray(safeZonesResponse.data.prediction) ||
-          safeZonesResponse.data.prediction.length === 0
-        ) {
-          throw new Error("Invalid response from /flood_safe_area");
+        if (!safeZonesResponse.data || !Array.isArray(safeZonesResponse.data.prediction) || safeZonesResponse.data.prediction.length === 0) {
+          throw new Error("Invalid response from flood_safe_area");
         }
-
         const safeZonesPrediction = safeZonesResponse.data.prediction[0];
         setSafeZones(safeZonesPrediction);
-
         // Step 3: Fetch recovery time prediction
-        const recoveryResponse = await axioInstance.post("/recover_days_xgbr", {
-          features: [
-            month,
-            rain_fall,
-            river_level,
-            water_recession_level,
-            floodAreaPrediction, // Include flood area prediction
-          ],
+        const recoveryFeatures = [...features, floodAreaPrediction];
+        const recoveryResponse = await axios.post("/api/flood/predict-ml", {
+          model: "recover_days_xgbr",
+          features: recoveryFeatures,
         });
-
-        if (
-          !recoveryResponse.data ||
-          !recoveryResponse.data.prediction ||
-          !Array.isArray(recoveryResponse.data.prediction) ||
-          recoveryResponse.data.prediction.length === 0
-        ) {
-          throw new Error("Invalid response from /recover_days_xgbr");
+        if (!recoveryResponse.data || !Array.isArray(recoveryResponse.data.prediction) || recoveryResponse.data.prediction.length === 0) {
+          throw new Error("Invalid response from recover_days_xgbr");
         }
-
         const recoveryPrediction = recoveryResponse.data.prediction[0];
         setRecoveryTime(recoveryPrediction);
       } catch (error) {
@@ -90,7 +74,6 @@ function FloodImpactPrediction({ floodData }) {
         setLoading(false);
       }
     };
-
     fetchImpactData();
   }, [floodData]);
 

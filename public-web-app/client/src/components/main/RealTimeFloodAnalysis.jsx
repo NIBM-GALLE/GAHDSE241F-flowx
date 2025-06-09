@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import floodIcon from "@/assets/flood.png";
 import RainIcon from "@/assets/rain.png";
 import RiverIcon from "@/assets/river.png";
+import axios from "axios";
 
-import supabase from "../../lib/supabaseClient";
-import axioInstance from "../../lib/axioInstance";
 import FloodImpactPrediction from "./FloodImpactPrediction";
 
 function RealTimeFloodAnalysis({ onHighRiskDetected }) {
@@ -15,59 +14,53 @@ function RealTimeFloodAnalysis({ onHighRiskDetected }) {
   useEffect(() => {
     const getData = async () => {
       try {
-        let { data: flood_data, error } = await supabase
-          .from("flood_data")
-          .select("*")
-          .order("date", { ascending: false })
-          .limit(1);
-
-        if (error) {
-          console.error("Error fetching flood data:", error);
-        } else {
-          const processedData = flood_data.map((item) => {
-            const date = new Date(item.date);
-            const month = date.getMonth() + 1;
-            return { ...item, month };
-          });
-
-          setFloodData(processedData[0]);
-
-          const response = await axioInstance.post("/flood_percentage_rf", {
-            features: [
-              processedData[0].month,
-              processedData[0].rain_fall,
-              processedData[0].river_level,
-            ],
-          });
-
-          if (
-            response.data &&
-            response.data.prediction &&
-            Array.isArray(response.data.prediction) &&
-            response.data.prediction.length > 0
-          ) {
-            const percentage = response.data.prediction[0] * 100;
-            const formattedPercentage = parseFloat(percentage.toFixed(2));
-            setFloodRisk(formattedPercentage);
-
-            if (formattedPercentage > 70) {
-              setShowImpactPrediction(true);
-              if (onHighRiskDetected) {
-                onHighRiskDetected({
-                  risk: formattedPercentage,
-                  data: processedData[0],
-                });
-              }
-            } else {
-              setShowImpactPrediction(false);
+        // Fetch latest flood data from your backend (MySQL)
+        const floodRes = await axios.get("/api/flood/details/today");
+        const data = floodRes.data?.data;
+        if (!data) {
+          setFloodData(null);
+          setFloodRisk(0);
+          setShowImpactPrediction(false);
+          return;
+        }
+        setFloodData(data);
+        // Use backend for ML prediction
+        const response = await axios.post("/api/flood/predict-ml", {
+          model: "flood_percentage_rf",
+          features: [
+            data.month,
+            data.rain_fall,
+            data.river_level,
+          ],
+        });
+        if (
+          response.data &&
+          response.data.prediction &&
+          Array.isArray(response.data.prediction) &&
+          response.data.prediction.length > 0
+        ) {
+          const percentage = response.data.prediction[0] * 100;
+          const formattedPercentage = parseFloat(percentage.toFixed(2));
+          setFloodRisk(formattedPercentage);
+          if (formattedPercentage > 70) {
+            setShowImpactPrediction(true);
+            if (onHighRiskDetected) {
+              onHighRiskDetected({
+                risk: formattedPercentage,
+                data: data,
+              });
             }
+          } else {
+            setShowImpactPrediction(false);
           }
         }
       } catch (error) {
+        setFloodData(null);
+        setFloodRisk(0);
+        setShowImpactPrediction(false);
         console.error("Error fetching flood data:", error);
       }
     };
-
     getData();
   }, [onHighRiskDetected]);
 
