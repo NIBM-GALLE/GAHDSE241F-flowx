@@ -19,6 +19,13 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 function UserProfile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -30,6 +37,7 @@ function UserProfile() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   // Fetch user profile and area names
   useEffect(() => {
@@ -118,6 +126,17 @@ function UserProfile() {
 
   const handleEdit = () => {
     setIsEditing(true);
+    setShowEditDialog(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsEditing(false);
+    setShowEditDialog(false);
+  };
+
+  const handleDialogSave = async () => {
+    await handleSave();
+    setShowEditDialog(false);
   };
 
   if (loading) {
@@ -222,7 +241,6 @@ function UserProfile() {
                   Manage your personal details and contact information
                 </p>
               </CardHeader>
-
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
@@ -257,31 +275,64 @@ function UserProfile() {
                   ))}
                 </div>
               </CardContent>
-
               <CardFooter className="flex justify-end gap-4 border-t px-6 py-4">
-                {isEditing ? (
-                  <>
-                    <Button
-                      onClick={() => setIsEditing(false)}
-                      variant="outline"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSave}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Save Changes
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={handleEdit} variant="outline">
-                    Edit Profile
-                  </Button>
-                )}
+                <Button onClick={handleEdit} variant="outline">
+                  Edit Profile
+                </Button>
               </CardFooter>
             </Card>
           </div>
+          {/* Edit Profile Dialog */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className="max-w-lg w-full rounded-2xl p-8 bg-white dark:bg-gray-900 shadow-2xl border dark:border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold mb-2 text-blue-700 dark:text-blue-200">
+                  Edit Profile
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Update your personal details below and save changes.
+                </p>
+              </DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); handleDialogSave(); }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {[
+                    { label: "First Name", key: "firstName" },
+                    { label: "Last Name", key: "lastName" },
+                    { label: "Email", key: "email", colSpan: 2 },
+                    { label: "Phone Number", key: "phone" },
+                    { label: "Emergency Contact", key: "emergencyContact" },
+                    { label: "NIC Number", key: "nic", readOnly: true },
+                    { label: "House ID", key: "houseId", readOnly: true },
+                    { label: "Address", key: "address", colSpan: 2 },
+                  ].map((field) => (
+                    <div
+                      key={field.key}
+                      className={field.colSpan === 2 ? "md:col-span-2" : ""}
+                    >
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {field.label}
+                      </Label>
+                      <Input
+                        name={field.key}
+                        value={profile[field.key] || ""}
+                        onChange={handleChange}
+                        readOnly={field.readOnly}
+                        className={`mt-1 ${field.readOnly ? "bg-gray-50 dark:bg-gray-700" : ""}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <DialogFooter className="flex justify-end gap-4 mt-4">
+                  <Button type="button" variant="outline" onClick={handleDialogClose}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Save Changes
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </main>
       </SidebarInset>
     </SidebarProvider>
