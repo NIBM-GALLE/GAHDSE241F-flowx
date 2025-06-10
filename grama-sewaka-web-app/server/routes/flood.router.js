@@ -11,13 +11,21 @@ import {
   getPastFloods,
   getCurrentFloodDetails,
   getPastFloodDetails,
-  updateFloodDetailsFields
+  updateFloodDetailsFields,
+  getTodayFloodDetails,
+  predictFloodML,
+  predictFloodRiskForUser,
 } from '../controllers/flood.controller.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-//all routes protected and only for administrators
+// public routes
+router.get('/details/today', getTodayFloodDetails);
+router.post('/predict-ml', predictFloodML);
+router.post('/predict-user-risk', predictFloodRiskForUser);
+
+// protect all other routes
 router.use(protect);
 
 router.post('/', insertFlood);

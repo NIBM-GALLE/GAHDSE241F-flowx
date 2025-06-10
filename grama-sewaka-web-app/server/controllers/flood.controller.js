@@ -1,5 +1,7 @@
 import pool from '../utils/db.js';
 import logger from '../utils/logger.js';
+import axios from 'axios';
+import { callFlaskModel } from '../utils/flaskProxy.js';
 
 //insert new flood
 export const insertFlood = async (req, res, next) => {
@@ -563,6 +565,89 @@ export const updateFloodDetailsFields = async (req, res, next) => {
     });
   } catch (error) {
     logger.error('Update flood details fields error:', error);
+    next(error);
+  }
+};
+
+// --- BEGIN: Public API for ML, user risk, and today details ---
+// Get today's flood details (from flood_details table)
+export const getTodayFloodDetails = async (req, res, next) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const [details] = await pool.query(
+      `SELECT * FROM flood_details WHERE flood_details_date = ? ORDER BY flood_details_id DESC LIMIT 1`,
+      [today]
+    );
+    if (details.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No flood details found for today',
+        data: null
+      });
+    }
+    // Add month and parse numeric fields for ML
+    const date = new Date(details[0].flood_details_date || details[0].date || Date.now());
+    const month = date.getMonth() + 1;
+    const river_level = parseFloat(details[0].river_level);
+    const rain_fall = parseFloat(details[0].rain_fall);
+    const water_recession_level = details[0].water_rising_rate !== undefined ? parseFloat(details[0].water_rising_rate) : null;
+    const processed = {
+      ...details[0],
+      month,
+      river_level,
+      rain_fall,
+      water_recession_level
+    };
+    res.status(200).json({
+      success: true,
+      message: "Today's flood details retrieved successfully",
+      data: processed
+    });
+  } catch (error) {
+    logger.error('Get today flood details error:', error);
+    next(error);
+  }
+};
+
+// Proxy ML prediction to Flask
+export const predictFloodML = async (req, res) => {
+  try {
+    const { model, features } = req.body;
+    if (!model || !features) {
+      return res.status(400).json({ success: false, message: 'Model and features are required' });
+    }
+    const flaskRes = await callFlaskModel(model, features);
+    res.status(200).json({ success: true, prediction: flaskRes.data.prediction });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'ML prediction failed', error: error.message });
+  }
+};
+
+// Predict flood risk for a user based on distance to river and flood area
+export const predictFloodRiskForUser = async (req, res, next) => {
+  try {
+    const { distance_to_river, flood_area } = req.body;
+    if (distance_to_river === undefined || flood_area === undefined) {
+      return res.status(400).json({ success: false, message: 'distance_to_river and flood_area are required' });
+    }
+    let riskLevel, message;
+    if (distance_to_river <= flood_area) {
+      riskLevel = 'danger';
+      message = `Your home is within the predicted flood area (${distance_to_river} km to river, flood may reach up to ${flood_area} km). You are at risk!`;
+    } else {
+      const safeDistance = (distance_to_river - flood_area).toFixed(2);
+      riskLevel = 'safe';
+      message = `You are approximately ${safeDistance} km outside the predicted flood area. Stay alert, but you are currently safe.`;
+    }
+    res.status(200).json({
+      success: true,
+      risk: riskLevel,
+      message,
+      distance_to_river: parseFloat(distance_to_river),
+      flood_area: parseFloat(flood_area)
+    });
+  } catch (error) {
+    logger.error('Predict flood risk for user error:', error);
     next(error);
   }
 };
