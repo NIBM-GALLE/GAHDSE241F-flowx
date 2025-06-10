@@ -123,8 +123,8 @@ function Contact() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 px-4 bg-blue-200 text-white">
-          <SidebarTrigger className="-ml-1 text-white" />
+        <header className="flex h-16 items-center gap-2 px-4 text-black dark:text-white">
+          <SidebarTrigger className="-ml-1" />
           <h1 className="text-xl font-semibold">
             Emergency Contacts
           </h1>

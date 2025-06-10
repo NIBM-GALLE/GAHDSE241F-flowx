@@ -34,7 +34,9 @@ export const useVictimRequestStore = create((set) => ({
   async fetchVictimHistory() {
     set({ historyLoading: true, historyError: null });
     try {
-      const res = await axios.get('/api/victims/history');
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.get('/api/victims/history', { headers });
       if (!res.data?.data?.allHouseRequests) {
         throw new Error('No requests found');
       }

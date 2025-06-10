@@ -6,6 +6,7 @@ import { MdOutlineAnnouncement } from "react-icons/md";
 import { FaWater } from "react-icons/fa";
 import { FaPhoneAlt } from "react-icons/fa";
 import { FaUsers } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/sidebar";
 
 export function AppSidebar({ ...props }) {
+  const navigate = useNavigate();
+
   const navMain = [
     {
       title: "Flood Prediction",
@@ -35,7 +38,7 @@ export function AppSidebar({ ...props }) {
         },
         {
           title: "Flood Impact Map",
-          url: "/flood-impact-map",
+          url: "/flood-map",
         },
       ],
     },
@@ -124,11 +127,11 @@ export function AppSidebar({ ...props }) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
                   <img src={logo} alt="Logo" className="w-10 h-10" />
                   <span className="hidden lg:inline text-lg font-bold">FlowX</span>
                 </div>
-                  <ModeToggle className="gap-2" />
+                <ModeToggle className="gap-2" />
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
