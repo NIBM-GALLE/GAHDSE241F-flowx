@@ -9,7 +9,10 @@ export function useAnnouncementsStore() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("api/announcements/all");
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/announcements/all", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to fetch announcements");
       const data = await res.json();
       setAnnouncements(data.announcements || []);

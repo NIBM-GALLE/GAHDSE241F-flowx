@@ -17,7 +17,10 @@ export const useSubsidiesStore = create((set) => ({
   fetchNewSubsidies: async () => {
     set({ loadingNew: true, errorNew: null });
     try {
-      const res = await axios.get("/api/subsidies/available");
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/subsidies/available", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.data.success) {
         set({
           newSubsidies: res.data.data.subsidies,

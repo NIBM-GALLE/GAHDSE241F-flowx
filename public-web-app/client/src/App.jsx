@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import ShelterInformation from "./pages/ShelterInformation";
 import Shelters from "./pages/Shelters";
 import UserProfile from "./pages/UserProfile";
+import FloodMap from "./pages/FloodMap";
 
 function App() {
   
@@ -82,6 +83,11 @@ function App() {
           <Route path="/user-profile" element={
             <ProtectedRoute>
               <UserProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/flood-map" element={
+            <ProtectedRoute>
+              <FloodMap />
             </ProtectedRoute>
           } />
 
