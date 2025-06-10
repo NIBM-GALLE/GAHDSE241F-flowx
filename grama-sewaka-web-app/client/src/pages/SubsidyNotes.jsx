@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, PlusCircle } from "lucide-react"
 import { useSubsidyRequestStore } from "@/stores/useSubsidyRequestStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { useUserStore } from "@/stores/useUserStore";
 
 const statusVariantMap = {
   approved: "success",
@@ -56,6 +57,8 @@ function SubsidyNotes() {
     updateSubsidyRequestStatus,
     clearStatus,
   } = useSubsidyRequestStore();
+
+  const { user } = useUserStore();
 
   React.useEffect(() => {
     fetchSubsidyRequests();
@@ -136,7 +139,6 @@ function SubsidyNotes() {
             Agricultural Subsidy Management
           </h1>
         </header>
-
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
           <div className="space-y-6">
             {/* Summary Cards */}
@@ -197,10 +199,12 @@ function SubsidyNotes() {
                         className="pl-10 w-full md:w-[300px]"
                       />
                     </div>
-                    <Button onClick={() => setIsAddingNote(true)}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Record
-                    </Button>
+                    {user?.role === "grama_sevaka" && (
+                      <Button onClick={() => setIsAddingNote(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Record
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -231,7 +235,9 @@ function SubsidyNotes() {
                           </TableCell>
                           <TableCell className="text-right space-x-2">
                             <Button size="sm" variant="outline" onClick={() => handleView(note)}>View</Button>
-                            <Button size="sm" variant="default" onClick={() => handleUpdateStatus(note)}>Update Status</Button>
+                            {user?.role === "grama_sevaka" && (
+                              <Button size="sm" variant="default" onClick={() => handleUpdateStatus(note)}>Update Status</Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))
@@ -253,88 +259,90 @@ function SubsidyNotes() {
               </CardContent>
             </Card>
           </div>
-          {/* Add Record Modal */}
-          <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Subsidy Request</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="house_id">House ID *</Label>
-                  <Input
-                    id="house_id"
-                    name="house_id"
-                    value={addForm.house_id}
-                    onChange={handleAddChange}
-                    className={addErrors.house_id ? "border-red-500" : ""}
-                  />
-                  {addErrors.house_id && <p className="text-sm text-red-500">{addErrors.house_id}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subsidies_id">Subsidy *</Label>
-                  <select
-                    id="subsidies_id"
-                    name="subsidies_id"
-                    value={addForm.subsidies_id}
-                    onChange={handleAddChange}
-                    className={`w-full border rounded px-2 py-2 ${addErrors.subsidies_id ? "border-red-500" : ""}`}
-                  >
-                    <option value="">Select subsidy</option>
-                    {subsidies.map((s) => (
-                      <option key={s.subsidies_id} value={s.subsidies_id}>
-                        {s.subsidy_name} ({s.category})
-                      </option>
-                    ))}
-                  </select>
-                  {addErrors.subsidies_id && <p className="text-sm text-red-500">{addErrors.subsidies_id}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Input
-                    id="category"
-                    name="category"
-                    value={addForm.category}
-                    onChange={handleAddChange}
-                    className={addErrors.category ? "border-red-500" : ""}
-                  />
-                  {addErrors.category && <p className="text-sm text-red-500">{addErrors.category}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantity *</Label>
-                  <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    value={addForm.quantity}
-                    onChange={handleAddChange}
-                    className={addErrors.quantity ? "border-red-500" : ""}
-                    min="1"
-                  />
-                  {addErrors.quantity && <p className="text-sm text-red-500">{addErrors.quantity}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="collection_place">Collection Place *</Label>
-                  <Input
-                    id="collection_place"
-                    name="collection_place"
-                    value={addForm.collection_place}
-                    onChange={handleAddChange}
-                    className={addErrors.collection_place ? "border-red-500" : ""}
-                  />
-                  {addErrors.collection_place && <p className="text-sm text-red-500">{addErrors.collection_place}</p>}
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
-                  </DialogClose>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
-                    {loading ? "Saving..." : "Add Request"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          {/* Add Record Modal (only for grama_sevaka) */}
+          {user?.role === "grama_sevaka" && (
+            <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Subsidy Request</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="house_id">House ID *</Label>
+                    <Input
+                      id="house_id"
+                      name="house_id"
+                      value={addForm.house_id}
+                      onChange={handleAddChange}
+                      className={addErrors.house_id ? "border-red-500" : ""}
+                    />
+                    {addErrors.house_id && <p className="text-sm text-red-500">{addErrors.house_id}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subsidies_id">Subsidy *</Label>
+                    <select
+                      id="subsidies_id"
+                      name="subsidies_id"
+                      value={addForm.subsidies_id}
+                      onChange={handleAddChange}
+                      className={`w-full border rounded px-2 py-2 ${addErrors.subsidies_id ? "border-red-500" : ""}`}
+                    >
+                      <option value="">Select subsidy</option>
+                      {subsidies.map((s) => (
+                        <option key={s.subsidies_id} value={s.subsidies_id}>
+                          {s.subsidy_name} ({s.category})
+                        </option>
+                      ))}
+                    </select>
+                    {addErrors.subsidies_id && <p className="text-sm text-red-500">{addErrors.subsidies_id}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category *</Label>
+                    <Input
+                      id="category"
+                      name="category"
+                      value={addForm.category}
+                      onChange={handleAddChange}
+                      className={addErrors.category ? "border-red-500" : ""}
+                    />
+                    {addErrors.category && <p className="text-sm text-red-500">{addErrors.category}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity *</Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      value={addForm.quantity}
+                      onChange={handleAddChange}
+                      className={addErrors.quantity ? "border-red-500" : ""}
+                      min="1"
+                    />
+                    {addErrors.quantity && <p className="text-sm text-red-500">{addErrors.quantity}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="collection_place">Collection Place *</Label>
+                    <Input
+                      id="collection_place"
+                      name="collection_place"
+                      value={addForm.collection_place}
+                      onChange={handleAddChange}
+                      className={addErrors.collection_place ? "border-red-500" : ""}
+                    />
+                    {addErrors.collection_place && <p className="text-sm text-red-500">{addErrors.collection_place}</p>}
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                      {loading ? "Saving..." : "Add Request"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
 
           {/* View Modal */}
           <Dialog open={!!viewNote} onOpenChange={() => setViewNote(null)}>
@@ -395,22 +403,24 @@ function SubsidyNotes() {
           </Dialog>
 
           {/* Update Status Modal */}
-          <Dialog open={!!updateStatusNote} onOpenChange={() => setUpdateStatusNote(null)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Update Status</DialogTitle>
-              </DialogHeader>
-              <div>Are you sure you want to mark this request as <b>collected</b>?</div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button type="button" className="bg-blue-600 hover:bg-blue-700" onClick={handleStatusSubmit} disabled={statusLoading}>
-                  {statusLoading ? "Updating..." : "Mark as Collected"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {user?.role === "grama_sevaka" && (
+            <Dialog open={!!updateStatusNote} onOpenChange={() => setUpdateStatusNote(null)}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Update Status</DialogTitle>
+                </DialogHeader>
+                <div>Are you sure you want to mark this request as <b>collected</b>?</div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button type="button" className="bg-blue-600 hover:bg-blue-700" onClick={handleStatusSubmit} disabled={statusLoading}>
+                    {statusLoading ? "Updating..." : "Mark as Collected"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </main>
       </SidebarInset>
     </SidebarProvider>
