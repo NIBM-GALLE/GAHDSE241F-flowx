@@ -12,6 +12,7 @@ import { NavUser } from "./nav-user";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 
 import logo from '/src/assets/images/logo.svg';
+import Statistics from "@/pages/Statistics";
 
 import {
   Sidebar,
@@ -35,7 +36,7 @@ export function AppSidebar({ ...props }) {
         icon: MdDashboard,
         items: [
           { title: "Overview", url: "/dashboard" },
-          { title: "Statistics", url: "/admin/statistics" },
+          { title: "Statistics", url: "/statistics" },
         ],
       },
       {

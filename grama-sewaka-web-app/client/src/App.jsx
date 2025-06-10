@@ -24,6 +24,10 @@ import CreateFloodEvent from "./pages/CreateFloodEvent";
 import FloodDetails from "./pages/FloodDetails";
 import FloodEvents from "./pages/FloodEvents";
 import CreateFloodDetails from "./pages/CreateFloodDetails";
+import Statistics from "./pages/Statistics";
+
+// components
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -60,6 +64,7 @@ function App() {
           <Route path="/create-flood-details" element={<CreateFloodDetails />} />
           <Route path="/flood-details" element={<FloodDetails />} />
 
+          <Route path="/statistics" element={<Statistics /> } />
         </Routes>
     </ThemeProvider>
   );
