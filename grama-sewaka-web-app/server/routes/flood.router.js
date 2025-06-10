@@ -33,13 +33,13 @@ router.post('/details', insertFloodDetails);
 router.put('/:flood_id/status', updateFloodStatus);
 router.put('/details/:flood_details_id', updateFloodDetails);
 router.put('/:flood_id', updateFlood);
-router.put('/details/:flood_details_id/fields', updateFloodDetailsFields); // Update only changed fields for flood_details
+router.put('/details/:flood_details_id/fields', updateFloodDetailsFields);
 
 router.get('/current', getCurrentFlood);
 router.get('/past', getPastFloods);
 router.get('/', getAllFloods);
 router.get('/:flood_id/details', getFloodDetails);
-router.get('/details/current', getCurrentFloodDetails); // Get most recent flood_details
-router.get('/details/past', getPastFloodDetails); // Get all past flood_details (excluding current)
+router.get('/details/current', getCurrentFloodDetails);
+router.get('/details/past', getPastFloodDetails);
 
 export default router;

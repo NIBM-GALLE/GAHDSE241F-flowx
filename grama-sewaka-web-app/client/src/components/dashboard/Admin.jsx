@@ -1,101 +1,73 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FloodSummary from "./FloodSummary";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-// Dummy data for demonstration
-const initialFloods = [
-  { id: 1, date: "2025-06-01", river_level: 2.8, rain_fall: 120, area: "Galle", status: "active" },
-  { id: 2, date: "2025-05-15", river_level: 2.2, rain_fall: 80, area: "Matara", status: "over" },
-];
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import axios from "axios";
+import { useUserStore } from '@/stores/useUserStore';
 
 export default function AdminDashboard() {
-  const [floods, setFloods] = useState(initialFloods);
-  const [form, setForm] = useState({ date: "", river_level: "", rain_fall: "", area: "" });
-  const [editingId, setEditingId] = useState(null);
+  const [pastFloodDetails, setPastFloodDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { token } = useUserStore();
 
-  // Handle form input
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // Insert or update flood
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editingId) {
-      setFloods(floods.map(f => f.id === editingId ? { ...f, ...form, id: editingId } : f));
-      setEditingId(null);
-    } else {
-      setFloods([...floods, { ...form, id: Date.now(), status: "active" }]);
-    }
-    setForm({ date: "", river_level: "", rain_fall: "", area: "" });
-  };
-
-  // Edit flood
-  const handleEdit = (flood) => {
-    setForm({ date: flood.date, river_level: flood.river_level, rain_fall: flood.rain_fall, area: flood.area });
-    setEditingId(flood.id);
-  };
+  useEffect(() => {
+    const fetchPastFloodDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await axios.get("/api/flood/details/past", {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
+        });
+        setPastFloodDetails(res.data?.data || []);
+      } catch {
+        setError("Failed to fetch past flood details.");
+        setPastFloodDetails([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchPastFloodDetails();
+  }, [token]);
 
   return (
     <div className="space-y-8">
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
-          <CardTitle>Flood Details</CardTitle>
+          <CardTitle>Past Flood Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4" onSubmit={handleSubmit}>
-            <div>
-              <Label>Date</Label>
-              <Input name="date" type="date" value={form.date} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label>River Level (m)</Label>
-              <Input name="river_level" type="number" step="0.01" value={form.river_level} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label>Rainfall (mm)</Label>
-              <Input name="rain_fall" type="number" value={form.rain_fall} onChange={handleChange} required />
-            </div>
-            <div>
-              <Label>Area</Label>
-              <Input name="area" value={form.area} onChange={handleChange} required />
-            </div>
-            <div className="md:col-span-4 flex gap-2 mt-2">
-              <Button type="submit">{editingId ? "Update" : "Insert"} Flood</Button>
-              {editingId && <Button type="button" variant="outline" onClick={() => { setEditingId(null); setForm({ date: "", river_level: "", rain_fall: "", area: "" }); }}>Cancel</Button>}
-            </div>
-          </form>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border">
-              <thead className="bg-gray-100 dark:bg-gray-800">
-                <tr>
-                  <th className="p-2">Date</th>
-                  <th className="p-2">River Level</th>
-                  <th className="p-2">Rainfall</th>
-                  <th className="p-2">Area</th>
-                  <th className="p-2">Status</th>
-                  <th className="p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {floods.map(flood => (
-                  <tr key={flood.id} className="border-t">
-                    <td className="p-2">{flood.date}</td>
-                    <td className="p-2">{flood.river_level}</td>
-                    <td className="p-2">{flood.rain_fall}</td>
-                    <td className="p-2">{flood.area}</td>
-                    <td className="p-2">{flood.status}</td>
-                    <td className="p-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(flood)}>Edit</Button>
-                    </td>
-                  </tr>
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p className="text-red-500">{error}</p>
+          ) : pastFloodDetails.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>River Level</TableHead>
+                  <TableHead>Rainfall</TableHead>
+                  <TableHead>Water Rising Rate</TableHead>
+                  <TableHead>Flood Area</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pastFloodDetails.map((detail) => (
+                  <TableRow key={detail.flood_details_id}>
+                    <TableCell>{detail.flood_details_date}</TableCell>
+                    <TableCell>{detail.river_level} m</TableCell>
+                    <TableCell>{detail.rain_fall} mm</TableCell>
+                    <TableCell>{detail.water_rising_rate} m/h</TableCell>
+                    <TableCell>{detail.flood_area} km²</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          ) : (
+            <p>No past flood details.</p>
+          )}
         </CardContent>
       </Card>
     </div>
