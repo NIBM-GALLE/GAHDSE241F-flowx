@@ -72,11 +72,22 @@ export const useSubsidyRequestStore = create((set) => ({
   async fetchDivisionSubsidyRequests() {
     set({ loading: true, error: null });
     try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
       const token = localStorage.getItem("token");
-      const res = await axios.get("/api/subsidy/division-requests", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      set({ requests: res.data.requests || [], loading: false });
+      if (user && user.role === "government_officer") {
+        const res = await axios.get("/api/subsidy/division-requests", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        set({ requests: res.data.requests || [], loading: false });
+      } else if (user && user.role === "grama_sevaka") {
+        // fallback to grama_sevaka's own requests endpoint
+        const res = await axios.get("/api/subsidy/requests", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        set({ requests: res.data.requests || [], loading: false });
+      } else {
+        set({ loading: false, error: "Access denied: Only government officers or grama sevaka can view subsidy requests." });
+      }
     } catch (err) {
       set({ error: err.response?.data?.error || err.message, loading: false });
     }
