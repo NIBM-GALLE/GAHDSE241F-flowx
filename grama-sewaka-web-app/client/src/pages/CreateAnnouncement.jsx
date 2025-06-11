@@ -47,7 +47,7 @@ function CreateAnnouncement() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 px-4 border-b dark:border-gray-800 bg-gradient-to-r from-blue-600 to-blue-400 text-white">
+        <header className="flex h-16 items-center gap-2 px-4 border-b dark:border-gray-800 bg-gradient-to-r text-black">
           <SidebarTrigger />
           <h1 className="text-xl font-semibold">Create Announcement</h1>
         </header>
