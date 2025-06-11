@@ -28,6 +28,19 @@ export const getDivisionalSecretariats = async (req, res, next) => {
   }
 };
 
+// Get all divisional secretariats (no filter)
+export const getAllDivisionalSecretariats = async (req, res, next) => {
+  try {
+    const [secretariats] = await pool.query('SELECT * FROM divisional_secretariat');
+    res.status(200).json({
+      success: true,
+      data: secretariats
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getGramaNiladhariDivisions = async (req, res, next) => {
   try {
     const { divisional_secretariat_id } = req.query;

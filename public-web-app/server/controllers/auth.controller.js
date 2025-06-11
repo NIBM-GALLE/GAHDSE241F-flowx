@@ -13,8 +13,6 @@ export const registerUser = async (req, res, next) => {
     phone,
     houseId,
     address,
-    latitude,
-    longitude,
     members,
     distance_to_river,
     grama_niladhari_division_id,
@@ -62,41 +60,45 @@ export const registerUser = async (req, res, next) => {
 
     //if houseId is not provided, create a new house
     if (houseId) {
-    const [existingHouse] = await pool.query(
+      const [existingHouse] = await pool.query(
         "SELECT house_id FROM house WHERE house_id = ?",
         [houseId]
-    );
+      );
 
-    if (existingHouse.length === 0) {
+      if (existingHouse.length === 0) {
         //validate required fields for new house
-        if (!address || !latitude || !longitude || !grama_niladhari_division_id || 
-            !divisional_secretariat_id || !district_id) {
-        return next(errorHandler(400, "For new house, address, location coordinates and administrative divisions are required"));
+        if (!address || !grama_niladhari_division_id || !divisional_secretariat_id || !district_id) {
+          return next(errorHandler(400, "For new house, address and administrative divisions are required"));
         }
-
-        //create new house
+        //create new house (latitude/longitude removed)
         await pool.query(
-        `INSERT INTO house 
-        (house_id, address, latitude, longitude, members, distance_to_river, 
-        grama_niladhari_division_id, divisional_secretariat_id, district_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
+          `INSERT INTO house 
+          (house_id, address, members, distance_to_river, grama_niladhari_division_id, divisional_secretariat_id, district_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
             houseId,
             address,
-            latitude,
-            longitude,
             members,
             distance_to_river || 0.0,
             grama_niladhari_division_id,
             divisional_secretariat_id,
             district_id
-        ]
+          ]
         );
+      }
+      finalHouseId = houseId;
+    } else {
+      //create new house if not provided
+      if (!address || !grama_niladhari_division_id || !divisional_secretariat_id || !district_id) {
+        return next(errorHandler(400, "For new house, address and administrative divisions are required"));
+      }
+      const [houseResult] = await pool.query(
+        `INSERT INTO house (address, members, distance_to_river, grama_niladhari_division_id, divisional_secretariat_id, district_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [address, members, distance_to_river || 0.0, grama_niladhari_division_id, divisional_secretariat_id, district_id]
+      );
+      finalHouseId = houseResult.insertId;
     }
-    //use user-provided houseId
-    finalHouseId = houseId;
-    }
-
 
     //hash password
     const hashedPassword = await hashPassword(password);
@@ -242,9 +244,9 @@ export const checkHouseId = async (req, res, next) => {
   }
   
   try {
+    // Remove latitude and longitude from SELECT for checkHouseId
     const [house] = await pool.query(
-      `SELECT house_id, address, latitude, longitude 
-       FROM house WHERE house_id = ?`,
+      `SELECT house_id, address FROM house WHERE house_id = ?`,
       [houseId]
     );
     
@@ -284,8 +286,9 @@ export const getUserProfile = async (req, res, next) => {
 
 //update user profile
 export const updateUserProfile = async (req, res, next) => {
+  // Remove latitude and longitude from allowedFields, update logic, and house update logic
   const allowedFields = [
-    'firstName', 'lastName', 'email', 'phone', 'houseId', 'address', 'latitude', 'longitude'
+    'firstName', 'lastName', 'email', 'phone', 'houseId', 'address'
   ];
   const updates = {};
   for (const key of allowedFields) {
@@ -346,14 +349,6 @@ export const updateUserProfile = async (req, res, next) => {
       houseFields.push('address = ?');
       houseParams.push(updates.address);
     }
-    if (updates.latitude) {
-      houseFields.push('latitude = ?');
-      houseParams.push(updates.latitude);
-    }
-    if (updates.longitude) {
-      houseFields.push('longitude = ?');
-      houseParams.push(updates.longitude);
-    }
     if (houseFields.length > 0) {
       await pool.query(
         `UPDATE house SET ${houseFields.join(', ')} WHERE house_id = ?`,
@@ -374,9 +369,9 @@ export const updateUserProfile = async (req, res, next) => {
 //get user house details
 export const getUserHouseDetails = async (req, res, next) => {
   try {
+    // Remove latitude and longitude from SELECT/response for house details
     const [house] = await pool.query(
-      `SELECT h.house_id, h.address, h.latitude, h.longitude, 
-              h.members, h.distance_to_river, 
+      `SELECT h.house_id, h.address, h.members, h.distance_to_river, 
               h.grama_niladhari_division_id, 
               h.divisional_secretariat_id, 
               h.district_id

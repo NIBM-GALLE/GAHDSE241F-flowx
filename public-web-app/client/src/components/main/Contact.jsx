@@ -1,12 +1,23 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Contact() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    subject: "",
+    phone: "",
+    donationType: "",
     message: "",
+    divisional_secretariat_id: ""
   });
+  const [divisionalSecretariats, setDivisionalSecretariats] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/area/divisional-secretariats-all")
+      .then((res) => res.json())
+      .then((data) => setDivisionalSecretariats(data.data || []));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,12 +27,41 @@ function Contact() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log("Form submitted:", formData);
-    // Reset form after submission
-    setFormData({ name: "", email: "", message: "" });
+    // Map frontend fields to backend expected payload
+    const payload = {
+      fullname: formData.name,
+      donation_email: formData.email,
+      donation_phone_number: formData.phone,
+      category: formData.donationType,
+      message: formData.message,
+      divisional_secretariat_id: formData.divisional_secretariat_id ? Number(formData.divisional_secretariat_id) : undefined
+    };
+    try {
+      const response = await fetch("/api/donation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        // Success logic here (show a message, etc.)
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          phone: "",
+          donationType: "",
+          message: "",
+          divisional_secretariat_id: ""
+        });
+      } else {
+        // Handle error (show error message)
+      }
+    // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      // Handle error (show error message)
+    }
   };
   return (
     <section id="contact" className="py-16 bg-white">
@@ -179,6 +219,8 @@ function Contact() {
                   type="text"
                   id="subject"
                   name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter message subject"
                 />
@@ -195,6 +237,8 @@ function Contact() {
                   type="tel"
                   id="phone"
                   name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="+94 XXXXXXXXX"
                 />
@@ -211,6 +255,8 @@ function Contact() {
                 <select
                   id="donationType"
                   name="donationType"
+                  value={formData.donationType}
+                  onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select type of donation</option>
@@ -221,7 +267,30 @@ function Contact() {
                   <option value="food">Hygiene Supplies</option>
                   <option value="water">Medical Supplies</option>
                   <option value="other">Other</option>
+                </select>
+              </div>
 
+              <div className="form-group md:col-span-2">
+                <label
+                  htmlFor="divisional_secretariat_id"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Select Divisional Secretariat
+                </label>
+                <select
+                  id="divisional_secretariat_id"
+                  name="divisional_secretariat_id"
+                  value={formData.divisional_secretariat_id}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Divisional Secretariat</option>
+                  {divisionalSecretariats.map((ds) => (
+                    <option key={ds.divisional_secretariat_id} value={ds.divisional_secretariat_id}>
+                      {ds.divisional_secretariat_name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -235,6 +304,8 @@ function Contact() {
                 <textarea
                   id="message"
                   name="message"
+                  value={formData.message}
+                  onChange={handleChange}
                   rows="4"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Write your message here..."

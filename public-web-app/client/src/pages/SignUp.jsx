@@ -36,8 +36,6 @@ const step1Schema = z.object({
 //address and area details
 const step2Schema = z.object({
   address: z.string().min(1, "Address is required"),
-  latitude: z.string().min(1, "Latitude is required"),
-  longitude: z.string().min(1, "Longitude is required"),
   members: z.string().min(1, "Members is required"),
   distance_to_river: z.string().min(1, "Distance to river is required"),
   district_id: z.string().min(1, "District is required"),
@@ -74,8 +72,6 @@ function SignUp() {
     resolver: zodResolver(step2Schema),
     defaultValues: {
       address: "",
-      latitude: "",
-      longitude: "",
       members: "",
       distance_to_river: "",
       district_id: "",
@@ -200,20 +196,6 @@ function SignUp() {
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl><Input placeholder="Enter your address" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={step2Form.control} name="latitude" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Latitude</FormLabel>
-                  <FormControl><Input placeholder="Latitude (e.g. 6.9271)" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={step2Form.control} name="longitude" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Longitude</FormLabel>
-                  <FormControl><Input placeholder="Longitude (e.g. 79.8612)" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

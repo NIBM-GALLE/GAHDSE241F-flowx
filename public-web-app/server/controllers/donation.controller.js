@@ -41,9 +41,14 @@ export const createDonation = async (req, res, next) => {
     divisional_secretariat_id
   } = req.body;
 
-  //validate required fields
+  // Validate required fields
   if (!fullname || !donation_email || !category || !message || !divisional_secretariat_id) {
     return next(errorHandler(400, "Full name, email, category, message, and divisional_secretariat_id are required"));
+  }
+
+  // Validate divisional_secretariat_id is a number
+  if (isNaN(Number(divisional_secretariat_id))) {
+    return next(errorHandler(400, "A valid divisional_secretariat_id is required"));
   }
 
   //validate email format
