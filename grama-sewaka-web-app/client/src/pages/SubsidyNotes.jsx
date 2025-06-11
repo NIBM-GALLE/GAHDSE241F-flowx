@@ -55,22 +55,34 @@ function SubsidyNotes() {
     fetchAvailableSubsidies,
     createSubsidyRequest,
     updateSubsidyRequestStatus,
+    fetchDivisionSubsidyRequests,
     clearStatus,
   } = useSubsidyRequestStore();
 
   const { user } = useUserStore();
 
+  // Fetch correct data based on role
   React.useEffect(() => {
-    fetchSubsidyRequests();
+    if (user?.role === "government_officer") {
+      fetchDivisionSubsidyRequests();
+    } else {
+      fetchSubsidyRequests();
+    }
     fetchAvailableSubsidies();
-  }, [fetchSubsidyRequests, fetchAvailableSubsidies]);
+  }, [fetchSubsidyRequests, fetchAvailableSubsidies, fetchDivisionSubsidyRequests, user?.role]);
 
-  const filteredNotes = requests.filter(
-    (note) =>
-      (note.householder_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (note.nic?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (note.note?.toLowerCase() || "").includes(search.toLowerCase())
-  );
+  const filteredNotes = requests.filter((note) => {
+    const searchLower = search.toLowerCase();
+    return (
+      (note.householder_name?.toLowerCase() || "").includes(searchLower) ||
+      (note.nic?.toLowerCase() || "").includes(searchLower) ||
+      (note.note?.toLowerCase() || "").includes(searchLower) ||
+      (note.house_id?.toString().toLowerCase() || "").includes(searchLower) ||
+      (note.subsidy_name?.toLowerCase() || "").includes(searchLower) ||
+      (note.subsidy_category?.toLowerCase() || "").includes(searchLower) ||
+      (note.house_address?.toLowerCase() || "").includes(searchLower)
+    );
+  });
 
   const handleAddChange = (e) => {
     const { name, value } = e.target;
@@ -185,7 +197,9 @@ function SubsidyNotes() {
                   <div>
                     <CardTitle>Subsidy Records</CardTitle>
                     <CardDescription>
-                      All approved and pending agricultural subsidies
+                      {user?.role === "government_officer"
+                        ? "All subsidy requests in your division"
+                        : "All approved and pending agricultural subsidies"}
                     </CardDescription>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -217,6 +231,11 @@ function SubsidyNotes() {
                       <TableHead>Category</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Status</TableHead>
+                      {user?.role === "government_officer" && <>
+                        <TableHead>Grama Sevaka</TableHead>
+                        <TableHead>Division</TableHead>
+                        <TableHead>Address</TableHead>
+                      </>}
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -233,6 +252,11 @@ function SubsidyNotes() {
                               {note.subsidies_status?.charAt(0).toUpperCase() + note.subsidies_status?.slice(1)}
                             </Badge>
                           </TableCell>
+                          {user?.role === "government_officer" && <>
+                            <TableCell>{note.grama_sevaka_first_name} {note.grama_sevaka_last_name}</TableCell>
+                            <TableCell>{note.grama_niladhari_division_name}</TableCell>
+                            <TableCell>{note.house_address}</TableCell>
+                          </>}
                           <TableCell className="text-right space-x-2">
                             <Button size="sm" variant="outline" onClick={() => handleView(note)}>View</Button>
                             {user?.role === "grama_sevaka" && (
@@ -243,7 +267,7 @@ function SubsidyNotes() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan="6" className="text-center py-8">
+                        <TableCell colSpan={user?.role === "government_officer" ? 9 : 6} className="text-center py-8">
                           <div className="flex flex-col items-center justify-center space-y-2">
                             <Search className="h-8 w-8 text-muted-foreground" />
                             <p className="text-lg font-medium">No records found</p>
