@@ -1,217 +1,237 @@
-import React, { useEffect } from "react";
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-    Tooltip,
-    CartesianGrid,
-} from "recharts";
-import { useDashboardStore } from "@/stores/useDashboardStore";
-import { useUserStore } from "@/stores/useUserStore";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { BiWater, BiCloudRain, BiMap, BiTimeFive } from "react-icons/bi";
+import { MdOutlineSafetyDivider } from "react-icons/md";
 
-export default function FloodSummary() {
-    const { token } = useUserStore();
-    const {
-        floodSummary,
-        floodSummaryLoading,
-        floodSummaryError,
-        fetchFloodSummary,
-    } = useDashboardStore(token);
+function FloodSummary() {
+  const [floodData, setFloodData] = useState(null);
+  const [floodRisk, setFloodRisk] = useState(0);
+  const [safeZones, setSafeZones] = useState(null);
+  const [recoveryTime, setRecoveryTime] = useState(null);
+  const [floodArea, setFloodArea] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchFloodSummary();
-        // eslint-disable-next-line
-    }, [token]);
-
-    // Loading state
-    if (floodSummaryLoading) {
-        return (
-            <Card className="border border-blue-200 dark:border-blue-800 animate-pulse">
-                <CardHeader className="bg-blue-50 dark:bg-blue-900/20 rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <span className="text-blue-500">Loading flood summary...</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 h-40" />
-            </Card>
-        );
-    }
-
-    // Error state
-    if (floodSummaryError) {
-        return (
-            <Card className="border border-red-200 dark:border-red-800">
-                <CardHeader className="bg-red-50 dark:bg-red-900/20 rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <span className="text-red-500">Error loading flood summary</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 text-red-600 dark:text-red-300">
-                    {floodSummaryError}
-                </CardContent>
-            </Card>
-        );
-    }
-
-    // Empty state
-    if (!floodSummary) {
-        return (
-            <Card className="border border-gray-200 dark:border-gray-800">
-                <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <span className="text-gray-500">No flood data available</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 text-gray-500 dark:text-gray-400">
-                    Flood summary data is not available at the moment.
-                </CardContent>
-            </Card>
-        );
-    }
-
-    // Extract data from API response
-    const floodStatus = floodSummary.status || "over"; // fallback
-    const floodRisk = floodSummary.risk || 0;
-    const floodData = {
-        rain_fall: floodSummary.rain_fall,
-        river_level: floodSummary.river_level,
-        date: floodSummary.date,
-        location: floodSummary.location,
-        affectedFamilies: floodSummary.affected_families,
-        collectedItems: floodSummary.collected_items,
-        progress: floodSummary.relief_progress,
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch latest flood data (public endpoint)
+        const floodRes = await axios.get("/api/flood/details/today", { withCredentials: false });
+        const data = floodRes.data?.data;
+        if (!data) {
+          setFloodData(null);
+          setFloodRisk(0);
+          setSafeZones(null);
+          setRecoveryTime(null);
+          setLoading(false);
+          return;
+        }
+        setFloodData(data);
+        // ML prediction for flood risk
+        const riskRes = await axios.post("/api/flood/predict-ml", {
+          model: "flood_percentage_rf",
+          features: [data.month, data.rain_fall, data.river_level],
+        });
+        let risk = 0;
+        if (
+          riskRes.data &&
+          riskRes.data.prediction &&
+          Array.isArray(riskRes.data.prediction) &&
+          riskRes.data.prediction.length > 0
+        ) {
+          risk = parseFloat((riskRes.data.prediction[0] * 100).toFixed(2));
+        }
+        setFloodRisk(risk);
+        // ML prediction for flood area, safe zones, recovery time
+        const { month, rain_fall, river_level, water_recession_level } = data;
+        if (
+          month !== undefined &&
+          rain_fall !== undefined &&
+          river_level !== undefined &&
+          water_recession_level !== undefined
+        ) {
+          const features = [month, rain_fall, river_level, water_recession_level];
+          // Flood area
+          const floodAreaRes = await axios.post("/api/flood/predict-ml", {
+            model: "flood_area",
+            features,
+          });
+          setFloodArea(floodAreaRes.data?.prediction?.[0] ?? null);
+          // Safe zones
+          const safeZonesRes = await axios.post("/api/flood/predict-ml", {
+            model: "flood_safe_area",
+            features,
+          });
+          setSafeZones(safeZonesRes.data?.prediction?.[0] ?? null);
+          // Recovery time
+          const recoveryFeatures = [...features, floodAreaRes.data?.prediction?.[0] ?? 0];
+          const recoveryRes = await axios.post("/api/flood/predict-ml", {
+            model: "recover_days_xgbr",
+            features: recoveryFeatures,
+          });
+          setRecoveryTime(recoveryRes.data?.prediction?.[0] ?? null);
+        }
+      } catch {
+        setError("Failed to fetch flood summary data. Please try again later.");
+        setFloodData(null);
+        setFloodRisk(0);
+        setSafeZones(null);
+        setRecoveryTime(null);
+      } finally {
+        setLoading(false);
+      }
     };
-    const analysis = floodSummary.item_distribution || [];
+    fetchData();
+  }, []);
 
-    return (
-        <div className="space-y-6">
-            {floodStatus === "flood" ? (
-                <Card className="border border-blue-200 dark:border-blue-800">
-                    <CardHeader className="bg-blue-50 dark:bg-blue-900/20 rounded-t-lg">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <span className="text-red-500">🚨</span>
-                            <span>Real-Time Flood Analysis</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                        <div>
-                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Flood Risk</p>
-                            <Progress value={floodRisk} className="h-2" />
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {floodRisk}% risk detected - Take immediate action
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800">
-                                <CardContent className="text-center py-6">
-                                    <p className="font-semibold text-blue-700 dark:text-blue-300">🌊 River Level</p>
-                                    <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">
-                                        {floodData.river_level} M
-                                    </p>
-                                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">Critical level: 2.5M</p>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800">
-                                <CardContent className="text-center py-6">
-                                    <p className="font-semibold text-blue-700 dark:text-blue-300">🌧️ Rainfall Today</p>
-                                    <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-2">
-                                        {floodData.rain_fall} MM
-                                    </p>
-                                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">Normal range: 50-80mm</p>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </CardContent>
-                </Card>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Flood Summary */}
-                    <Card className="border border-gray-200 dark:border-gray-800">
-                        <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
-                            <div className="flex justify-between items-center">
-                                <CardTitle className="flex items-center gap-2">
-                                    <span className="text-green-500">✅</span>
-                                    <span>Flood Summary - {floodData.location}</span>
-                                </CardTitle>
-                                <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                    Completed
-                                </Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 gap-6 pt-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400">Date</p>
-                                    <p className="font-medium">{floodData.date}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400">Affected Families</p>
-                                    <p className="font-medium">{floodData.affectedFamilies}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400">Items Collected</p>
-                                    <p className="font-medium">{floodData.collectedItems}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400 mb-2">Relief Progress</p>
-                                    <Progress value={floodData.progress} className="h-2" />
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{floodData.progress}% completed</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+  const getBarColor = (percentage) => {
+    if (percentage <= 40) return "bg-green-500";
+    if (percentage <= 70) return "bg-yellow-500";
+    return "bg-red-500";
+  };
 
-                    {/* Bar Chart */}
-                    <Card className="border border-gray-200 dark:border-gray-800">
-                        <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
-                            <CardTitle className="flex items-center gap-2">
-                                <span className="text-blue-900">📊</span>
-                                <span>Item Distribution</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={analysis}>
-                                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                        <XAxis
-                                            dataKey="name"
-                                            stroke="#888"
-                                            className="text-xs"
-                                        />
-                                        <YAxis
-                                            stroke="#888"
-                                            className="text-xs"
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'hsl(var(--background))',
-                                                borderColor: 'hsl(var(--border))',
-                                                borderRadius: 'var(--radius)',
-                                            }}
-                                        />
-                                        <Bar
-                                            dataKey="count"
-                                            fill="#3b82f6"
-                                            radius={[4, 4, 0, 0]}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </CardContent>
-                    </Card>
+  const formatArea = (area) => {
+    if (area === null) return "-";
+    return typeof area === "number" ? area.toLocaleString() + " sq km" : area;
+  };
+
+  const formatTime = (days) => {
+    if (days === null) return "-";
+    return typeof days === "number" ? days + " days" : days;
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Flood Summary</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
+      ) : (
+        floodData && (
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center">
+                  <BiWater className="w-12 h-12 mr-4 text-blue-500" />
+                  <div>
+                    <h3 className="text-lg font-semibold">Flood Risk</h3>
+                    <div className="flex items-center">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                        <div
+                          className={`h-2.5 rounded-full ${getBarColor(floodRisk)}`}
+                          style={{ width: `${floodRisk}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{floodRisk}%</span>
+                    </div>
+                  </div>
                 </div>
-            )}
-        </div>
-    );
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center">
+                  <BiCloudRain className="w-12 h-12 mr-4 text-blue-400" />
+                  <div>
+                    <h3 className="text-lg font-semibold">Rainfall</h3>
+                    <p className="text-xl font-bold">
+                      {floodData.rain_fall !== undefined
+                        ? floodData.rain_fall.toFixed(2) + " mm"
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center">
+                  <BiMap className="w-12 h-12 mr-4 text-green-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold">River Level</h3>
+                    <p className="text-xl font-bold">
+                      {floodData.river_level !== undefined
+                        ? floodData.river_level.toFixed(2) + " m"
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center">
+                  <MdOutlineSafetyDivider className="w-12 h-12 mr-4 text-yellow-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold">Safe Zones</h3>
+                    <p className="text-xl font-bold">
+                      {safeZones !== null ? formatArea(safeZones) : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center">
+                  <BiTimeFive className="w-12 h-12 mr-4 text-purple-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold">Recovery Time</h3>
+                    <p className="text-xl font-bold">
+                      {recoveryTime !== null ? formatTime(recoveryTime) : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-semibold mb-2">Flood Affected Area Details</h3>
+              <p className="text-sm text-gray-600 mb-2">
+                Based on the latest data and machine learning predictions.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-700">Total Affected Area:</span>
+                  <span className="text-sm font-semibold">
+                    {floodData.affected_area !== undefined
+                      ? formatArea(floodData.affected_area)
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-700">Urban Area Affected:</span>
+                  <span className="text-sm font-semibold">
+                    {floodData.urban_area !== undefined
+                      ? formatArea(floodData.urban_area)
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-700">Rural Area Affected:</span>
+                  <span className="text-sm font-semibold">
+                    {floodData.rural_area !== undefined
+                      ? formatArea(floodData.rural_area)
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-700">Estimated Recovery Time:</span>
+                  <span className="text-sm font-semibold">
+                    {floodData.recovery_time !== undefined
+                      ? formatTime(floodData.recovery_time)
+                      : "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-white rounded-lg shadow-md text-center flex flex-col items-center">
+              <BiCloudRain className="w-10 h-10 mb-2 text-blue-400" />
+              <p className="font-semibold">Flooded Area</p>
+              <p className="text-lg font-bold mt-2">{loading ? "Loading..." : formatArea(floodArea)}</p>
+              <p className="text-sm text-gray-600 mt-1">Predicted affected area</p>
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
 }
+
+export default FloodSummary;
+
+

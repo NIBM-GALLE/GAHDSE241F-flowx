@@ -1,14 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
     Card,
-    CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
     CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useDashboardStore } from "@/stores/useDashboardStore";
 import { useUserStore } from "@/stores/useUserStore";
 
@@ -20,6 +19,9 @@ function Donation() {
     donationsError,
     fetchDonations,
   } = useDashboardStore(token);
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedDonation, setSelectedDonation] = useState(null);
 
   useEffect(() => {
     fetchDonations();
@@ -76,45 +78,77 @@ function Donation() {
           <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
             New Donations
           </CardTitle>
-          <Button variant="outline" size="sm" className="text-gray-700 dark:text-gray-300">
-            View All Donations
+          <Button 
+            variant="outline" size="sm" className="text-gray-700 dark:text-gray-300" onClick={() => window.location.href = "/donations/new-requests"}>
+              View All Donations
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="pt-6">
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          {donations.map((donation) => (
-            <Card 
-              key={donation.id || donation._id} 
-              className="shadow-sm hover:shadow-md transition-shadow border-gray-200 dark:border-gray-700"
-            >
-              <CardHeader>
-                <CardTitle className="text-base font-semibold text-gray-800 dark:text-gray-200">
-                  Donation #{donation.id || donation._id}
-                </CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400">
-                  Amount: ${donation.amount ? donation.amount.toLocaleString() : 0}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex justify-between items-center">
-                <Badge 
-                  variant={donation.status === "approved" ? "default" : "secondary"}
-                  className={
-                    donation.status === "approved" 
-                      ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200" 
-                      : "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
-                  }
-                >
-                  {donation.status}
-                </Badge>
-                <Button size="sm" variant="outline" className="text-gray-700 dark:text-gray-300">
-                  Details
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+      <CardContent className="pt-6 overflow-x-auto">
+        <table className="w-full text-sm text-left text-gray-700 dark:text-gray-200">
+          <thead className="text-xs text-gray-500 uppercase dark:text-gray-400">
+            <tr>
+              <th className="px-4 py-2">Donor</th>
+              <th className="px-4 py-2">Category</th>
+              <th className="px-4 py-2">Contact Number</th>
+              <th className="px-4 py-2">Email</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {donations.length > 0 ? (
+              donations.map((d) => (
+                <tr key={d.id || d._id} className="border-b dark:border-gray-700">
+                  <td className="px-4 py-2">{d.fullname || d.name || "-"}</td>
+                  <td className="px-4 py-2">Rs. {d.category || d.donations_amount}</td>
+                  <td className="px-4 py-2">{d.donation_phone_number || d.donations_method}</td>
+                  <td className="px-4 py-2">{d.donation_email}</td>
+                  <td className="px-4 py-2">
+                    <Badge variant={d.donations_status === "approved" ? "success" : d.donations_status === "pending" ? "warning" : d.donations_status === "rejected" ? "destructive" : "secondary"}>
+                      {d.donations_status || d.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    <Button size="sm" variant="outline" onClick={() => { setSelectedDonation(d); setViewModalOpen(true); }}>
+                      View
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-8">No donation requests found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </CardContent>
+      {/* View Dialog */}
+      <Dialog open={!!viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Donation Details</DialogTitle>
+          </DialogHeader>
+          {selectedDonation ? (
+            <div className="space-y-2">
+              {Object.entries(selectedDonation).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
+                  <span>{String(value)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>Loading...</div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="ghost">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

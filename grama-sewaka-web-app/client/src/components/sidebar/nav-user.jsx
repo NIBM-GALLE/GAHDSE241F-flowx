@@ -1,7 +1,7 @@
 "use client";
 import { LogOut, CircleUserRound } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Link } from "react-router-dom"; 
+import { useNavigate } from "react-router";
 
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import {
 
 export function NavUser({ user }) {
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) {
     return (
@@ -59,12 +60,10 @@ export function NavUser({ user }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuItem>
-          <Link href="/profile" className="w-full flex items-center">
-            <CircleUserRound className="mr-2 size-4" />
-            Profile
-          </Link>
-         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/profile")}> 
+          <CircleUserRound className="mr-2 size-4" />
+          Profile
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 size-4" />

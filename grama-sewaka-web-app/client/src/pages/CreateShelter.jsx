@@ -11,7 +11,8 @@ import {
   Save,
   Trash2,
   Filter,
-  Search
+  Search,
+  Clock
 } from "lucide-react";
 import {
   Card,
@@ -247,14 +248,14 @@ function CreateShelter() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 px-4 bg-blue-600 text-white">
-          <SidebarTrigger className="-ml-1 text-white" />
+        <header className="flex h-16 items-center gap-2 px-4 text-black">
+          <SidebarTrigger className="-ml-1 text-black" />
           <h1 className="text-xl font-semibold">
             Shelter Management
           </h1>
         </header>
 
-        <main className="p-4 bg-white dark:bg-gray-900">
+        <main className="p-2 bg-white dark:bg-gray-900">
           <div className="flex-1 p-4 md:p-8">
             <div className="space-y-6">
               <div className="flex items-center justify-between">

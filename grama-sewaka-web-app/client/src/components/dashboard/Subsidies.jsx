@@ -69,7 +69,8 @@ export default function Subsidies() {
       <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Subsidies</h2>
-          <Button variant="outline" size="sm" className="text-gray-700 dark:text-gray-300">
+          <Button 
+          variant="outline" size="sm" className="text-gray-700 dark:text-gray-300" onClick={() => window.location.href = "/subsidy-notes"}>
             View All Subsidies
           </Button>
         </div>
@@ -87,24 +88,24 @@ export default function Subsidies() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subsidies.map((subsidy) => (
-                <TableRow key={subsidy.id || subsidy._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              {subsidies.map((subsidy, idx) => (
+                <TableRow key={subsidy.id || subsidy._id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <TableCell className="font-medium text-gray-900 dark:text-gray-100">
-                    {subsidy.header}
+                    {subsidy.header || subsidy.subsidy_name || "-"}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-gray-700 dark:text-gray-300">
-                      {subsidy.category}
+                      {subsidy.category || "-"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-700 dark:text-gray-300">
-                    {subsidy.quantity}
+                    {subsidy.quantity ?? subsidy.current_quantity ?? "-"}
                   </TableCell>
                   <TableCell className="text-gray-700 dark:text-gray-300">
-                    {subsidy.collectPlace}
+                    {subsidy.collectPlace || subsidy.collection_place || "-"}
                   </TableCell>
                   <TableCell className="text-gray-700 dark:text-gray-300">
-                    {subsidy.members}
+                    {subsidy.members || subsidy.member_count || "-"}
                   </TableCell>
                 </TableRow>
               ))}

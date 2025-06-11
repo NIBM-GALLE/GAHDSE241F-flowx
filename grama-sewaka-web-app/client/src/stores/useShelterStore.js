@@ -128,7 +128,7 @@ export const useShelterStore = create((set, get) => ({
       }
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "/api/shelter/create",
+        "/api/shelter/officer/create", // <-- updated endpoint
         {
           shelter_name,
           shelter_size,
@@ -151,7 +151,7 @@ export const useShelterStore = create((set, get) => ({
     set({ updateStatus: null, error: null });
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`/api/shelter/update/${shelter_id}`, payload, {
+      const res = await axios.put(`/api/shelter/officer/update/${shelter_id}`, payload, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       set({ updateStatus: res.data, error: null });
