@@ -3,6 +3,7 @@ import 'sidebar.dart';
 import 'app_scaffold.dart';
 import 'dashboard_page.dart';
 import 'announcements_page.dart';
+import 'shelter_detail_page.dart';
 
 class SheltersPage extends StatelessWidget {
   const SheltersPage({super.key});
@@ -67,6 +68,28 @@ class SheltersPage extends StatelessWidget {
               capacity: shelter['capacity']!,
               status: shelter['status']!,
               contact: shelter['contact']!,
+              onView: () {
+                // Dummy coordinates for demo
+                final coords = {
+                  'Galle Town Hall Shelter': [6.0367, 80.2170],
+                  'Community Center Shelter': [6.0400, 80.2100],
+                  'School Auditorium Shelter': [6.0450, 80.2200],
+                };
+                final latLng = coords[shelter['name']!] ?? [6.0367, 80.2170];
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ShelterDetailPage(
+                      name: shelter['name']!,
+                      location: shelter['location']!,
+                      capacity: shelter['capacity']!,
+                      status: shelter['status']!,
+                      contact: shelter['contact']!,
+                      latitude: latLng[0],
+                      longitude: latLng[1],
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -81,6 +104,7 @@ class _ShelterCard extends StatelessWidget {
   final String capacity;
   final String status;
   final String contact;
+  final VoidCallback onView;
 
   const _ShelterCard({
     required this.name,
@@ -88,6 +112,7 @@ class _ShelterCard extends StatelessWidget {
     required this.capacity,
     required this.status,
     required this.contact,
+    required this.onView,
   });
 
   @override
@@ -159,7 +184,7 @@ class _ShelterCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: onView,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0A2342),
                   foregroundColor: Colors.white,
