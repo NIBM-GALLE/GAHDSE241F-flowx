@@ -121,7 +121,69 @@ class ShelterDetailPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: isAvailable ? () {} : null,
+                  onPressed: isAvailable
+                      ? () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              final _titleController = TextEditingController();
+                              final _reasonController = TextEditingController();
+                              final _formKey = GlobalKey<FormState>();
+                              return AlertDialog(
+                                title: const Text('Apply for Shelter'),
+                                content: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TextFormField(
+                                        controller: _titleController,
+                                        decoration: const InputDecoration(labelText: 'Title'),
+                                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextFormField(
+                                        controller: _reasonController,
+                                        decoration: const InputDecoration(labelText: 'Reason'),
+                                        minLines: 2,
+                                        maxLines: 4,
+                                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (_formKey.currentState!.validate()) {
+                                        Navigator.of(context).pop();
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Application Sent'),
+                                            content: const Text('Your shelter application has been submitted.'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: const Text('Submit'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0A2342),
                     foregroundColor: Colors.white,
