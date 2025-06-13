@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_scaffold.dart';
 import 'sidebar.dart';
 import 'announcements_page.dart';
+import 'shelters_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -11,12 +12,19 @@ class DashboardPage extends StatelessWidget {
     return AppScaffold(
       selectedIndex: 0, // Dashboard index
       onItemSelected: (index) {
-        if (index == 1) {
-          Navigator.of(context).push(
+        if (index == 0) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
+          );
+        } else if (index == 1) {
+          Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const AnnouncementsPage()),
           );
+        } else if (index == 2) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const SheltersPage()),
+          );
         }
-        // TODO: Add navigation for other indexes
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F8FA),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'sidebar.dart';
 import 'app_scaffold.dart';
+import 'dashboard_page.dart';
+import 'shelters_page.dart';
 
 class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
@@ -54,7 +56,17 @@ class AnnouncementsPage extends StatelessWidget {
     return AppScaffold(
       selectedIndex: 1, // Announcements index
       onItemSelected: (index) {
-        // TODO: Implement navigation logic for other pages
+        if (index == 0) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
+          );
+        } else if (index == 1) {
+          // Already on Shelters, do nothing
+        } else if (index == 2) {
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const SheltersPage()),
+            );
+        }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F8FA),

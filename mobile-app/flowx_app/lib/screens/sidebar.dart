@@ -13,11 +13,12 @@ class FlowXSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _SidebarItem(icon: Icons.water_drop, label: 'Flood Prediction'),
+      _SidebarItem(icon: Icons.water_drop, label: 'Flood Prediction'), // Dashboard
       _SidebarItem(icon: Icons.announcement, label: 'Announcements'),
+      _SidebarItem(icon: Icons.home, label: 'Safe Shelters'),
+      // The rest are placeholders, not linked
       _SidebarItem(icon: Icons.people, label: 'Victim Requests'),
       _SidebarItem(icon: Icons.volunteer_activism, label: 'Subsidies'),
-      _SidebarItem(icon: Icons.home, label: 'Safe Shelters'),
       _SidebarItem(icon: Icons.phone, label: 'Contact Info'),
       _SidebarItem(icon: Icons.person, label: 'Profile'),
     ];
@@ -51,11 +52,13 @@ class FlowXSidebar extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = items[index];
                 final isSelected = index == selectedIndex;
+                // Only enable navigation for Dashboard, Announcements, Safe Shelters
+                final isLinked = index == 0 || index == 1 || index == 2;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6.0),
                   child: IconButton(
                     icon: Icon(item.icon, color: isSelected ? Colors.blueAccent : Colors.white, size: 30),
-                    onPressed: () => onItemSelected(index),
+                    onPressed: isLinked ? () => onItemSelected(index) : null,
                     tooltip: item.label,
                   ),
                 );
