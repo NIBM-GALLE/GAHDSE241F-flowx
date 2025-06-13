@@ -136,7 +136,7 @@ export const getShelterRequests = async (req, res, next) => {
         //get pending shelter requests with house and member details
         const [requests] = await pool.query(
             `SELECT sr.*, h.address as house_address, h.members as house_members,
-                    h.latitude, h.longitude, h.distance_to_river,
+                    h.distance_to_river,
                     m.first_name, m.last_name, m.member_email, m.member_phone_number,
                     f.flood_name, f.start_date, f.end_date
              FROM shelter_request sr
@@ -193,7 +193,7 @@ export const getApprovedRequests = async (req, res, next) => {
         //get approved shelter requests with house and member details
         const [requests] = await pool.query(
             `SELECT sr.*, h.address as house_address, h.members as house_members,
-                    h.latitude, h.longitude, h.distance_to_river,
+                    h.distance_to_river,
                     m.first_name, m.last_name, m.member_email, m.member_phone_number,
                     f.flood_name, f.start_date, f.end_date,
                     s.shelter_name, s.shelter_address, s.shelter_size
@@ -571,7 +571,7 @@ export const getShelterRequestsByGS = async (req, res, next) => {
         //get pending shelter requests for this GS's division
         const [requests] = await pool.query(
             `SELECT sr.*, h.address as house_address, h.members as house_members,
-                    h.latitude, h.longitude, h.distance_to_river,
+                    h.distance_to_river,
                     m.first_name, m.last_name, m.member_email, m.member_phone_number,
                     f.flood_name, f.start_date, f.end_date
              FROM shelter_request sr
@@ -622,7 +622,7 @@ export const getApprovedRequestsByGS = async (req, res, next) => {
         //get approved shelter requests for this GS's division
         const [requests] = await pool.query(
             `SELECT sr.*, h.address as house_address, h.members as house_members,
-                    h.latitude, h.longitude, h.distance_to_river,
+                    h.distance_to_river,
                     m.first_name, m.last_name, m.member_email, m.member_phone_number,
                     f.flood_name, f.start_date, f.end_date,
                     s.shelter_name, s.shelter_address, s.shelter_size

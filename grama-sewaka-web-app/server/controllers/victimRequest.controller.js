@@ -57,8 +57,6 @@ export const gramaSevaka = {
           m.last_name,
           m.member_phone_number,
           h.address,
-          h.latitude,
-          h.longitude,
           h.members as house_members,
           h.distance_to_river
         FROM victim_request vr
@@ -167,8 +165,6 @@ export const gramaSevaka = {
           m.last_name,
           m.member_phone_number,
           h.address,
-          h.latitude,
-          h.longitude,
           h.members as house_members,
           h.distance_to_river
         FROM victim_request vr
@@ -218,8 +214,6 @@ export const gramaSevaka = {
           m.last_name,
           m.member_phone_number,
           h.address,
-          h.latitude,
-          h.longitude,
           h.members as house_members,
           h.distance_to_river
         FROM victim_request vr
@@ -275,8 +269,6 @@ export const governmentOfficer = {
           m.last_name,
           m.member_phone_number,
           h.address,
-          h.latitude,
-          h.longitude,
           h.members as house_members,
           h.distance_to_river,
           gnd.grama_niladhari_division_name,
@@ -337,8 +329,6 @@ export const governmentOfficer = {
           m.last_name,
           m.member_phone_number,
           h.address,
-          h.latitude,
-          h.longitude,
           h.members as house_members,
           h.distance_to_river,
           gnd.grama_niladhari_division_name,
@@ -394,8 +384,6 @@ export const governmentOfficer = {
           m.last_name,
           m.member_phone_number,
           h.address,
-          h.latitude,
-          h.longitude,
           h.members as house_members,
           h.distance_to_river,
           gnd.grama_niladhari_division_name,
