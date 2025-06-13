@@ -3,6 +3,7 @@ import 'sidebar.dart';
 import 'app_scaffold.dart';
 import 'dashboard_page.dart';
 import 'shelters_page.dart';
+import 'inform_victims_page.dart';
 
 class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
@@ -52,7 +53,6 @@ class AnnouncementsPage extends StatelessWidget {
         },
       ],
     };
-
     return AppScaffold(
       selectedIndex: 1, // Announcements index
       onItemSelected: (index) {
@@ -61,11 +61,15 @@ class AnnouncementsPage extends StatelessWidget {
             MaterialPageRoute(builder: (context) => const DashboardPage()),
           );
         } else if (index == 1) {
-          // Already on Shelters, do nothing
+          // Already on Announcements
         } else if (index == 2) {
-            Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const SheltersPage()),
-            );
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const SheltersPage()),
+          );
+        } else if (index == 3) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InformVictimsPage()),
+          );
         }
       },
       child: Scaffold(

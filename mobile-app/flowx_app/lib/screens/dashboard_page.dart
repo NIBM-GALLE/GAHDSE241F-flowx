@@ -3,6 +3,7 @@ import 'app_scaffold.dart';
 import 'sidebar.dart';
 import 'announcements_page.dart';
 import 'shelters_page.dart';
+import 'inform_victims_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -23,6 +24,10 @@ class DashboardPage extends StatelessWidget {
         } else if (index == 2) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const SheltersPage()),
+          );
+        } else if (index == 3) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InformVictimsPage()),
           );
         }
       },

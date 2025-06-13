@@ -52,8 +52,8 @@ class FlowXSidebar extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = items[index];
                 final isSelected = index == selectedIndex;
-                // Only enable navigation for Dashboard, Announcements, Safe Shelters
-                final isLinked = index == 0 || index == 1 || index == 2;
+                // Enable navigation for Dashboard, Announcements, Safe Shelters, and Victim Requests
+                final isLinked = index == 0 || index == 1 || index == 2 || index == 3;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6.0),
                   child: IconButton(

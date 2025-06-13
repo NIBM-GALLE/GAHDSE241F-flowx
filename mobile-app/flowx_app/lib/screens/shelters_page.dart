@@ -4,6 +4,7 @@ import 'app_scaffold.dart';
 import 'dashboard_page.dart';
 import 'announcements_page.dart';
 import 'shelter_detail_page.dart';
+import 'inform_victims_page.dart';
 
 class SheltersPage extends StatelessWidget {
   const SheltersPage({super.key});
@@ -48,6 +49,10 @@ class SheltersPage extends StatelessWidget {
           );
         } else if (index == 2) {
           // Already on Shelters, do nothing
+        } else if (index == 3) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InformVictimsPage()),
+          );
         }
       },
       child: Scaffold(
