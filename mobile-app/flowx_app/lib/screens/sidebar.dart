@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'app_scaffold.dart';
+import 'login_page.dart';
 
 class FlowXSidebar extends StatelessWidget {
   final int selectedIndex;
@@ -66,12 +68,8 @@ class FlowXSidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // User (dummy)
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.blueAccent,
-            child: Icon(Icons.person, color: Colors.white),
-          ),
+          // User menu (profile icon with popup menu)
+          _SidebarUserMenu(onProfile: () => onItemSelected(6)),
           const SizedBox(height: 16),
         ],
       ),
@@ -83,4 +81,54 @@ class _SidebarItem {
   final IconData icon;
   final String label;
   const _SidebarItem({required this.icon, required this.label});
+}
+
+// User menu widget for sidebar bottom
+class _SidebarUserMenu extends StatelessWidget {
+  final VoidCallback onProfile;
+  const _SidebarUserMenu({required this.onProfile});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (details) async {
+        final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+        final result = await showMenu<String>(
+            context: context,
+            color: Colors.white,
+            position: RelativeRect.fromRect(
+            details.globalPosition & const Size(40, 40),
+            Offset.zero & overlay.size,
+          ),
+          items: [
+            const PopupMenuItem<String>(
+              value: 'profile',
+              child: Row(
+                children: [Icon(Icons.person, color: Colors.blueAccent), SizedBox(width: 8), Text('Profile')],
+              ),
+            ),
+            const PopupMenuItem<String>(
+              value: 'logout',
+              child: Row(
+                children: [Icon(Icons.logout, color: Colors.redAccent), SizedBox(width: 8), Text('Log out')],
+              ),
+            ),
+          ],
+        );
+        if (result == 'profile') {
+          onProfile();
+        } else if (result == 'logout') {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => LoginPage()),
+            (route) => false,
+          );
+        }
+      },
+      child: const CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.blueAccent,
+        child: Icon(Icons.person, color: Colors.white),
+      ),
+    );
+  }
 }
