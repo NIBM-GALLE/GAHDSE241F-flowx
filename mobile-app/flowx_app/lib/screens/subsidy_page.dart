@@ -5,6 +5,7 @@ import 'dashboard_page.dart';
 import 'announcements_page.dart';
 import 'shelters_page.dart';
 import 'inform_victims_page.dart';
+import 'contact_page.dart';
 
 class SubsidyPage extends StatelessWidget {
   const SubsidyPage({Key? key}) : super(key: key);
@@ -44,6 +45,10 @@ class SubsidyPage extends StatelessWidget {
         } else if (index == 3) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const InformVictimsPage()),
+          );
+        } else if (index == 5) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ContactPage()),
           );
         }
       },
