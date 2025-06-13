@@ -5,6 +5,7 @@ import 'announcements_page.dart';
 import 'shelters_page.dart';
 import 'subsidy_page.dart';
 import 'contact_page.dart';
+import 'profile_page.dart';
 
 class InformVictimsPage extends StatefulWidget {
   const InformVictimsPage({super.key});
@@ -78,6 +79,10 @@ class _InformVictimsPageState extends State<InformVictimsPage> {
         } else if (index == 5) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const ContactPage()),
+          );
+        } else if (index == 6) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
           );
         }
       },

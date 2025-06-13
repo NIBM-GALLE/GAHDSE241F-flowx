@@ -6,6 +6,7 @@ import 'shelters_page.dart';
 import 'inform_victims_page.dart';
 import 'subsidy_page.dart';
 import 'contact_page.dart';
+import 'profile_page.dart';
 
 class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
@@ -79,6 +80,10 @@ class AnnouncementsPage extends StatelessWidget {
         } else if (index == 5) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const ContactPage()),
+          );
+        } else if (index == 6) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
           );
         }
       },

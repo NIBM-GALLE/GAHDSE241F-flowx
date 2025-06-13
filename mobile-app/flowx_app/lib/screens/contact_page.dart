@@ -6,6 +6,7 @@ import 'announcements_page.dart';
 import 'shelters_page.dart';
 import 'inform_victims_page.dart';
 import 'subsidy_page.dart';
+import 'profile_page.dart';
 
 class ContactPage extends StatelessWidget {
   const ContactPage({Key? key}) : super(key: key);
@@ -91,13 +92,16 @@ class ContactPage extends StatelessWidget {
           );
         } else if (index == 5) {
           // Already on Contact Info
+        } else if (index == 6) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
+          );
         }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F6FA),
         appBar: AppBar(
           title: const Text('Emergency Contacts'),
-          backgroundColor: Colors.blue[900],
           elevation: 0,
           centerTitle: true,
         ),
