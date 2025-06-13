@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_scaffold.dart';
 import 'sidebar.dart';
+import 'announcements_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -10,7 +11,12 @@ class DashboardPage extends StatelessWidget {
     return AppScaffold(
       selectedIndex: 0, // Dashboard index
       onItemSelected: (index) {
-        // TODO: Implement navigation logic for other pages
+        if (index == 1) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const AnnouncementsPage()),
+          );
+        }
+        // TODO: Add navigation for other indexes
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F8FA),
