@@ -1,138 +1,204 @@
 import 'package:flutter/material.dart';
+import 'app_scaffold.dart';
+import 'sidebar.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Flood Risk Dashboard',
-          style: TextStyle(color: Color(0xFF0A2342), fontWeight: FontWeight.bold),
+    return AppScaffold(
+      selectedIndex: 0, // Dashboard index
+      onItemSelected: (index) {
+        // TODO: Implement navigation logic for other pages
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF6F8FA),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          title: Row(
+            children: [
+              Icon(Icons.water_drop, color: Colors.blue[800], size: 28),
+              const SizedBox(width: 8),
+              const Text(
+                'Flood Risk Dashboard',
+                style: TextStyle(color: Color(0xFF0A2342), fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ],
+          ),
+          centerTitle: false,
         ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Flood Risk Card
-            Card(
-              color: const Color(0xFFe3eafc),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.water_drop, color: Colors.blue[800], size: 40),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('Current Flood Risk', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0A2342))),
-                          SizedBox(height: 8),
-                          Text('Moderate risk in your area', style: TextStyle(fontSize: 16, color: Colors.orange)),
-                          SizedBox(height: 4),
-                          Text('Predicted Flood Area: 2.5 km²', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                          SizedBox(height: 2),
-                          Text('Safe Area: 7.5 km²', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                          SizedBox(height: 2),
-                          Text('Flood Percentage: 25%', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                          SizedBox(height: 2),
-                          Text('Estimated Recovery Days: 5', style: TextStyle(fontSize: 14, color: Colors.black87)),
-                          SizedBox(height: 4),
-                          Text('Last updated: 2025-06-13', style: TextStyle(fontSize: 12, color: Colors.black54)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Tabs for Announcements and Subsidies
-            DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  Container(
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Flood Risk Card - Redesigned
+                Center(
+                  child: Container(
+                    width: 340,
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const TabBar(
-                      labelColor: Color(0xFF0A2342),
-                      unselectedLabelColor: Colors.black54,
-                      indicatorColor: Color(0xFF0A2342),
-                      tabs: [
-                        Tab(text: 'Announcements'),
-                        Tab(text: 'Subsidies'),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.08),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
                       ],
                     ),
-                  ),
-                  SizedBox(
-                    height: 220,
-                    child: TabBarView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Announcements Tab
-                        ListView(
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _AnnouncementCard(
-                              type: 'warning',
-                              title: 'Heavy Rainfall Alert',
-                              message: 'Expect heavy rainfall in Colombo and surrounding areas within the next 24 hours.',
-                              date: '2025-06-10',
+                            Flexible(
+                              child: Icon(Icons.water_drop, color: Colors.blue[700], size: 38),
                             ),
-                            _AnnouncementCard(
-                              type: 'info',
-                              title: 'Relief Camp Setup',
-                              message: 'A new relief camp has been set up at Galle Town Hall.',
-                              date: '2025-06-09',
-                            ),
-                            _AnnouncementCard(
-                              type: 'general',
-                              title: 'Donation Drive',
-                              message: 'We are organizing a donation drive. Volunteers are welcome!',
-                              date: '2025-06-08',
+                            const SizedBox(width: 10),
+                            const Flexible(
+                              child: Text(
+                                'Current Flood Risk',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0A2342)),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
-                        // Subsidies Tab
-                        ListView(
-                          children: [
-                            _SubsidyCard(
-                              title: 'Emergency Relief Fund',
-                              description: 'Immediate financial aid for affected families',
-                              amount: 'LKR 25,000',
-                              eligibility: 'Flood-affected residents of Galle',
+                        const SizedBox(height: 18),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Text(
+                            'MODERATE',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              letterSpacing: 2,
                             ),
-                            _SubsidyCard(
-                              title: 'Agricultural Loss Compensation',
-                              description: 'Compensation for crop damages due to flooding',
-                              amount: 'LKR 50,000',
-                              eligibility: 'Registered farmers in Southern Province',
-                            ),
-                            _SubsidyCard(
-                              title: 'Housing Repair Grant',
-                              description: 'Financial assistance for home repairs after flood damage',
-                              amount: 'LKR 75,000',
-                              eligibility: 'Homeowners with verified flood damage',
-                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            _RiskStat(icon: Icons.map, label: 'Flood Area', value: '2.5 km²', color: Colors.blue),
+                            _RiskStat(icon: Icons.shield, label: 'Safe Area', value: '7.5 km²', color: Colors.green),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            _RiskStat(icon: Icons.percent, label: 'Flood %', value: '25%', color: Colors.deepPurple),
+                            _RiskStat(icon: Icons.timer, label: 'Recovery', value: '5 days', color: Colors.redAccent),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        const Text('Last updated: 2025-06-13', style: TextStyle(fontSize: 13, color: Colors.black54)),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 32),
+                // Tabs for Announcements and Subsidies
+                DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const TabBar(
+                          labelColor: Color(0xFF0A2342),
+                          unselectedLabelColor: Colors.black54,
+                          indicatorColor: Color(0xFF0A2342),
+                          labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          tabs: [
+                            Tab(text: 'Announcements'),
+                            Tab(text: 'Subsidies'),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        height: 260,
+                        child: TabBarView(
+                          children: [
+                            // Announcements Tab
+                            ListView(
+                              padding: const EdgeInsets.only(top: 12),
+                              children: [
+                                _AnnouncementCard(
+                                  type: 'warning',
+                                  title: 'Heavy Rainfall Alert',
+                                  message: 'Expect heavy rainfall in Colombo and surrounding areas within the next 24 hours.',
+                                  date: '2025-06-10',
+                                ),
+                                _AnnouncementCard(
+                                  type: 'info',
+                                  title: 'Relief Camp Setup',
+                                  message: 'A new relief camp has been set up at Galle Town Hall.',
+                                  date: '2025-06-09',
+                                ),
+                                _AnnouncementCard(
+                                  type: 'general',
+                                  title: 'Donation Drive',
+                                  message: 'We are organizing a donation drive. Volunteers are welcome!',
+                                  date: '2025-06-08',
+                                ),
+                              ],
+                            ),
+                            // Subsidies Tab
+                            ListView(
+                              padding: const EdgeInsets.only(top: 12),
+                              children: [
+                                _SubsidyCard(
+                                  title: 'Emergency Relief Fund',
+                                  description: 'Immediate financial aid for affected families',
+                                  amount: 'LKR 25,000',
+                                  eligibility: 'Flood-affected residents of Galle',
+                                ),
+                                _SubsidyCard(
+                                  title: 'Agricultural Loss Compensation',
+                                  description: 'Compensation for crop damages due to flooding',
+                                  amount: 'LKR 50,000',
+                                  eligibility: 'Registered farmers in Southern Province',
+                                ),
+                                _SubsidyCard(
+                                  title: 'Housing Repair Grant',
+                                  description: 'Financial assistance for home repairs after flood damage',
+                                  amount: 'LKR 75,000',
+                                  eligibility: 'Homeowners with verified flood damage',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -217,6 +283,32 @@ class _SubsidyCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RiskStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _RiskStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 13, color: Colors.black54)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: color)),
+      ],
     );
   }
 }
