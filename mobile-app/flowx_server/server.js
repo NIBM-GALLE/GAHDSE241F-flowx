@@ -6,6 +6,8 @@ import logger from "./utils/logger.js";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
+import areaRoutes from "./routers/area.routes.js";
+
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -36,6 +38,9 @@ if (
   logger.error("Database connection details are missing in .env file");
   process.exit(1);
 }
+
+// routing
+app.use("/api/area", areaRoutes);
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
