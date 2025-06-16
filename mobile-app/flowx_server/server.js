@@ -7,6 +7,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
 import areaRoutes from "./routers/area.routes.js";
+import announcementRoutes from "./routers/announcement.routes.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ if (
 
 // routing
 app.use("/api/area", areaRoutes);
+app.use("/api/announcement", announcementRoutes);
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
