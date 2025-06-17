@@ -11,6 +11,7 @@ import areaRoutes from "./routers/area.routes.js";
 import floodRoutes from "./routers/flood.routes.js";
 import announcementRoutes from "./routers/announcement.routes.js";
 import shelterRoutes from "./routers/shelter.routes.js";
+import subsidiesRoutes from "./routers/subsidies.routes.js";
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use("/api/area", areaRoutes);
 app.use("/api/flood", floodRoutes);
 app.use("/api/announcement", announcementRoutes);
 app.use("/api/shelter", shelterRoutes);
+app.use("/api/subsidies", subsidiesRoutes);
 
 
 const server = app.listen(PORT, () => {
