@@ -6,9 +6,10 @@ import logger from "./utils/logger.js";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
+import authRoutes from "./routers/auth.routes.js";
 import areaRoutes from "./routers/area.routes.js";
-import announcementRoutes from "./routers/announcement.routes.js";
 import floodRoutes from "./routers/flood.routes.js";
+import announcementRoutes from "./routers/announcement.routes.js";
 import shelterRoutes from "./routers/shelter.routes.js";
 
 dotenv.config();
@@ -43,10 +44,12 @@ if (
 }
 
 // routing
+app.use("/api/auth", authRoutes);
 app.use("/api/area", areaRoutes);
-app.use("/api/announcement", announcementRoutes);
 app.use("/api/flood", floodRoutes);
+app.use("/api/announcement", announcementRoutes);
 app.use("/api/shelter", shelterRoutes);
+
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
