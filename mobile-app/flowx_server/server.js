@@ -12,6 +12,7 @@ import floodRoutes from "./routers/flood.routes.js";
 import announcementRoutes from "./routers/announcement.routes.js";
 import shelterRoutes from "./routers/shelter.routes.js";
 import subsidiesRoutes from "./routers/subsidies.routes.js";
+import victimRoutes from "./routers/victim.routes.js";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use("/api/flood", floodRoutes);
 app.use("/api/announcement", announcementRoutes);
 app.use("/api/shelter", shelterRoutes);
 app.use("/api/subsidies", subsidiesRoutes);
+app.use("/api/victim", victimRoutes);
 
 
 const server = app.listen(PORT, () => {
