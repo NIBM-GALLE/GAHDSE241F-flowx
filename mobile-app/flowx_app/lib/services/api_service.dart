@@ -152,4 +152,30 @@ class ApiService {
       return {'success': false, 'message': 'Network error: [31m${e.toString()}[0m'};
     }
   }
+
+  // Fetch all current flood announcements for the user
+  Future<List<Map<String, dynamic>>> fetchCurrentFloodAnnouncementsForUser() async {
+    final url = Uri.parse('$baseUrl/announcement/current/user');
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        url,
+        headers: token != null ? {'Authorization': 'Bearer $token'} : {},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['announcements'] != null) {
+          return List<Map<String, dynamic>>.from(data['announcements']);
+        } else {
+          return [];
+        }
+      } else {
+        debugPrint('Failed to fetch announcements: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error fetching announcements: $e');
+      return [];
+    }
+  }
 }

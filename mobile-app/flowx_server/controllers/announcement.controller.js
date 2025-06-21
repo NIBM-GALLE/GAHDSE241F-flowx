@@ -23,7 +23,7 @@ const getCurrentOrLatestFloodId = async () => {
        ORDER BY start_date DESC, flood_id DESC LIMIT 1`
     );
 
-    return latestFloods[0]?.f
+    return latestFloods[0]?.flood_id;
   } catch (error) {
     logger.error("Error getting current or latest flood ID:", error);
     throw error;

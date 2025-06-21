@@ -7,55 +7,26 @@ import 'inform_victims_page.dart';
 import 'subsidy_page.dart';
 import 'contact_page.dart';
 import 'profile_page.dart';
+import '../services/api_service.dart';
 
-class AnnouncementsPage extends StatelessWidget {
+class AnnouncementsPage extends StatefulWidget {
   const AnnouncementsPage({super.key});
 
   @override
+  State<AnnouncementsPage> createState() => _AnnouncementsPageState();
+}
+
+class _AnnouncementsPageState extends State<AnnouncementsPage> {
+  late Future<List<Map<String, dynamic>>> _announcementsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _announcementsFuture = ApiService().fetchCurrentFloodAnnouncementsForUser();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final categories = [
-      'Irrigation Department',
-      'Gov Officer',
-      'Grama Sevaka',
-    ];
-    final Map<String, List<Map<String, String>>> announcements = {
-      'Irrigation Department': [
-        {
-          'title': 'Water Level Rising',
-          'message': 'Water level in Kelani river is rising rapidly. Stay alert.',
-          'date': '2025-06-13',
-        },
-        {
-          'title': 'Flood Gate Release',
-          'message': 'Flood gates will be opened at 3pm today.',
-          'date': '2025-06-12',
-        },
-      ],
-      'Gov Officer': [
-        {
-          'title': 'Relief Camp Setup',
-          'message': 'New relief camp at Galle Town Hall.',
-          'date': '2025-06-11',
-        },
-        {
-          'title': 'Medical Camp',
-          'message': 'Free medical camp for flood victims.',
-          'date': '2025-06-10',
-        },
-      ],
-      'Grama Sevaka': [
-        {
-          'title': 'Food Distribution',
-          'message': 'Food packs will be distributed at the community center.',
-          'date': '2025-06-09',
-        },
-        {
-          'title': 'Volunteer Meeting',
-          'message': 'Meeting for all volunteers at 5pm.',
-          'date': '2025-06-08',
-        },
-      ],
-    };
     return AppScaffold(
       selectedIndex: 1, // Announcements index
       onItemSelected: (index) {
@@ -111,35 +82,58 @@ class AnnouncementsPage extends StatelessWidget {
           ),
           centerTitle: false,
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: ListView.separated(
-            itemCount: categories.length,
-            separatorBuilder: (context, i) => const SizedBox(height: 28),
-            itemBuilder: (context, i) {
-              final category = categories[i];
-              final annList = announcements[category]!;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0A2342),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...annList.map((ann) => _AnnouncementCard(
-                        title: ann['title']!,
-                        message: ann['message']!,
-                        date: ann['date']!,
-                      )),
-                ],
-              );
-            },
-          ),
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _announcementsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Failed to load announcements'));
+            }
+            final announcements = snapshot.data ?? [];
+            if (announcements.isEmpty) {
+              return const Center(child: Text('No announcements available.'));
+            }
+            // Group announcements by type
+            final Map<String, List<Map<String, dynamic>>> grouped = {
+              'Irrigation Department': announcements.where((a) => a['type'] == 'admin').toList(),
+              'Gov Officer': announcements.where((a) => a['type'] == 'government_officer').toList(),
+              'Grama Sevaka': announcements.where((a) => a['type'] == 'grama_sevaka').toList(),
+            };
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: ListView.separated(
+                itemCount: grouped.keys.length,
+                separatorBuilder: (context, i) => const SizedBox(height: 28),
+                itemBuilder: (context, i) {
+                  final category = grouped.keys.elementAt(i);
+                  final annList = grouped[category]!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A2342),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (annList.isEmpty)
+                        const Text('No announcements.'),
+                      ...annList.map((ann) => _AnnouncementCard(
+                            title: ann['title'] ?? '',
+                            message: ann['description'] ?? '',
+                            date: ann['date'] ?? '',
+                          )),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );
