@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../services/api_service.dart';
 
 class ShelterDetailPage extends StatelessWidget {
   final String name;
@@ -188,28 +189,56 @@ class ShelterDetailPage extends StatelessWidget {
                             builder: (context) {
                               final _titleController = TextEditingController();
                               final _reasonController = TextEditingController();
+                              final _needsController = TextEditingController();
+                              String? _emergencyLevel;
                               final _formKey = GlobalKey<FormState>();
                               return AlertDialog(
-                                title: const Text('Apply for Shelter'),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: const Text('Apply for Shelter', style: TextStyle(fontWeight: FontWeight.bold)),
                                 content: Form(
                                   key: _formKey,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      TextFormField(
-                                        controller: _titleController,
-                                        decoration: const InputDecoration(labelText: 'Title'),
-                                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      TextFormField(
-                                        controller: _reasonController,
-                                        decoration: const InputDecoration(labelText: 'Reason'),
-                                        minLines: 2,
-                                        maxLines: 4,
-                                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                      ),
-                                    ],
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        TextFormField(
+                                          controller: _titleController,
+                                          decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+                                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        TextFormField(
+                                          controller: _reasonController,
+                                          decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder()),
+                                          minLines: 2,
+                                          maxLines: 4,
+                                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        TextFormField(
+                                          controller: _needsController,
+                                          decoration: const InputDecoration(labelText: 'Special Needs', border: OutlineInputBorder()),
+                                          minLines: 1,
+                                          maxLines: 3,
+                                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        DropdownButtonFormField<String>(
+                                          value: _emergencyLevel,
+                                          decoration: const InputDecoration(labelText: 'Emergency Level', border: OutlineInputBorder()),
+                                          items: const [
+                                            DropdownMenuItem(value: 'low', child: Text('Low')),
+                                            DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                                            DropdownMenuItem(value: 'high', child: Text('High')),
+                                          ],
+                                          onChanged: (val) {
+                                            _emergencyLevel = val;
+                                          },
+                                          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 actions: [
@@ -218,22 +247,52 @@ class ShelterDetailPage extends StatelessWidget {
                                     child: const Text('Cancel'),
                                   ),
                                   ElevatedButton(
-                                    onPressed: () {
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF0A2342),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    ),
+                                    onPressed: () async {
                                       if (_formKey.currentState!.validate()) {
                                         Navigator.of(context).pop();
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text('Application Sent'),
-                                            content: const Text('Your shelter application has been submitted.'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.of(context).pop(),
-                                                child: const Text('OK'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
+                                        try {
+                                          await ApiService().requestShelter(
+                                            title: _titleController.text,
+                                            message: _reasonController.text,
+                                            needs: _needsController.text,
+                                            emergencyLevel: _emergencyLevel!,
+                                          );
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              title: const Text('Success', style: TextStyle(color: Color(0xFF0A2342), fontWeight: FontWeight.bold)),
+                                              content: const Text('Your shelter application has been submitted.'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(context).pop(),
+                                                  child: const Text('OK'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              title: const Text('Error', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                                              content: Text('Failed to submit shelter request. $e'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(context).pop(),
+                                                  child: const Text('OK'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
                                       }
                                     },
                                     child: const Text('Submit'),

@@ -300,4 +300,32 @@ class ApiService {
     }
     return [];
   }
+
+  Future<void> requestShelter({
+    required String title,
+    required String message,
+    required String needs,
+    required String emergencyLevel,
+  }) async {
+    final url = Uri.parse('$baseUrl/shelter/request');
+    final token = await getToken();
+    final Map<String, dynamic> body = {
+      'shelter_request_title': title,
+      'shelter_request_message': message,
+      'shelter_request_needs': needs,
+      'emergency_level': emergencyLevel,
+    };
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode != 201) {
+      final data = jsonDecode(response.body);
+      throw Exception(data['message'] ?? 'Failed to submit shelter request');
+    }
+  }
 }
