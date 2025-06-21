@@ -6,6 +6,7 @@ import 'shelters_page.dart';
 import 'subsidy_page.dart';
 import 'contact_page.dart';
 import 'profile_page.dart';
+import '../services/api_service.dart';
 
 class InformVictimsPage extends StatefulWidget {
   const InformVictimsPage({super.key});
@@ -24,6 +25,8 @@ class _InformVictimsPageState extends State<InformVictimsPage> {
   bool _submitSuccess = false;
   String? _submitError;
 
+  final ApiService _apiService = ApiService();
+
   final List<Map<String, String>> urgencyLevels = [
     { 'value': 'critical', 'label': 'Critical - Immediate danger' },
     { 'value': 'high', 'label': 'High - Need help within hours' },
@@ -41,16 +44,38 @@ class _InformVictimsPageState extends State<InformVictimsPage> {
   ];
 
   void _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+    debugPrint('Submitting victim request...');
+    debugPrint('Title: "+_titleController.text.trim()+"');
+    debugPrint('Message: "+_messageController.text.trim()+"');
+    debugPrint('Urgency Level: "+(_urgencyLevel ?? "null")+"');
+    debugPrint('Assistance Type: "+(_assistanceType ?? "null")+"');
+    if (!_formKey.currentState!.validate()) {
+      debugPrint('Form validation failed');
+      return;
+    }
     setState(() {
       _isSubmitting = true;
       _submitError = null;
     });
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-    setState(() {
-      _isSubmitting = false;
-      _submitSuccess = true;
-    });
+    final result = await _apiService.submitVictimRequest(
+      title: _titleController.text.trim(),
+      message: _messageController.text.trim(),
+      emergencyLevel: _urgencyLevel!,
+      needs: _assistanceType!,
+    );
+    debugPrint('API result: "+result.toString()+"');
+    if (result['success'] == true) {
+      setState(() {
+        _isSubmitting = false;
+        _submitSuccess = true;
+      });
+    } else {
+      setState(() {
+        _isSubmitting = false;
+        _submitError = result['message'] ?? 'Failed to submit request';
+      });
+      debugPrint('Submit error: "+(_submitError ?? "Unknown error")+"');
+    }
   }
 
   @override
@@ -173,7 +198,13 @@ class _InformVictimsPageState extends State<InformVictimsPage> {
                     if (_submitError != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(_submitError!, style: const TextStyle(color: Colors.red)),
+                        child: Text(
+                          _submitError == 'You already have a pending or approved request for this flood event'
+                              ? 'You have already placed a request for this flood event.'
+                              : _submitError!,
+                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     TextFormField(
                       controller: _titleController,

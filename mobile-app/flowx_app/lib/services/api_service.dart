@@ -178,4 +178,53 @@ class ApiService {
       return [];
     }
   }
+
+  // Submit a new victim request (inform victims)
+  Future<Map<String, dynamic>> submitVictimRequest({
+    required String title,
+    required String message,
+    required String emergencyLevel,
+    required String needs,
+  }) async {
+    final url = Uri.parse('$baseUrl/victim/request');
+    final token = await getToken();
+    // Map emergency level string to a number for backend
+    final Map<String, int> emergencyLevelMap = {
+      'critical': 1,
+      'high': 2,
+      'medium': 3,
+      'low': 4,
+    };
+    final int? emergencyLevelNum = emergencyLevelMap[emergencyLevel];
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'title': title,
+          'message': message,
+          'emergency_level': emergencyLevelNum, // send as number
+          'needs': needs,
+        }),
+      );
+      debugPrint('Victim request POST response: status=${response.statusCode}, body=${response.body}');
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201 && data['success'] == true) {
+        return {'success': true, 'message': data['message'] ?? 'Request submitted successfully'};
+      } else {
+        // Try to extract a user-friendly error message
+        String errorMsg = data['message'] ?? data['error'] ?? 'Failed to submit request';
+        // If the backend returns a list of errors, join them
+        if (data['errors'] is List) {
+          errorMsg += ': ' + (data['errors'] as List).join(', ');
+        }
+        return {'success': false, 'message': errorMsg};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: [31m[0m${e.toString()}'};
+    }
+  }
 }
