@@ -281,4 +281,23 @@ class ApiService {
     }
     return false;
   }
+
+  Future<List<Map<String, dynamic>>> fetchShelters() async {
+    final url = Uri.parse('$baseUrl/shelter/related');
+    final token = await getToken();
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['data'] != null && data['data']['relatedShelters'] is List) {
+        return List<Map<String, dynamic>>.from(data['data']['relatedShelters']);
+      }
+    }
+    return [];
+  }
 }

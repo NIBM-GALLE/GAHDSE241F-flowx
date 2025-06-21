@@ -8,112 +8,100 @@ import 'inform_victims_page.dart';
 import 'subsidy_page.dart';
 import 'contact_page.dart';
 import 'profile_page.dart';
+import '../services/api_service.dart';
 
 class SheltersPage extends StatelessWidget {
   const SheltersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Dummy shelter data
-    final List<Map<String, String>> shelters = [
-      {
-        'name': 'Galle Town Hall Shelter',
-        'location': 'Galle Town Hall, Main Street, Galle',
-        'capacity': '150',
-        'status': 'Available',
-        'contact': '077-1234567',
-      },
-      {
-        'name': 'Community Center Shelter',
-        'location': 'Community Center, Matara Road, Galle',
-        'capacity': '100',
-        'status': 'Full',
-        'contact': '077-9876543',
-      },
-      {
-        'name': 'School Auditorium Shelter',
-        'location': 'School Auditorium, Colombo Road, Galle',
-        'capacity': '200',
-        'status': 'Available',
-        'contact': '071-5555555',
-      },
-    ];
-
-    return AppScaffold(
-      selectedIndex: 2, // Shelters index (0: Dashboard, 1: Announcements, 2: Safe Shelters)
-      onItemSelected: (index) {
-        if (index == 0) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const DashboardPage()),
-          );
-        } else if (index == 1) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AnnouncementsPage()),
-          );
-        } else if (index == 2) {
-          // Already on Shelters, do nothing
-        } else if (index == 3) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const InformVictimsPage()),
-          );
-        } else if (index == 4) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SubsidyPage()),
-          );
-        } else if (index == 5) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const ContactPage()),
-          );
-        } else if (index == 6) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const ProfilePage()),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: ApiService().fetchShelters(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6F8FA),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF6F8FA),
-        appBar: AppBar(
-          title: const Text('Safe Shelters'),
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: shelters.length,
-          itemBuilder: (context, index) {
-            final shelter = shelters[index];
-            return _ShelterCard(
-              name: shelter['name']!,
-              location: shelter['location']!,
-              capacity: shelter['capacity']!,
-              status: shelter['status']!,
-              contact: shelter['contact']!,
-              onView: () {
-                // Dummy coordinates for demo
-                final coords = {
-                  'Galle Town Hall Shelter': [6.0367, 80.2170],
-                  'Community Center Shelter': [6.0400, 80.2100],
-                  'School Auditorium Shelter': [6.0450, 80.2200],
-                };
-                final latLng = coords[shelter['name']!] ?? [6.0367, 80.2170];
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ShelterDetailPage(
-                      name: shelter['name']!,
-                      location: shelter['location']!,
-                      capacity: shelter['capacity']!,
-                      status: shelter['status']!,
-                      contact: shelter['contact']!,
-                      latitude: latLng[0],
-                      longitude: latLng[1],
-                    ),
-                  ),
+        if (snapshot.hasError) {
+          print('SheltersPage error: \\${snapshot.error}');
+          return const Scaffold(
+            backgroundColor: Color(0xFFF6F8FA),
+            body: Center(child: Text('Failed to load shelters')),
+          );
+        }
+        final shelters = snapshot.data ?? [];
+        return AppScaffold(
+          selectedIndex: 2,
+          onItemSelected: (index) {
+            if (index == 0) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const DashboardPage()),
+              );
+            } else if (index == 1) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const AnnouncementsPage()),
+              );
+            } else if (index == 2) {
+              // Already on Shelters, do nothing
+            } else if (index == 3) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const InformVictimsPage()),
+              );
+            } else if (index == 4) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const SubsidyPage()),
+              );
+            } else if (index == 5) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const ContactPage()),
+              );
+            } else if (index == 6) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF6F8FA),
+            appBar: AppBar(
+              title: const Text('Safe Shelters'),
+              centerTitle: true,
+              elevation: 0,
+            ),
+            body: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: shelters.length,
+              itemBuilder: (context, index) {
+                final shelter = shelters[index];
+                return _ShelterCard(
+                  name: shelter['shelter_name'] ?? '-',
+                  location: shelter['shelter_address'] ?? '-',
+                  capacity: (shelter['shelter_size'] ?? '').toString(),
+                  status: (shelter['available'] == 1 || shelter['available'] == true) ? 'Available' : 'Full',
+                  contact: shelter['contact'] ?? '-',
+                  onView: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ShelterDetailPage(
+                          name: shelter['shelter_name'] ?? '-',
+                          location: shelter['shelter_address'] ?? '-',
+                          capacity: (shelter['shelter_size'] ?? '').toString(),
+                          status: (shelter['available'] == 1 || shelter['available'] == true) ? 'Available' : 'Full',
+                          contact: shelter['contact'] ?? '-',
+                          latitude: shelter['latitude'] ?? 0.0,
+                          longitude: shelter['longitude'] ?? 0.0,
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

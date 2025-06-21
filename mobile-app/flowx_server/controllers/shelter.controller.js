@@ -233,6 +233,12 @@ export const getUserRelatedShelters = async (req, res, next) => {
             [houseId, houseId]
         );
 
+        // Disable caching for this endpoint
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        res.set('Surrogate-Control', 'no-store');
+
         res.status(200).json({
             success: true,
             message: "User related shelters retrieved successfully",
