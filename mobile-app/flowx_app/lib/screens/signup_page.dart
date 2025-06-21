@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -30,6 +32,7 @@ class _SignUpPageState extends State<SignUpPage> {
   String? _district;
   String? _divSec;
   String? _gnDiv;
+  LatLng? _selectedLocation;
 
   //dummy data for dropdowns
   final List<String> _districts = ['Colombo', 'Gampaha', 'Kandy'];
@@ -232,6 +235,47 @@ class _SignUpPageState extends State<SignUpPage> {
             decoration: const InputDecoration(labelText: 'Grama Niladhari Division'),
             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
           ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 220,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: FlutterMap(
+                options: MapOptions(
+                  center: LatLng(7.8731, 80.7718), // Sri Lanka center
+                  zoom: 7.5,
+                  onTap: (tapPosition, point) {
+                    setState(() => _selectedLocation = point);
+                  },
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c'],
+                  ),
+                  if (_selectedLocation != null)
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          width: 40,
+                          height: 40,
+                          point: _selectedLocation!,
+                          child: const Icon(Icons.location_on, color: Colors.red, size: 36),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (_selectedLocation != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                'Selected: ${_selectedLocation!.latitude.toStringAsFixed(5)}, ${_selectedLocation!.longitude.toStringAsFixed(5)}',
+                style: const TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+            ),
           const SizedBox(height: 24),
           Row(
             children: [
@@ -245,10 +289,15 @@ class _SignUpPageState extends State<SignUpPage> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    if (_formKey2.currentState!.validate()) {
-                      // TODO: Implement sign up logic
+                    if (_formKey2.currentState!.validate() && _selectedLocation != null) {
+                      // TODO: Implement sign up logic with _selectedLocation.latitude & longitude
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Sign up successful!')),
+                        SnackBar(content: Text('Sign up successful! Location: '
+                          '${_selectedLocation!.latitude}, ${_selectedLocation!.longitude}')),
+                      );
+                    } else if (_selectedLocation == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please select a location on the map.')),
                       );
                     }
                   },
