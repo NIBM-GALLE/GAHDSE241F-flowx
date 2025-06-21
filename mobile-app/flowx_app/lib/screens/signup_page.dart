@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../services/api_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -34,10 +35,49 @@ class _SignUpPageState extends State<SignUpPage> {
   String? _gnDiv;
   LatLng? _selectedLocation;
 
-  //dummy data for dropdowns
-  final List<String> _districts = ['Colombo', 'Gampaha', 'Kandy'];
-  final List<String> _divSecs = ['DS1', 'DS2', 'DS3'];
-  final List<String> _gnDivs = ['GN1', 'GN2', 'GN3'];
+  //dynamic data for dropdowns
+  List<Map<String, dynamic>> _districts = [];
+  List<Map<String, dynamic>> _divSecs = [];
+  List<Map<String, dynamic>> _gnDivs = [];
+  bool _loadingDistricts = false;
+  bool _loadingDivSecs = false;
+  bool _loadingGnDivs = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDistricts();
+  }
+
+  Future<void> _fetchDistricts() async {
+    setState(() => _loadingDistricts = true);
+    try {
+      _districts = await ApiService().fetchDistricts();
+    } catch (_) {
+      _districts = [];
+    }
+    setState(() => _loadingDistricts = false);
+  }
+
+  Future<void> _fetchDivSecs(String districtId) async {
+    setState(() => _loadingDivSecs = true);
+    try {
+      _divSecs = await ApiService().fetchDivisionalSecretariats(districtId);
+    } catch (_) {
+      _divSecs = [];
+    }
+    setState(() => _loadingDivSecs = false);
+  }
+
+  Future<void> _fetchGnDivs(String divSecId) async {
+    setState(() => _loadingGnDivs = true);
+    try {
+      _gnDivs = await ApiService().fetchGramaNiladhariDivisions(divSecId);
+    } catch (_) {
+      _gnDivs = [];
+    }
+    setState(() => _loadingGnDivs = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,26 +254,56 @@ class _SignUpPageState extends State<SignUpPage> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _district,
-            items: _districts.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
-            onChanged: (v) => setState(() => _district = v),
+            items: _districts.map((d) => DropdownMenuItem(
+              value: d['district_id'].toString(),
+              child: Text(d['district_name']),
+            )).toList(),
+            onChanged: (v) {
+              setState(() {
+                _district = v;
+                _divSec = null;
+                _gnDiv = null;
+                _divSecs = [];
+                _gnDivs = [];
+              });
+              if (v != null) _fetchDivSecs(v);
+            },
             decoration: const InputDecoration(labelText: 'District'),
             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            isExpanded: true,
           ),
+          if (_loadingDivSecs) const LinearProgressIndicator(),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _divSec,
-            items: _divSecs.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
-            onChanged: (v) => setState(() => _divSec = v),
+            items: _divSecs.map((d) => DropdownMenuItem(
+              value: d['divisional_secretariat_id'].toString(),
+              child: Text(d['divisional_secretariat_name']),
+            )).toList(),
+            onChanged: (v) {
+              setState(() {
+                _divSec = v;
+                _gnDiv = null;
+                _gnDivs = [];
+              });
+              if (v != null) _fetchGnDivs(v);
+            },
             decoration: const InputDecoration(labelText: 'Divisional Secretariat'),
             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            isExpanded: true,
           ),
+          if (_loadingGnDivs) const LinearProgressIndicator(),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _gnDiv,
-            items: _gnDivs.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+            items: _gnDivs.map((d) => DropdownMenuItem(
+              value: d['grama_niladhari_division_id'].toString(),
+              child: Text(d['grama_niladhari_division_name']),
+            )).toList(),
             onChanged: (v) => setState(() => _gnDiv = v),
             decoration: const InputDecoration(labelText: 'Grama Niladhari Division'),
             validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            isExpanded: true,
           ),
           const SizedBox(height: 16),
           SizedBox(

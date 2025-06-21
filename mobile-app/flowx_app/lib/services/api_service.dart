@@ -65,4 +65,40 @@ class ApiService {
     debugPrint("🚪 Logging out - removing token");
     await _storage.delete(key: 'jwt_token');
   }
+
+  // Fetch all districts
+  Future<List<Map<String, dynamic>>> fetchDistricts() async {
+    final url = Uri.parse('$baseUrl/area/districts');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['data'] ?? []);
+    } else {
+      throw Exception('Failed to load districts');
+    }
+  }
+
+  // Fetch divisional secretariats for a district
+  Future<List<Map<String, dynamic>>> fetchDivisionalSecretariats(String districtId) async {
+    final url = Uri.parse('$baseUrl/area/divisional-secretariats?district_id=$districtId');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['data'] ?? []);
+    } else {
+      throw Exception('Failed to load divisional secretariats');
+    }
+  }
+
+  // Fetch GN divisions for a divisional secretariat
+  Future<List<Map<String, dynamic>>> fetchGramaNiladhariDivisions(String divSecId) async {
+    final url = Uri.parse('$baseUrl/area/grama-niladhari-divisions?divisional_secretariat_id=$divSecId');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['data'] ?? []);
+    } else {
+      throw Exception('Failed to load GN divisions');
+    }
+  }
 }
