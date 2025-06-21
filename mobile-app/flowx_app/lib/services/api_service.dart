@@ -227,4 +227,23 @@ class ApiService {
       return {'success': false, 'message': 'Network error: [31m[0m${e.toString()}'};
     }
   }
+
+  Future<Map<String, dynamic>?> fetchUserProfile() async {
+    final url = Uri.parse('$baseUrl/auth/profile');
+    final token = await getToken();
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['user'] != null) {
+        return Map<String, dynamic>.from(data['user']);
+      }
+    }
+    return null;
+  }
 }
