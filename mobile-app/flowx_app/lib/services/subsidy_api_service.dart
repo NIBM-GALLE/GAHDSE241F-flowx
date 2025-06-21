@@ -41,4 +41,29 @@ class ApiService {
       throw Exception('Failed to fetch subsidies');
     }
   }
+
+  // Fetch user's collected subsidies (history)
+  Future<List<Map<String, dynamic>>> fetchSubsidiesHistory() async {
+    final url = Uri.parse('$baseUrl/subsidies/history');
+    final token = await getToken();
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    print('Subsidy History API response: ${response.body}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['data'] != null && data['data']['subsidiesHistory'] is List) {
+        return List<Map<String, dynamic>>.from(data['data']['subsidiesHistory']);
+      } else {
+        return [];
+      }
+    } else {
+      throw Exception('Failed to fetch subsidies history');
+    }
+  }
 }
