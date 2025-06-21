@@ -23,7 +23,7 @@ const getCurrentOrLatestFloodId = async () => {
        ORDER BY start_date DESC, flood_id DESC LIMIT 1`
     );
 
-    return latestFloods[0]?.f
+    return latestFloods[0]?.flood_id;
   } catch (error) {
     logger.error("Error getting current or latest flood ID:", error);
     throw error;
@@ -31,7 +31,7 @@ const getCurrentOrLatestFloodId = async () => {
 };
 
 //all announcements for current flood for a specific user
-export const getCurrentFloodAnnouncementsForUser = async (req, res, next) => {
+const getCurrentFloodAnnouncementsForUser = async (req, res, next) => {
   try {
     const currentFloodId = await getCurrentOrLatestFloodId();
     if (!currentFloodId) {
@@ -129,7 +129,7 @@ export const getCurrentFloodAnnouncementsForUser = async (req, res, next) => {
 };
 
 //all announcements for current flood (no user filter)
-export const getAllCurrentFloodAnnouncements = async (req, res, next) => {
+const getAllCurrentFloodAnnouncements = async (req, res, next) => {
   try {
     const currentFloodId = await getCurrentOrLatestFloodId();
     if (!currentFloodId) {
@@ -215,7 +215,7 @@ export const getAllCurrentFloodAnnouncements = async (req, res, next) => {
 };
 
 //function to get admin announcements for current flood
-export const getAdminAnnouncementsForCurrentFlood = async (req, res, next) => {
+const getAdminAnnouncementsForCurrentFlood = async (req, res, next) => {
   try {
     const currentFloodId = await getCurrentOrLatestFloodId();
     if (!currentFloodId) {
@@ -252,7 +252,7 @@ export const getAdminAnnouncementsForCurrentFlood = async (req, res, next) => {
 };
 
 //function to get government officer announcements for current flood
-export const getGovOfficerAnnouncementsForCurrentFlood = async (req, res, next) => {
+const getGovOfficerAnnouncementsForCurrentFlood = async (req, res, next) => {
   try {
     const currentFloodId = await getCurrentOrLatestFloodId();
     if (!currentFloodId) {
@@ -291,7 +291,7 @@ export const getGovOfficerAnnouncementsForCurrentFlood = async (req, res, next) 
 };
 
 //function to get grama sevaka announcements for current flood
-export const getGramaSevakaAnnouncementsForCurrentFlood = async (req, res, next) => {
+const getGramaSevakaAnnouncementsForCurrentFlood = async (req, res, next) => {
   try {
     const currentFloodId = await getCurrentOrLatestFloodId();
     if (!currentFloodId) {
