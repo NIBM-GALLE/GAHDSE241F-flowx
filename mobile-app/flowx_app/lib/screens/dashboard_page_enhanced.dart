@@ -49,14 +49,12 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     });
     try {
       final data = await ApiService().fetchUserFloodRisk();
-      print('🟢 Dashboard: Received flood data: $data'); // Debug log
       setState(() {
         floodData = data;
         loading = false;
       });
       _animationController.forward();
     } catch (e) {
-      print('🔴 Dashboard: Error fetching flood data: $e'); // Debug log
       setState(() {
         error = e.toString();
         loading = false;
@@ -183,53 +181,40 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       ),
                     ),
                     child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Error loading data',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.red[700],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading data',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            error!,
+                            style: const TextStyle(color: Color(0xFF64748B)),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: fetchFloodRisk,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[600],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                error!,
-                                style: const TextStyle(
-                                  color: Color(0xFF64748B),
-                                  fontSize: 14,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: fetchFloodRisk,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Retry'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red[600],
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -272,9 +257,6 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
   }
 
   Widget _buildLocationCard(Map<String, dynamic> userLoc) {
-    // Debug: Print the actual data structure
-    print('🟢 Dashboard Location Data: $userLoc');
-    
     return AnimatedContainer(
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOut,
@@ -328,32 +310,23 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           _LocationDetail(
             icon: Icons.location_city,
             label: 'District',
-            value: _getValueOrDefault(userLoc['district_name'], 'Not available'),
+            value: userLoc['district_name'] ?? 'Not available',
             color: Colors.purple,
           ),
           const SizedBox(height: 12),
           _LocationDetail(
             icon: Icons.account_balance,
             label: 'Divisional Secretariat',
-            value: _getValueOrDefault(userLoc['ds_name'], 'Not available'),
+            value: userLoc['ds_name'] ?? 'Not available',
             color: Colors.indigo,
           ),
           const SizedBox(height: 12),
           _LocationDetail(
             icon: Icons.person_pin_circle,
             label: 'Grama Niladhari Division',
-            value: _getValueOrDefault(userLoc['gn_name'], 'Not available'),
+            value: userLoc['gn_name'] ?? 'Not available',
             color: Colors.teal,
           ),
-          if (userLoc['distance_to_river'] != null) ...[
-            const SizedBox(height: 12),
-            _LocationDetail(
-              icon: Icons.water,
-              label: 'Distance to River',
-              value: _formatNumber(userLoc['distance_to_river'], 'km', 'Not available'),
-              color: Colors.blue,
-            ),
-          ],
         ],
       ),
     );
@@ -463,7 +436,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       child: _EnhancedRiskStat(
                         icon: Icons.water_damage,
                         label: 'Flood Area',
-                        value: _formatNumber(floodInfo['flood_area'], 'km²', 'Not available'),
+                        value: '${floodInfo['flood_area'] ?? '0'} km²',
                         color: Colors.blue,
                       ),
                     ),
@@ -472,7 +445,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       child: _EnhancedRiskStat(
                         icon: Icons.shield_outlined,
                         label: 'Safe Zones',
-                        value: _formatNumber(pred['safe_zones'], 'km²', 'Not available'),
+                        value: '${pred['safe_zones'] ?? '0'} km²',
                         color: Colors.green,
                       ),
                     ),
@@ -485,7 +458,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       child: _EnhancedRiskStat(
                         icon: Icons.analytics_outlined,
                         label: 'Risk Level',
-                        value: _formatNumber(risk['risk_percentage'], '%', 'Not available'),
+                        value: '${risk['risk_percentage'] ?? '0'}%',
                         color: Colors.orange,
                       ),
                     ),
@@ -494,7 +467,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       child: _EnhancedRiskStat(
                         icon: Icons.schedule,
                         label: 'Recovery Time',
-                        value: _formatNumber(pred['recovery_time'], 'days', 'Not available'),
+                        value: '${pred['recovery_time'] ?? '0'} days',
                         color: Colors.purple,
                       ),
                     ),
@@ -618,36 +591,6 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         return Colors.blue;
       default:
         return Colors.grey;
-    }
-  }
-
-  String _getValueOrDefault(dynamic value, String defaultValue) {
-    if (value == null) return defaultValue;
-    String stringValue = value.toString().trim();
-    if (stringValue.isEmpty || stringValue == '0' || stringValue == '0.0') {
-      return defaultValue;
-    }
-    return stringValue;
-  }
-
-  String _formatNumber(dynamic value, String unit, String defaultValue) {
-    if (value == null) return defaultValue;
-    
-    // Convert to number
-    double? numValue;
-    if (value is String) {
-      numValue = double.tryParse(value);
-    } else if (value is num) {
-      numValue = value.toDouble();
-    }
-    
-    if (numValue == null || numValue == 0) return defaultValue;
-    
-    // Format number nicely
-    if (numValue % 1 == 0) {
-      return '${numValue.toInt()} $unit';
-    } else {
-      return '${numValue.toStringAsFixed(1)} $unit';
     }
   }
 }

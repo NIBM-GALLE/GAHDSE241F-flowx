@@ -5,6 +5,8 @@ import { pool } from '../utils/db.js';
 
 //protect middleware for member authentication
 export const protect = async (req, res, next) => {
+  console.log('🔐 [protect] Called for', req.method, req.originalUrl);
+  console.log('🔐 [protect] Headers:', req.headers);
   let token;
 
   //extract token from cookies or Authorization header

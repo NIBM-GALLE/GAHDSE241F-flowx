@@ -328,4 +328,38 @@ class ApiService {
       throw Exception(data['message'] ?? 'Failed to submit shelter request');
     }
   }
+
+  Future<Map<String, dynamic>> fetchUserFloodRisk() async {
+    final url = Uri.parse('$baseUrl/flood/user-risk');
+    final token = await getToken();
+    
+    print('🟢 API Service: Calling fetchUserFloodRisk');
+    print('🟢 API Service: URL: $url');
+    print('🟢 API Service: Has token: ${token != null}');
+    
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    
+    print('🟢 API Service: Response status: ${response.statusCode}');
+    print('🟢 API Service: Response body: ${response.body}');
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['data'] != null) {
+        print('🟢 API Service: Successfully parsed data: ${data['data']}');
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        print('🔴 API Service: API returned error: ${data['message']}');
+        throw Exception(data['message'] ?? 'Failed to fetch flood risk');
+      }
+    } else {
+      print('🔴 API Service: HTTP error: ${response.statusCode} - ${response.body}');
+      throw Exception('Failed to fetch flood risk: ${response.statusCode}');
+    }
+  }
 }
