@@ -101,4 +101,55 @@ class ApiService {
       throw Exception('Failed to load GN divisions');
     }
   }
+
+  // Register user (sign up)
+  Future<Map<String, dynamic>> registerUser({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    required String phone,
+    String? houseId,
+    required String address,
+    required int members,
+    required double distanceToRiver,
+    required String districtId,
+    required String divSecId,
+    required String gnDivId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final url = Uri.parse('$baseUrl/auth/register');
+    final body = {
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'password': password,
+      'phone': phone,
+      if (houseId != null && houseId.isNotEmpty) 'houseId': houseId,
+      'address': address,
+      'members': members,
+      'distance_to_river': distanceToRiver,
+      'district_id': districtId,
+      'divisional_secretariat_id': divSecId,
+      'grama_niladhari_division_id': gnDivId,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201 && data['success'] == true) {
+        return {'success': true, 'user': data['user']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Registration failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: [31m${e.toString()}[0m'};
+    }
+  }
 }

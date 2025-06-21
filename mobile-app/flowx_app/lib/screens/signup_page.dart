@@ -358,13 +358,45 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey2.currentState!.validate() && _selectedLocation != null) {
-                      // TODO: Implement sign up logic with _selectedLocation.latitude & longitude
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Sign up successful! Location: '
-                          '${_selectedLocation!.latitude}, ${_selectedLocation!.longitude}')),
+                      final result = await ApiService().registerUser(
+                        firstName: _firstNameController.text.trim(),
+                        lastName: _lastNameController.text.trim(),
+                        email: _emailController.text.trim(),
+                        password: _passwordController.text,
+                        phone: _phoneController.text.trim(),
+                        houseId: _homeIdController.text.trim(),
+                        address: _addressController.text.trim(),
+                        members: int.tryParse(_membersController.text.trim()) ?? 1,
+                        distanceToRiver: double.tryParse(_distanceToRiverController.text.trim()) ?? 0.0,
+                        districtId: _district!,
+                        divSecId: _divSec!,
+                        gnDivId: _gnDiv!,
+                        latitude: _selectedLocation!.latitude,
+                        longitude: _selectedLocation!.longitude,
                       );
+                      if (result['success'] == true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Sign up successful! Please sign in.')),
+                        );
+                        Navigator.of(context).pop();
+                      } else {
+                        // Show backend error message in a dialog for clarity
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Registration Failed'),
+                            content: Text(result['message'] ?? 'Sign up failed'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     } else if (_selectedLocation == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please select a location on the map.')),
