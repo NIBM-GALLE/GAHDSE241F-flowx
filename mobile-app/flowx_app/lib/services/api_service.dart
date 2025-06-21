@@ -246,4 +246,39 @@ class ApiService {
     }
     return null;
   }
+
+  Future<bool> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String address,
+    String? emergencyContact,
+    String? latitude,
+    String? longitude,
+  }) async {
+    final url = Uri.parse('$baseUrl/auth/profile');
+    final token = await getToken();
+    final body = {
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phone': phone,
+      'address': address,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+    };
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200) {
+      return true;
+    }
+    return false;
+  }
 }

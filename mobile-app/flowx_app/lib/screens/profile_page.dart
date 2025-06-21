@@ -333,12 +333,27 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               const SizedBox(width: 12),
               ElevatedButton(
                 onPressed: () async {
-                  // Call API to update profile with latitude/longitude
-                  // (You should implement this in ApiService)
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Profile updated (demo only)')),
+                  final success = await ApiService().updateUserProfile(
+                    firstName: firstName.text,
+                    lastName: lastName.text,
+                    email: email.text,
+                    phone: phone.text,
+                    address: address.text,
+                    latitude: latitude.text.isNotEmpty ? latitude.text : null,
+                    longitude: longitude.text.isNotEmpty ? longitude.text : null,
                   );
+                  if (success) {
+                    // Force refresh of the profile page after update
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const ProfilePage()),
+                    );
+                  } else {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to update profile')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
