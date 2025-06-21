@@ -79,7 +79,7 @@ class SheltersPage extends StatelessWidget {
                   name: shelter['shelter_name'] ?? '-',
                   location: shelter['shelter_address'] ?? '-',
                   capacity: (shelter['shelter_size'] ?? '').toString(),
-                  status: (shelter['available'] == 1 || shelter['available'] == true) ? 'Available' : 'Full',
+                  status: (shelter['available'] != null && shelter['available'] > 0) ? 'Available' : 'Full',
                   contact: shelter['contact'] ?? '-',
                   onView: () {
                     Navigator.of(context).push(
@@ -88,10 +88,16 @@ class SheltersPage extends StatelessWidget {
                           name: shelter['shelter_name'] ?? '-',
                           location: shelter['shelter_address'] ?? '-',
                           capacity: (shelter['shelter_size'] ?? '').toString(),
-                          status: (shelter['available'] == 1 || shelter['available'] == true) ? 'Available' : 'Full',
+                          status: (shelter['available'] != null && shelter['available'] > 0) ? 'Available' : 'Full',
                           contact: shelter['contact'] ?? '-',
-                          latitude: shelter['latitude'] ?? 0.0,
-                          longitude: shelter['longitude'] ?? 0.0,
+                          latitude: double.tryParse(shelter['latitude']?.toString() ?? '') ?? 0.0,
+                          longitude: double.tryParse(shelter['longitude']?.toString() ?? '') ?? 0.0,
+                          floodName: shelter['flood_name'],
+                          startDate: shelter['start_date']?.toString(),
+                          endDate: shelter['end_date']?.toString(),
+                          shelterId: shelter['shelter_id']?.toString() ?? '-',
+                          divisionalSecretariatId: shelter['divisional_secretariat_id']?.toString() ?? '-',
+                          shelterHouseId: shelter['shelter_house_id']?.toString(),
                         ),
                       ),
                     );

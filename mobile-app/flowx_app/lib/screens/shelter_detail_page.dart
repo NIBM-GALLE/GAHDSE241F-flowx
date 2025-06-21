@@ -10,6 +10,12 @@ class ShelterDetailPage extends StatelessWidget {
   final String contact;
   final double latitude;
   final double longitude;
+  final String? floodName;
+  final String? startDate;
+  final String? endDate;
+  final String shelterId;
+  final String divisionalSecretariatId;
+  final String? shelterHouseId;
 
   const ShelterDetailPage({
     super.key,
@@ -20,6 +26,12 @@ class ShelterDetailPage extends StatelessWidget {
     required this.contact,
     required this.latitude,
     required this.longitude,
+    this.floodName,
+    this.startDate,
+    this.endDate,
+    required this.shelterId,
+    required this.divisionalSecretariatId,
+    this.shelterHouseId,
   });
 
   @override
@@ -115,6 +127,54 @@ class ShelterDetailPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.home, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text('Shelter ID: $shelterId'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.location_city, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text('Divisional Secretariat ID: $divisionalSecretariatId'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.house, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text('Shelter House ID: ${shelterHouseId ?? "-"}'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.water_drop, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text(floodName != null ? 'Flood: $floodName' : 'No flood assigned'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text(startDate != null ? 'Start: $startDate' : 'No start date'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text(endDate != null ? 'End: $endDate' : 'Ongoing'),
                 ],
               ),
               const SizedBox(height: 32), // Add spacing before the button
