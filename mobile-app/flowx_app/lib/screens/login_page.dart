@@ -15,25 +15,63 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  final bool _showDebugButton = true; // Set to false for production
 
   Future<void> _handleLogin() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-    final api = ApiService();
-    final result = await api.login(_emailController.text.trim(), _passwordController.text);
-    setState(() {
-      _isLoading = false;
-    });
-    if (result['success'] == true) {
-      // TODO: Store token if needed: result['token']
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const DashboardPage()),
+    
+    try {
+      final api = ApiService();
+      final result = await api.login(
+        _emailController.text.trim(), 
+        _passwordController.text
       );
-    } else {
+
+      if (result['success'] == true) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const DashboardPage()),
+        );
+      } else {
+        setState(() {
+          _errorMessage = result['message'] ?? 'Login failed';
+        });
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = result['message'] ?? 'Login failed';
+        _errorMessage = 'Connection error: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _testApiConnection() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final api = ApiService();
+      final result = await api.login('chamindu@gmail.com', 'Chamindu123');
+      
+      setState(() {
+        _errorMessage = result['success'] 
+            ? 'API test successful! Token: ${result['token']?.substring(0, 15)}...'
+            : 'API test failed: ${result['message']}';
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'API connection failed: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -56,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   shape: BoxShape.circle,
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Image.asset(
                     'assets/images/flowx_logo.jpg',
                     fit: BoxFit.contain,
@@ -95,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -109,8 +147,8 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: Icon(Icons.lock_outline),
-                      suffixIcon: Icon(Icons.visibility_off),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: const Icon(Icons.visibility_off),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -124,11 +162,32 @@ class _LoginPageState extends State<LoginPage> {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.red, 
+                          fontWeight: FontWeight.w500),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  const SizedBox(height: 8),
+                  
+                  // API Test Button (Visible only in debug mode)
+                  if (_showDebugButton)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _testApiConnection,
+                        icon: const Icon(Icons.bolt, size: 20),
+                        label: const Text('Test API Connection'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.blueAccent,
+                          side: const BorderSide(color: Colors.blueAccent),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
@@ -143,12 +202,16 @@ class _LoginPageState extends State<LoginPage> {
                         ? const SizedBox(
                             width: 24,
                             height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2, 
+                              color: Colors.white),
+                            )
                         : const Text(
                             'Login',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
+                            style: TextStyle(
+                              fontSize: 18, 
+                              fontWeight: FontWeight.bold),
+                            ),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
@@ -162,25 +225,19 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Expanded(
-                        child: Text(
-                          "Don't have an account? ",
-                          style: TextStyle(color: Colors.black54),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Flexible(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => const SignUpPage()),
-                            );
-                          },
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      const Text("Don't have an account? "),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SignUpPage()),
+                          );
+                        },
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: Colors.blue, 
+                            fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
