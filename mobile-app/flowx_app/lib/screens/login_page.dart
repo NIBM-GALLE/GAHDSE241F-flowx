@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  final bool _showDebugButton = true; // Set to false for production
+  final bool _showDebugButton = false; // Hide test button for production
 
   Future<void> _handleLogin() async {
     setState(() {
@@ -169,25 +169,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   
-                  // API Test Button (Visible only in debug mode)
-                  if (_showDebugButton)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _testApiConnection,
-                        icon: const Icon(Icons.bolt, size: 20),
-                        label: const Text('Test API Connection'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.blueAccent,
-                          side: const BorderSide(color: Colors.blueAccent),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
