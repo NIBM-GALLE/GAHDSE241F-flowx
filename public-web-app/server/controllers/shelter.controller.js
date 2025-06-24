@@ -207,9 +207,9 @@ export const getShelterRequestHistory = async (req, res, next) => {
 //function to get user related shelters 
 export const getUserRelatedShelters = async (req, res, next) => {
     try {
-        //get user's house ID
+        //get user's house ID and lat/lng
         const [user] = await pool.query(
-            `SELECT house_id FROM member WHERE member_id = ?`,
+            `SELECT house_id, latitude, longitude FROM house WHERE house_id = (SELECT house_id FROM member WHERE member_id = ?)` ,
             [req.user.member_id]
         );
 
@@ -218,6 +218,8 @@ export const getUserRelatedShelters = async (req, res, next) => {
         }
 
         const houseId = user[0].house_id;
+        const houseLat = user[0].latitude;
+        const houseLng = user[0].longitude;
 
         //get all shelters related to the user's house
         const [relatedShelters] = await pool.query(
@@ -239,7 +241,9 @@ export const getUserRelatedShelters = async (req, res, next) => {
             message: "User related shelters retrieved successfully",
             data: {
                 relatedShelters: relatedShelters,
-                houseId: houseId
+                houseId: houseId,
+                houseLat: houseLat,
+                houseLng: houseLng
             }
         });
 

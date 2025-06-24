@@ -31,10 +31,18 @@ export default function Shelters() {
   const [loadingRelated, setLoadingRelated] = useState(true);
   const [errorRelated, setErrorRelated] = useState(null);
   const [dsNames, setDsNames] = useState({});
+  const [houseLat, setHouseLat] = useState(null);
+  const [houseLng, setHouseLng] = useState(null);
 
   // Map marker icon
   const shelterIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  });
+  // Custom icon for user house (red)
+  const userIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
   });
@@ -50,6 +58,8 @@ export default function Shelters() {
         });
         const shelters = res.data.data.relatedShelters || [];
         setRelatedShelters(shelters);
+        setHouseLat(res.data.data.houseLat);
+        setHouseLng(res.data.data.houseLng);
         // Fetch DS names for all unique ids
         const uniqueDsIds = [...new Set(shelters.map(s => s.divisional_secretariat_id).filter(Boolean))];
         const dsNameMap = {};
@@ -89,6 +99,16 @@ export default function Shelters() {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution="&copy; OpenStreetMap contributors"
                     />
+                    {/* User house marker */}
+                    {houseLat && houseLng && (
+                      <Marker position={[parseFloat(houseLat), parseFloat(houseLng)]} icon={userIcon}>
+                        <Popup>
+                          <div><strong>Your House</strong></div>
+                          <div>Lat: {houseLat}, Lng: {houseLng}</div>
+                        </Popup>
+                      </Marker>
+                    )}
+                    {/* Shelter markers */}
                     {shelterPositions.length > 0 && shelterPositions.map((pos, i) => (
                       <Marker key={i} position={pos} icon={shelterIcon}>
                         <Popup>
