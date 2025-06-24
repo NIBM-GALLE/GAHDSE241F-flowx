@@ -15,6 +15,8 @@ export const useShelterStore = create((set) => ({
   allShelters: [],
   loadingShelterInfo: false,
   errorShelterInfo: null,
+  houseLat: null,
+  houseLng: null,
 
   requestShelter: async (payload) => {
     set({ isRequesting: true, requestError: null, requestStatus: null });
@@ -65,12 +67,16 @@ export const useShelterStore = create((set) => ({
       set({
         assignedShelter: res.data.data.assignedShelter,
         allShelters: res.data.data.allShelters,
+        houseLat: res.data.data.houseLat,
+        houseLng: res.data.data.houseLng,
         loadingShelterInfo: false
       });
     } catch (error) {
       set({
         assignedShelter: null,
         allShelters: [],
+        houseLat: null,
+        houseLng: null,
         loadingShelterInfo: false,
         errorShelterInfo: error.response?.data?.message || error.message
       });
