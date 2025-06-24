@@ -123,7 +123,7 @@ export const getShelterInfo = async (req, res, next) => {
         //get assigned shelter for the house (from shelter_house)
         const [assignedShelter] = await pool.query(
             `SELECT sh.*, s.shelter_name, s.shelter_size, s.shelter_address, s.available, 
-                    s.shelter_status, s.divisional_secretariat_id,
+                    s.shelter_status, s.divisional_secretariat_id, s.latitude, s.longitude,
                     f.flood_name, f.start_date, f.end_date
              FROM shelter_house sh
              JOIN shelter s ON sh.shelter_id = s.shelter_id
@@ -137,7 +137,7 @@ export const getShelterInfo = async (req, res, next) => {
         //get all shelters in user's divisional secretariat
         const [allShelters] = await pool.query(
             `SELECT shelter_id, shelter_name, shelter_size, shelter_address, available, 
-                    shelter_status, divisional_secretariat_id
+                    shelter_status, divisional_secretariat_id, latitude, longitude
              FROM shelter 
              WHERE divisional_secretariat_id = ?
              ORDER BY shelter_name`,
@@ -221,7 +221,8 @@ export const getUserRelatedShelters = async (req, res, next) => {
 
         //get all shelters related to the user's house
         const [relatedShelters] = await pool.query(
-            `SELECT s.*, sh.shelter_house_id, 
+            `SELECT s.shelter_id, s.shelter_name, s.shelter_size, s.shelter_address, s.available, 
+                    s.shelter_status, s.divisional_secretariat_id, s.latitude, s.longitude, sh.shelter_house_id, 
                     f.flood_name, f.start_date, f.end_date
              FROM shelter s
              LEFT JOIN shelter_house sh ON s.shelter_id = sh.shelter_id AND sh.house_id = ?
