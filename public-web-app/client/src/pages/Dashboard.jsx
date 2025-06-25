@@ -25,7 +25,14 @@ function Dashboard() {
     houseLat,
     houseLng,
     loadingShelterInfo,
-    fetchShelterInfo
+    fetchShelterInfo,
+    gramaDivisionId,
+    divisionalSecretariatId,
+    districtId,
+    gramaDivisionName,
+    divisionalSecretariatName,
+    districtName,
+    setDivisionInfo
   } = useShelterStore();
 
   // Fetch user's flood risk data
@@ -76,6 +83,12 @@ function Dashboard() {
   useEffect(() => {
     fetchShelterInfo();
   }, [fetchShelterInfo]);
+
+  useEffect(() => {
+    if (typeof setDivisionInfo === 'function') {
+      setDivisionInfo();
+    }
+  }, [setDivisionInfo, gramaDivisionId, divisionalSecretariatId, districtId]);
 
   // Dummy data for development/fallback
   const getDummyFloodData = () => ({
@@ -215,6 +228,12 @@ function Dashboard() {
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2">
+                            {/* Administrative Info */}
+                            <div className="flex flex-col gap-1 mb-2">
+                              <span className="text-xs text-gray-500">Grama Niladhari Division: <span className="font-semibold text-gray-800">{gramaDivisionName || '-'}</span></span>
+                              <span className="text-xs text-gray-500">Divisional Secretariat: <span className="font-semibold text-gray-800">{divisionalSecretariatName || '-'}</span></span>
+                              <span className="text-xs text-gray-500">District: <span className="font-semibold text-gray-800">{districtName || '-'}</span></span>
+                            </div>
                             <div className="flex justify-between items-center">
                               <span className="text-sm">Distance to River:</span>
                               <span className="font-medium">{userLocation.distance_to_river} km</span>

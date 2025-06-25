@@ -105,9 +105,9 @@ export const requestShelter = async (req, res, next) => {
 //function to get assigned shelter and all available shelters
 export const getShelterInfo = async (req, res, next) => {
     try {
-        //get user's house ID, divisional secretariat ID, and lat/lng
+        //get user's house ID, divisional secretariat ID, grama niladhari division ID, district ID, and lat/lng
         const [user] = await pool.query(
-            `SELECT h.house_id, h.divisional_secretariat_id, h.latitude as house_latitude, h.longitude as house_longitude
+            `SELECT h.house_id, h.divisional_secretariat_id, h.grama_niladhari_division_id, h.district_id, h.latitude as house_latitude, h.longitude as house_longitude
              FROM member m
              JOIN house h ON m.house_id = h.house_id
              WHERE m.member_id = ?`,
@@ -118,7 +118,7 @@ export const getShelterInfo = async (req, res, next) => {
             return next(errorHandler(404, "User not found"));
         }
 
-        const { house_id: houseId, divisional_secretariat_id: divisionalSecretariatId, house_latitude, house_longitude } = user[0];
+        const { house_id: houseId, divisional_secretariat_id: divisionalSecretariatId, grama_niladhari_division_id: gramaNiladhariDivisionId, district_id: districtId, house_latitude, house_longitude } = user[0];
 
         //get assigned shelter for the house (from shelter_house)
         const [assignedShelter] = await pool.query(
@@ -152,6 +152,8 @@ export const getShelterInfo = async (req, res, next) => {
                 allShelters: allShelters,
                 houseId: houseId,
                 divisionalSecretariatId: divisionalSecretariatId,
+                grama_niladhari_division_id: gramaNiladhariDivisionId,
+                district_id: districtId,
                 houseLat: house_latitude,
                 houseLng: house_longitude
             }
