@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { FloodPredictions } from "@/components/dashboard/FloodPredictions";
-import { Announcements } from "@/components/dashboard/Announcements";
-import { Subsidies } from "@/components/dashboard/Subsidies";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
   SidebarInset,
@@ -69,48 +66,6 @@ function Dashboard() {
     }
   });
 
-  const announcements = [
-    {
-      type: "warning",
-      title: "Heavy Rainfall Alert",
-      message: "Expect heavy rainfall in Colombo and surrounding areas within the next 24 hours.",
-      date: "2025-06-10",
-    },
-    {
-      type: "info",
-      title: "Relief Camp Setup",
-      message: "A new relief camp has been set up at Galle Town Hall.",
-      date: "2025-06-09",
-    },
-    {
-      type: "general",
-      title: "Donation Drive",
-      message: "We are organizing a donation drive. Volunteers are welcome!",
-      date: "2025-06-08",
-    },
-  ];
-
-  const subsidies = [
-    {
-      title: "Emergency Relief Fund",
-      description: "Immediate financial aid for affected families",
-      amount: "LKR 25,000",
-      eligibility: "Flood-affected residents of Galle",
-    },
-    {
-      title: "Agricultural Loss Compensation",
-      description: "Compensation for crop damages due to flooding",
-      amount: "LKR 50,000",
-      eligibility: "Registered farmers in Southern Province",
-    },
-    {
-      title: "Housing Repair Grant",
-      description: "Financial assistance for home repairs after flood damage",
-      amount: "LKR 75,000",
-      eligibility: "Homeowners with verified flood damage",
-    },
-  ];
-
   return (
     <div>
       <SidebarProvider>
@@ -140,31 +95,12 @@ function Dashboard() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              <div className="lg:col-span-2">
-                {/* Pass the flood risk data to FloodPredictions component */}
-                <FloodPredictions 
-                  floodRiskData={floodRiskData}
-                  loading={loading}
-                />
-              </div>
-              
-              <div className="lg:col-span-1">
-                <Tabs defaultValue="announcements" className="h-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="announcements">Announcements</TabsTrigger>
-                    <TabsTrigger value="subsidies">Subsidies</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="announcements" className="mt-4">
-                    <Announcements announcements={announcements} />
-                  </TabsContent>
-                  
-                  <TabsContent value="subsidies" className="mt-4">
-                    <Subsidies subsidies={subsidies} />
-                  </TabsContent>
-                </Tabs>
-              </div>
+            <div className="w-full space-y-6">
+              {/* Pass the flood risk data to FloodPredictions component */}
+              <FloodPredictions 
+                floodRiskData={floodRiskData}
+                loading={loading}
+              />
             </div>
           </main>
         </SidebarInset>
