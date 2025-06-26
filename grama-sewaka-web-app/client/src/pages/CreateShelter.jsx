@@ -78,6 +78,8 @@ function CreateShelter() {
     fetchShelters,
     createShelter,
     updateShelter,
+    fetchAllSheltersPublic,
+    sheltersPublic = [],
   } = useShelterStore();
 
   // Compute divisionalSecretariats from shelters
@@ -114,7 +116,8 @@ function CreateShelter() {
 
   useEffect(() => {
     fetchShelters();
-  }, [fetchShelters]);
+    fetchAllSheltersPublic();
+  }, [fetchShelters, fetchAllSheltersPublic]);
 
   // Filter shelters based on search and status
   const filteredShelters = shelters.filter(shelter => {
@@ -566,6 +569,40 @@ function CreateShelter() {
                         )}
                       </tbody>
                     </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            {/* Main content ends here, now show the map at the bottom */}
+            <div className="w-full mt-8 px-4 pb-8">
+              <Card className="border border-blue-200 dark:border-blue-800">
+                <CardHeader>
+                  <CardTitle className="text-lg">All Shelter Locations</CardTitle>
+                  <CardDescription>Map of all shelters with location data</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div style={{ height: 350, borderRadius: 8, overflow: 'hidden' }}>
+                    {(sheltersPublic && sheltersPublic.length > 0) ? (
+                      <MapContainer
+                        center={[7.8731, 80.7718]}
+                        zoom={8}
+                        style={{ height: '350px', width: '100%' }}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution="&copy; OpenStreetMap contributors"
+                        />
+                        {sheltersPublic.filter(s => s.latitude && s.longitude).map(shelter => (
+                          <Marker
+                            key={shelter.shelter_id}
+                            position={[parseFloat(shelter.latitude), parseFloat(shelter.longitude)]}
+                          >
+                          </Marker>
+                        ))}
+                      </MapContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">No shelter location data available.</div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

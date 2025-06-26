@@ -24,6 +24,7 @@ export const useShelterStore = create((set, get) => ({
   pendingRequests: [],
   approvedRequests: [],
   requests: [], // Combined for UI compatibility
+  sheltersPublic: [], // Added state for public shelters
 
   fetchShelters: async () => {
     set({ loading: true, error: null });
@@ -194,6 +195,17 @@ export const useShelterStore = create((set, get) => ({
       await get().fetchShelterRequests();
     } catch (error) {
       set({ updateStatus: null, error: error.response?.data?.message || error.message });
+    }
+  },
+
+  // New action to fetch all shelters for public map display
+  fetchAllSheltersPublic: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.get("/api/shelter/all-public");
+      set({ sheltersPublic: res.data.data, loading: false });
+    } catch (error) {
+      set({ sheltersPublic: [], loading: false, error: error.response?.data?.message || error.message });
     }
   },
 
