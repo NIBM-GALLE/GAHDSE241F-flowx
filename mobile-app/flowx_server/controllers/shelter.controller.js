@@ -253,3 +253,80 @@ export const getUserRelatedShelters = async (req, res, next) => {
         next(errorHandler(500, "Failed to get user related shelters"));
     }
 };
+
+// Get all shelters with lat/lng and assigned shelter for the user (if authenticated)
+export const getNearbySheltersWithUser = async (req, res, next) => {
+  try {
+    if (req.user && req.user.member_id) {
+      // Get user's house and divisional secretariat
+      const [user] = await pool.query(
+        `SELECT h.house_id, h.divisional_secretariat_id, h.latitude as user_latitude, h.longitude as user_longitude
+         FROM member m
+         JOIN house h ON m.house_id = h.house_id
+         WHERE m.member_id = ?`,
+        [req.user.member_id]
+      );
+      if (!user.length) {
+        return next(errorHandler(404, "User not found"));
+      }
+      const { house_id: houseId, divisional_secretariat_id: dsId, user_latitude, user_longitude } = user[0];
+
+      // If user_latitude or user_longitude is null, try to get from shelter assignment (as fallback)
+      let userLocation = null;
+      if (user_latitude != null && user_longitude != null) {
+        userLocation = { latitude: user_latitude, longitude: user_longitude };
+      } else {
+        // Try to get assigned shelter's location as fallback
+        const [assignedShelterLoc] = await pool.query(
+          `SELECT s.latitude, s.longitude FROM shelter_house sh JOIN shelter s ON sh.shelter_id = s.shelter_id WHERE sh.house_id = ? ORDER BY sh.shelter_house_id DESC LIMIT 1`,
+          [houseId]
+        );
+        if (assignedShelterLoc.length && assignedShelterLoc[0].latitude != null && assignedShelterLoc[0].longitude != null) {
+          userLocation = { latitude: assignedShelterLoc[0].latitude, longitude: assignedShelterLoc[0].longitude };
+        }
+      }
+      logger.info('DEBUG: Returning userLocation:', userLocation);
+
+      // Get assigned shelter (if any)
+      const [assignedShelter] = await pool.query(
+        `SELECT s.*, sh.shelter_house_id, sh.flood_id
+         FROM shelter_house sh
+         JOIN shelter s ON sh.shelter_id = s.shelter_id
+         WHERE sh.house_id = ?
+         ORDER BY sh.shelter_house_id DESC LIMIT 1`,
+        [houseId]
+      );
+
+      // Get all shelters in user's divisional secretariat (with lat/lng)
+      const [allShelters] = await pool.query(
+        `SELECT * FROM shelter WHERE divisional_secretariat_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL`,
+        [dsId]
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          userLocation: userLocation, // can be null if not found
+          assignedShelter: assignedShelter.length > 0 ? assignedShelter[0] : null,
+          allShelters: allShelters
+        }
+      });
+    } else {
+      // Public: return all shelters with lat/lng (no user/assigned shelter)
+      const [allShelters] = await pool.query(
+        `SELECT * FROM shelter WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
+      );
+      return res.status(200).json({
+        success: true,
+        data: {
+          userLocation: null,
+          assignedShelter: null,
+          allShelters: allShelters
+        }
+      });
+    }
+  } catch (error) {
+    logger.error("Get nearby shelters with user error:", error);
+    next(errorHandler(500, "Failed to get nearby shelters"));
+  }
+};

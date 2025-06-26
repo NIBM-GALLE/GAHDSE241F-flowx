@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'app_scaffold.dart';
 import 'sidebar.dart';
 import 'announcements_page.dart';
@@ -8,6 +9,7 @@ import 'subsidy_page.dart';
 import 'contact_page.dart';
 import 'profile_page.dart';
 import '../services/api_service.dart';
+import 'shelter_map_widget.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -22,6 +24,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
   String? error;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  Map<String, dynamic>? shelterMapData;
 
   @override
   void initState() {
@@ -34,6 +37,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     fetchFloodRisk();
+    fetchShelterMap();
   }
 
   @override
@@ -61,6 +65,17 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         error = e.toString();
         loading = false;
       });
+    }
+  }
+
+  Future<void> fetchShelterMap() async {
+    try {
+      final data = await ApiService().fetchShelterMapData();
+      setState(() {
+        shelterMapData = data;
+      });
+    } catch (e) {
+      print('🔴 Dashboard: Error fetching shelter map data: $e');
     }
   }
 
@@ -260,6 +275,26 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                                 
                                 // Main Flood Risk Card
                                 _buildFloodRiskCard(floodInfo, risk, alert, pred, lastUpdated),
+                                
+                                // Shelters Map
+                                if (shelterMapData != null) ...[
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    'Shelters & Your Location',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A2B3D)),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ShelterMapWidget(
+                                    userLocation: (shelterMapData!["userLocation"] != null && shelterMapData!["userLocation"]["latitude"] != null && shelterMapData!["userLocation"]["longitude"] != null)
+                                      ? LatLng(
+                                          double.tryParse(shelterMapData!["userLocation"]["latitude"].toString()) ?? 0.0,
+                                          double.tryParse(shelterMapData!["userLocation"]["longitude"].toString()) ?? 0.0,
+                                        )
+                                      : null,
+                                    shelters: List<Map<String, dynamic>>.from(shelterMapData!["allShelters"] ?? []),
+                                    assignedShelter: shelterMapData!["assignedShelter"],
+                                  ),
+                                ],
                               ],
                             ),
                           ),
