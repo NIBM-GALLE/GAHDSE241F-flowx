@@ -55,7 +55,7 @@ export function NavUser() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => navigate("/profile")}> 
+        <DropdownMenuItem onClick={() => navigate("/user-profile")}> 
           <CircleUserRound className="mr-2 size-4" />
           Profile
         </DropdownMenuItem>

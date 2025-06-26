@@ -55,6 +55,20 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix default marker icon for leaflet in React (otherwise marker icon may not show)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 function CreateShelter() {
   const {
@@ -64,6 +78,8 @@ function CreateShelter() {
     fetchShelters,
     createShelter,
     updateShelter,
+    fetchAllSheltersPublic,
+    sheltersPublic = [],
   } = useShelterStore();
 
   // Compute divisionalSecretariats from shelters
@@ -86,7 +102,8 @@ function CreateShelter() {
     shelter_address: '',
     available: '',
     shelter_status: 'active',
-    // divisional_secretariat_id is NOT needed for createShelter, backend gets it from user
+    latitude: '',
+    longitude: '',
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -99,7 +116,8 @@ function CreateShelter() {
 
   useEffect(() => {
     fetchShelters();
-  }, [fetchShelters]);
+    fetchAllSheltersPublic();
+  }, [fetchShelters, fetchAllSheltersPublic]);
 
   // Filter shelters based on search and status
   const filteredShelters = shelters.filter(shelter => {
@@ -134,6 +152,7 @@ function CreateShelter() {
     if (!formData.shelter_address) newErrors.shelter_address = 'Address is required';
     if (formData.available === '' || formData.available === null || formData.available === undefined) newErrors.available = 'Available is required';
     if (!formData.shelter_status) newErrors.shelter_status = 'Status is required';
+    if (!formData.latitude || !formData.longitude) newErrors.location = 'Location is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -145,13 +164,14 @@ function CreateShelter() {
       updateShelter(editingId, formData);
       setEditingId(null);
     } else {
-      // Only send fields required by backend
       createShelter({
         shelter_name: formData.shelter_name,
         shelter_size: formData.shelter_size,
         shelter_address: formData.shelter_address,
         available: formData.available,
         shelter_status: formData.shelter_status,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       });
     }
     setFormData({
@@ -160,6 +180,8 @@ function CreateShelter() {
       shelter_address: '',
       available: '',
       shelter_status: 'active',
+      latitude: '',
+      longitude: '',
     });
   };
 
@@ -188,6 +210,7 @@ function CreateShelter() {
     if (!editForm.shelter_address) errs.shelter_address = 'Address is required';
     if (editForm.available === '' || editForm.available === null || editForm.available === undefined) errs.available = 'Available is required';
     if (!editForm.shelter_status) errs.shelter_status = 'Status is required';
+    if (!editForm.latitude || !editForm.longitude) errs.location = 'Location is required';
     setEditErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -243,6 +266,37 @@ function CreateShelter() {
   // Show loading or error state
   if (loading) return <div>Loading shelters...</div>;
   if (error) return <div>Error loading shelters: {error.message}</div>;
+
+  // Map click handler for create form
+  const handleMapClick = (lat, lng) => {
+    setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+    setErrors(prev => ({ ...prev, location: undefined }));
+  };
+  // Map click handler for edit dialog
+  const handleEditMapClick = (lat, lng) => {
+    setEditForm(prev => ({ ...prev, latitude: lat, longitude: lng }));
+    setEditErrors(prev => ({ ...prev, location: undefined }));
+  };
+
+  // Map click component for create form
+  function LocationSelector({ onSelect, lat, lng }) {
+    useMapEvents({
+      click(e) {
+        onSelect(e.latlng.lat, e.latlng.lng);
+      },
+    });
+    return lat && lng ? <Marker position={[lat, lng]} /> : null;
+  }
+
+  // Map click component for edit form
+  function EditLocationSelector({ onSelect, lat, lng }) {
+    useMapEvents({
+      click(e) {
+        onSelect(e.latlng.lat, e.latlng.lng);
+      },
+    });
+    return lat && lng ? <Marker position={[lat, lng]} /> : null;
+  }
 
   return (
     <SidebarProvider>
@@ -346,6 +400,30 @@ function CreateShelter() {
                             <SelectItem value="maintenance">Maintenance</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Location *</Label>
+                        <div style={{ height: 250, borderRadius: 8, overflow: 'hidden' }}>
+                          <MapContainer
+                            center={formData.latitude && formData.longitude ? [parseFloat(formData.latitude), parseFloat(formData.longitude)] : [7.8731, 80.7718]}
+                            zoom={8}
+                            style={{ height: '250px', width: '100%' }}
+                          >
+                            <TileLayer
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              attribution="&copy; OpenStreetMap contributors"
+                            />
+                            <LocationSelector
+                              onSelect={handleMapClick}
+                              lat={formData.latitude ? parseFloat(formData.latitude) : null}
+                              lng={formData.longitude ? parseFloat(formData.longitude) : null}
+                            />
+                          </MapContainer>
+                        </div>
+                        {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
                       </div>
                     </div>
                   </CardContent>
@@ -495,6 +573,40 @@ function CreateShelter() {
                 </CardContent>
               </Card>
             </div>
+            {/* Main content ends here, now show the map at the bottom */}
+            <div className="w-full mt-8 px-4 pb-8">
+              <Card className="border border-blue-200 dark:border-blue-800">
+                <CardHeader>
+                  <CardTitle className="text-lg">All Shelter Locations</CardTitle>
+                  <CardDescription>Map of all shelters with location data</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div style={{ height: 350, borderRadius: 8, overflow: 'hidden' }}>
+                    {(sheltersPublic && sheltersPublic.length > 0) ? (
+                      <MapContainer
+                        center={[7.8731, 80.7718]}
+                        zoom={8}
+                        style={{ height: '350px', width: '100%' }}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution="&copy; OpenStreetMap contributors"
+                        />
+                        {sheltersPublic.filter(s => s.latitude && s.longitude).map(shelter => (
+                          <Marker
+                            key={shelter.shelter_id}
+                            position={[parseFloat(shelter.latitude), parseFloat(shelter.longitude)]}
+                          >
+                          </Marker>
+                        ))}
+                      </MapContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">No shelter location data available.</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </main>
       </SidebarInset>
@@ -574,6 +686,29 @@ function CreateShelter() {
                   </SelectContent>
                 </Select>
                 {editErrors.shelter_status && <p className="text-sm text-red-500">{editErrors.shelter_status}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label>Location *</Label>
+                <div style={{ height: 250, borderRadius: 8, overflow: 'hidden' }}>
+                  <MapContainer
+                    center={editForm.latitude && editForm.longitude ? [parseFloat(editForm.latitude), parseFloat(editForm.longitude)] : [7.8731, 80.7718]}
+                    zoom={8}
+                    style={{ height: '250px', width: '100%' }}
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution="&copy; OpenStreetMap contributors"
+                    />
+                    <EditLocationSelector
+                      onSelect={handleEditMapClick}
+                      lat={editForm.latitude ? parseFloat(editForm.latitude) : null}
+                      lng={editForm.longitude ? parseFloat(editForm.longitude) : null}
+                    />
+                  </MapContainer>
+                </div>
+                {editErrors.location && <p className="text-sm text-red-500">{editErrors.location}</p>}
               </div>
             </div>
             <DialogFooter className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">

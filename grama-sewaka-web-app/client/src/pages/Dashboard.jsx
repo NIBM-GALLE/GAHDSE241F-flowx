@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
-import React from "react";
+import React, { useEffect } from "react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -12,10 +12,15 @@ import VictimRequests from "@/components/dashboard/VictimRequests";
 import Subsidies from "@/components/dashboard/Subsidies";
 import Admin from "@/components/dashboard/Admin";
 import { useUserStore } from "@/stores/useUserStore";
+import ShelterMap from '@/components/dashboard/Map.jsx';
+import { useShelterStore } from '@/stores/useShelterStore';
+
 
 function Page() {
   const { user } = useUserStore();
   const userRole = user?.role;
+  const { fetchAllSheltersPublic, sheltersPublic = [] } = useShelterStore();
+  useEffect(() => { fetchAllSheltersPublic(); }, [fetchAllSheltersPublic]);
 
   return (
     <SidebarProvider>
@@ -42,6 +47,7 @@ function Page() {
             {userRole === "government_officer" && (
               <>
                 <FloodSummary user={user} />
+                <ShelterMap sheltersPublic={sheltersPublic} />
                 <Donation user={user} />
                 <Subsidies user={user} />
                 <VictimRequests user={user} />
@@ -51,6 +57,7 @@ function Page() {
             {userRole === "grama_sevaka" && (
               <>
                 <FloodSummary user={user} />
+                <ShelterMap sheltersPublic={sheltersPublic} />
                 <Subsidies user={user} />
                 <VictimRequests user={user} />
               </>

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 
-export const useShelterStore = create((set) => ({
+export const useShelterStore = create((set, get) => ({
   requestStatus: null,
   requestError: null,
   isRequesting: false,
@@ -15,6 +15,14 @@ export const useShelterStore = create((set) => ({
   allShelters: [],
   loadingShelterInfo: false,
   errorShelterInfo: null,
+  houseLat: null,
+  houseLng: null,
+  gramaDivisionId: null,
+  divisionalSecretariatId: null,
+  districtId: null,
+  gramaDivisionName: null,
+  divisionalSecretariatName: null,
+  districtName: null,
 
   requestShelter: async (payload) => {
     set({ isRequesting: true, requestError: null, requestStatus: null });
@@ -65,15 +73,47 @@ export const useShelterStore = create((set) => ({
       set({
         assignedShelter: res.data.data.assignedShelter,
         allShelters: res.data.data.allShelters,
+        houseLat: res.data.data.houseLat,
+        houseLng: res.data.data.houseLng,
+        gramaDivisionId: res.data.data.grama_niladhari_division_id,
+        divisionalSecretariatId: res.data.data.divisional_secretariat_id,
+        districtId: res.data.data.district_id,
         loadingShelterInfo: false
       });
     } catch (error) {
       set({
         assignedShelter: null,
         allShelters: [],
+        houseLat: null,
+        houseLng: null,
+        gramaDivisionId: null,
+        divisionalSecretariatId: null,
+        districtId: null,
         loadingShelterInfo: false,
         errorShelterInfo: error.response?.data?.message || error.message
       });
+    }
+  },
+  setDivisionInfo: async () => {
+    const { gramaDivisionId, divisionalSecretariatId, districtId } = get();
+    const token = localStorage.getItem("token");
+    try {
+      let gramaDivisionName = null, divisionalSecretariatName = null, districtName = null;
+      if (gramaDivisionId) {
+        const res = await axios.get(`/api/area/grama-niladhari-divisions/${gramaDivisionId}/name`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        gramaDivisionName = res.data.name;
+      }
+      if (divisionalSecretariatId) {
+        const res = await axios.get(`/api/area/divisional-secretariats/${divisionalSecretariatId}/name`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        divisionalSecretariatName = res.data.name;
+      }
+      if (districtId) {
+        const res = await axios.get(`/api/area/districts/${districtId}/name`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        districtName = res.data.name;
+      }
+      set({ gramaDivisionName, divisionalSecretariatName, districtName });
+    } catch {
+      set({ gramaDivisionName: null, divisionalSecretariatName: null, districtName: null });
     }
   },
 }));

@@ -81,6 +81,9 @@ function RealTimeFloodAnalysis({ onHighRiskDetected }) {
             <img src={floodIcon} alt="Flood Icon" className="w-8 h-8" />
             REAL-TIME FLOOD ANALYSIS
           </h2>
+          <h3 className="text-lg font-semibold text-center mt-2 mb-4 text-blue-700">
+            Kalutara District
+          </h3>
           <div className="mt-6 bg-gray-100 p-6 rounded-lg shadow-md">
             <p className="font-semibold flex items-center gap-2">
               <img src={floodIcon} alt="Flood Risk" className="w-6 h-6" />

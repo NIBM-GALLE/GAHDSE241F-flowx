@@ -18,6 +18,9 @@ import signUpImage from "../assets/Signup.png";
 import { useUserStore } from "../stores/useUserStore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 //user details and password
 const step1Schema = z.object({
@@ -43,6 +46,15 @@ const step2Schema = z.object({
   grama_niladhari_division_id: z.string().min(1, "Grama Niladhari Division is required"),
 });
 
+function LocationPicker({ position, setPosition }) {
+  useMapEvents({
+    click(e) {
+      setPosition([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+  return position ? <Marker position={position} icon={L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] })} /> : null;
+}
+
 function SignUp() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -52,6 +64,7 @@ function SignUp() {
   const [gnDivs, setGnDivs] = useState([]);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [position, setPosition] = useState([7.8731, 80.7718]); // Default: Sri Lanka center
 
   //form for user details
   const step1Form = useForm({
@@ -118,6 +131,8 @@ function SignUp() {
         houseId: step1Values.homeId,
         members: Number(values.members),
         distance_to_river: Number(values.distance_to_river),
+        latitude: position[0],
+        longitude: position[1],
       };
       //remove homeId from payload if backend does not expect it
       delete payload.homeId;
@@ -261,6 +276,17 @@ function SignUp() {
                   <FormMessage />
                 </FormItem>
               )} />
+              <div>
+                <label className="block mb-2 font-medium">Select House Location on Map</label>
+                <MapContainer center={position} zoom={8} style={{ height: "300px", width: "100%" }}>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="&copy; OpenStreetMap contributors"
+                  />
+                  <LocationPicker position={position} setPosition={setPosition} />
+                </MapContainer>
+                <div className="mt-2 text-sm text-gray-600">Lat: {position[0]}, Lng: {position[1]}</div>
+              </div>
               <div className="flex gap-4">
                 <Button type="button" variant="secondary" className="w-1/2" onClick={() => setStep(1)}>
                   Back

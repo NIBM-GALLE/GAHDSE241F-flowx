@@ -105,9 +105,9 @@ export const requestShelter = async (req, res, next) => {
 //function to get assigned shelter and all available shelters
 export const getShelterInfo = async (req, res, next) => {
     try {
-        //get user's house ID and divisional secretariat ID
+        //get user's house ID, divisional secretariat ID, grama niladhari division ID, district ID, and lat/lng
         const [user] = await pool.query(
-            `SELECT h.house_id, h.divisional_secretariat_id 
+            `SELECT h.house_id, h.divisional_secretariat_id, h.grama_niladhari_division_id, h.district_id, h.latitude as house_latitude, h.longitude as house_longitude
              FROM member m
              JOIN house h ON m.house_id = h.house_id
              WHERE m.member_id = ?`,
@@ -118,12 +118,12 @@ export const getShelterInfo = async (req, res, next) => {
             return next(errorHandler(404, "User not found"));
         }
 
-        const { house_id: houseId, divisional_secretariat_id: divisionalSecretariatId } = user[0];
+        const { house_id: houseId, divisional_secretariat_id: divisionalSecretariatId, grama_niladhari_division_id: gramaNiladhariDivisionId, district_id: districtId, house_latitude, house_longitude } = user[0];
 
         //get assigned shelter for the house (from shelter_house)
         const [assignedShelter] = await pool.query(
             `SELECT sh.*, s.shelter_name, s.shelter_size, s.shelter_address, s.available, 
-                    s.shelter_status, s.divisional_secretariat_id,
+                    s.shelter_status, s.divisional_secretariat_id, s.latitude, s.longitude,
                     f.flood_name, f.start_date, f.end_date
              FROM shelter_house sh
              JOIN shelter s ON sh.shelter_id = s.shelter_id
@@ -137,7 +137,7 @@ export const getShelterInfo = async (req, res, next) => {
         //get all shelters in user's divisional secretariat
         const [allShelters] = await pool.query(
             `SELECT shelter_id, shelter_name, shelter_size, shelter_address, available, 
-                    shelter_status, divisional_secretariat_id
+                    shelter_status, divisional_secretariat_id, latitude, longitude
              FROM shelter 
              WHERE divisional_secretariat_id = ?
              ORDER BY shelter_name`,
@@ -151,7 +151,11 @@ export const getShelterInfo = async (req, res, next) => {
                 assignedShelter: assignedShelter.length > 0 ? assignedShelter[0] : null,
                 allShelters: allShelters,
                 houseId: houseId,
-                divisionalSecretariatId: divisionalSecretariatId
+                divisionalSecretariatId: divisionalSecretariatId,
+                grama_niladhari_division_id: gramaNiladhariDivisionId,
+                district_id: districtId,
+                houseLat: house_latitude,
+                houseLng: house_longitude
             }
         });
 
@@ -207,9 +211,9 @@ export const getShelterRequestHistory = async (req, res, next) => {
 //function to get user related shelters 
 export const getUserRelatedShelters = async (req, res, next) => {
     try {
-        //get user's house ID
+        //get user's house ID and lat/lng
         const [user] = await pool.query(
-            `SELECT house_id FROM member WHERE member_id = ?`,
+            `SELECT house_id, latitude, longitude FROM house WHERE house_id = (SELECT house_id FROM member WHERE member_id = ?)` ,
             [req.user.member_id]
         );
 
@@ -218,10 +222,13 @@ export const getUserRelatedShelters = async (req, res, next) => {
         }
 
         const houseId = user[0].house_id;
+        const houseLat = user[0].latitude;
+        const houseLng = user[0].longitude;
 
         //get all shelters related to the user's house
         const [relatedShelters] = await pool.query(
-            `SELECT s.*, sh.shelter_house_id, 
+            `SELECT s.shelter_id, s.shelter_name, s.shelter_size, s.shelter_address, s.available, 
+                    s.shelter_status, s.divisional_secretariat_id, s.latitude, s.longitude, sh.shelter_house_id, 
                     f.flood_name, f.start_date, f.end_date
              FROM shelter s
              LEFT JOIN shelter_house sh ON s.shelter_id = sh.shelter_id AND sh.house_id = ?
@@ -238,7 +245,9 @@ export const getUserRelatedShelters = async (req, res, next) => {
             message: "User related shelters retrieved successfully",
             data: {
                 relatedShelters: relatedShelters,
-                houseId: houseId
+                houseId: houseId,
+                houseLat: houseLat,
+                houseLng: houseLng
             }
         });
 

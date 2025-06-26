@@ -17,7 +17,9 @@ export const registerUser = async (req, res, next) => {
     distance_to_river,
     grama_niladhari_division_id,
     divisional_secretariat_id,
-    district_id
+    district_id,
+    latitude,
+    longitude
   } = req.body;
 
   //required fields validation
@@ -70,11 +72,11 @@ export const registerUser = async (req, res, next) => {
         if (!address || !grama_niladhari_division_id || !divisional_secretariat_id || !district_id) {
           return next(errorHandler(400, "For new house, address and administrative divisions are required"));
         }
-        //create new house (latitude/longitude removed)
+        //create new house (now with latitude/longitude)
         await pool.query(
           `INSERT INTO house 
-          (house_id, address, members, distance_to_river, grama_niladhari_division_id, divisional_secretariat_id, district_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          (house_id, address, members, distance_to_river, grama_niladhari_division_id, divisional_secretariat_id, district_id, latitude, longitude)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             houseId,
             address,
@@ -82,7 +84,9 @@ export const registerUser = async (req, res, next) => {
             distance_to_river || 0.0,
             grama_niladhari_division_id,
             divisional_secretariat_id,
-            district_id
+            district_id,
+            latitude || null,
+            longitude || null
           ]
         );
       }
@@ -93,9 +97,9 @@ export const registerUser = async (req, res, next) => {
         return next(errorHandler(400, "For new house, address and administrative divisions are required"));
       }
       const [houseResult] = await pool.query(
-        `INSERT INTO house (address, members, distance_to_river, grama_niladhari_division_id, divisional_secretariat_id, district_id)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [address, members, distance_to_river || 0.0, grama_niladhari_division_id, divisional_secretariat_id, district_id]
+        `INSERT INTO house (address, members, distance_to_river, grama_niladhari_division_id, divisional_secretariat_id, district_id, latitude, longitude)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [address, members, distance_to_river || 0.0, grama_niladhari_division_id, divisional_secretariat_id, district_id, latitude || null, longitude || null]
       );
       finalHouseId = houseResult.insertId;
     }
