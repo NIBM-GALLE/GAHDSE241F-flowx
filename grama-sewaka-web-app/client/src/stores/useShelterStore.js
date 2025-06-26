@@ -114,6 +114,8 @@ export const useShelterStore = create((set, get) => ({
         shelter_address,
         available,
         shelter_status,
+        latitude,
+        longitude,
       } = payload;
       if (
         !shelter_name ||
@@ -135,6 +137,8 @@ export const useShelterStore = create((set, get) => ({
           shelter_address,
           available,
           shelter_status,
+          latitude: latitude || null,
+          longitude: longitude || null,
         },
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
