@@ -362,4 +362,27 @@ class ApiService {
       throw Exception('Failed to fetch flood risk: ${response.statusCode}');
     }
   }
+
+  // Fetch map data for user, assigned shelter, and all shelters
+  Future<Map<String, dynamic>> fetchShelterMapData() async {
+    final url = Uri.parse('$baseUrl/shelter/map');
+    final token = await getToken();
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['data'] != null) {
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to fetch shelter map data');
+      }
+    } else {
+      throw Exception('Failed to fetch shelter map data: \\${response.statusCode}');
+    }
+  }
 }
