@@ -1,9 +1,5 @@
 # 🌊 FlowX – Intelligent Disaster Risk Management System
 
-![FlowX Logo](https://img.shields.io/badge/FlowX-Disaster%20Management-blue?style=for-the-badge&logo=water&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Mobile%20%7C%20Admin-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Active%20Development-orange?style=for-the-badge)
-
 FlowX is a comprehensive, cross-platform disaster risk management system designed to protect communities in Sri Lanka through intelligent flood prediction, real-time alerts, and efficient resource allocation. The system serves citizens, government officers, and irrigation officials with tailored interfaces for disaster preparedness and response.
 
 ## 🏗️ System Architecture
@@ -302,39 +298,6 @@ Update API endpoints in `lib/services/api_service.dart`
 
 ---
 
-## 📊 Database Schema
-
-### Key Tables
-- **users** - Citizen and officer authentication
-- **houses** - Citizen location and property details
-- **shelters** - Safe shelter locations and capacity
-- **flood_events** - Historical flood data
-- **victim_requests** - Assistance requests
-- **subsidies** - Financial aid tracking
-- **announcements** - Emergency communications
-
----
-
-## 🧪 Testing
-
-### Running Tests
-
-```bash
-# Backend tests
-cd server
-npm test
-
-# Frontend tests
-cd client
-npm test
-
-# Flutter tests
-cd mobile-app/flowx_app
-flutter test
-```
-
----
-
 ## 🚀 Deployment
 
 ### Production Deployment
@@ -400,12 +363,6 @@ GAHDSE241F-flowx/
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 👨‍💻 Development Team
 
 **NIBM - Advanced Diploma in Software Engineering**  
@@ -415,7 +372,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 |-----------|------------|------|
 | **D C Induwara** | GAHDSE241F-004 | Full-Stack Developer & Team Lead |
 | **W G A P Prabodhya** | GAHDSE241F-042 | Frontend Developer & UI/UX |
-| **J K D Dumini** | GAHDSE241F-053 | Backend Developer & Database |
 
 ---
 
