@@ -339,6 +339,18 @@ export const updateFlood = async (req, res, next) => {
     await pool.query(updateQuery, updateParams);
     logger.info(`Flood updated successfully: flood_id=${flood_id}`);
     res.status(200).json({ success: true, message: "Flood updated successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Flood updated successfully",
+      data: {
+        flood_id: parseInt(flood_id),
+        ...(flood_name && { flood_name }),
+        ...(flood_status && { flood_status }),
+        ...(end_date && { end_date }),
+        ...(flood_description && { flood_description })
+      }
+    });
+
   } catch (error) {
     logger.error("Update flood error:", error);
     next(error);
@@ -648,6 +660,82 @@ export const predictFloodRiskForUser = async (req, res, next) => {
     });
   } catch (error) {
     logger.error('Predict flood risk for user error:', error);
+    next(error);
+  }
+};
+
+// Get statistics: count of records in flood and flood_details tables
+export const getFloodStatistics = async (req, res, next) => {
+  try {
+    const [[{ flood_count }]] = await pool.query('SELECT COUNT(*) as flood_count FROM flood');
+    const [[{ details_count }]] = await pool.query('SELECT COUNT(*) as details_count FROM flood_details');
+    res.status(200).json({
+      success: true,
+      flood_count,
+      details_count
+    });
+  } catch (error) {
+    logger.error('Get flood statistics error:', error);
+    next(error);
+  }
+};
+
+// Get current flood summary (duration, variance of daily flood)
+export const getCurrentFloodSummary = async (req, res, next) => {
+  try {
+    // Get the current flood event (status ongoing or active)
+    const [currentFloods] = await pool.query(
+      `SELECT * FROM flood WHERE flood_status IN ('ongoing', 'active') ORDER BY start_date DESC LIMIT 1`
+    );
+    if (currentFloods.length === 0) {
+      return res.status(200).json({ success: true, message: 'No current flood', data: null });
+    }
+    const flood = currentFloods[0];
+    // Get all flood_details for this flood period
+    let details, detailsQuery, detailsParams;
+    if (flood.end_date) {
+      detailsQuery = `SELECT * FROM flood_details WHERE flood_details_date >= ? AND flood_details_date <= ? ORDER BY flood_details_date ASC`;
+      detailsParams = [flood.start_date, flood.end_date];
+    } else {
+      detailsQuery = `SELECT * FROM flood_details WHERE flood_details_date >= ? AND flood_details_date <= CURDATE() ORDER BY flood_details_date ASC`;
+      detailsParams = [flood.start_date];
+    }
+    [details] = await pool.query(detailsQuery, detailsParams);
+    // Calculate duration
+    const start = new Date(flood.start_date);
+    const end = flood.end_date ? new Date(flood.end_date) : new Date();
+    const durationDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    // Calculate variance of daily flood_area
+    const areas = details.map(d => parseFloat(d.flood_area));
+    const mean = areas.reduce((a, b) => a + b, 0) / (areas.length || 1);
+    const variance = areas.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (areas.length || 1);
+    res.status(200).json({
+      success: true,
+      data: {
+        flood,
+        durationDays,
+        variance,
+        details
+      }
+    });
+  } catch (error) {
+    logger.error('Get current flood summary error:', error);
+    next(error);
+  }
+};
+
+// Get static summary of all past floods (for static page)
+export const getPastFloodsSummary = async (req, res, next) => {
+  try {
+    const [floods] = await pool.query(`SELECT * FROM flood WHERE flood_status = 'over' ORDER BY start_date DESC`);
+    const [details] = await pool.query(`SELECT * FROM flood_details ORDER BY flood_details_date DESC`);
+    res.status(200).json({
+      success: true,
+      floods,
+      details
+    });
+  } catch (error) {
+    logger.error('Get past floods summary error:', error);
     next(error);
   }
 };

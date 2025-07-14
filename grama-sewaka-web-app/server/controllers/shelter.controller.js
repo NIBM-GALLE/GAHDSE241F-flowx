@@ -33,7 +33,7 @@ const getCurrentOrLatestFloodId = async () => {
 
 //create new shelter
 export const createShelter = async (req, res, next) => {
-    const { shelter_name, shelter_size, shelter_address, available, shelter_status } = req.body;
+    const { shelter_name, shelter_size, shelter_address, available, shelter_status, latitude, longitude } = req.body;
 
     try {
         //validate required fields
@@ -59,12 +59,12 @@ export const createShelter = async (req, res, next) => {
 
         const divisionalSecretariatId = officer[0].divisional_secretariat_id;
 
-        //insert new shelter to database
+        //insert new shelter to database (now with latitude/longitude)
         const [result] = await pool.query(
             `INSERT INTO shelter 
-             (shelter_name, shelter_size, shelter_address, available, shelter_status, divisional_secretariat_id)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [shelter_name, shelter_size, shelter_address, available, shelter_status, divisionalSecretariatId]
+             (shelter_name, shelter_size, shelter_address, available, shelter_status, divisional_secretariat_id, latitude, longitude)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)` ,
+            [shelter_name, shelter_size, shelter_address, available, shelter_status, divisionalSecretariatId, latitude || null, longitude || null]
         );
 
         res.status(201).json({
@@ -77,7 +77,9 @@ export const createShelter = async (req, res, next) => {
                 shelter_address,
                 available,
                 shelter_status,
-                divisional_secretariat_id: divisionalSecretariatId
+                divisional_secretariat_id: divisionalSecretariatId,
+                latitude,
+                longitude
             }
         });
 
@@ -282,7 +284,7 @@ export const getShelters = async (req, res, next) => {
 //update shelter
 export const updateShelter = async (req, res, next) => {
     const { shelter_id } = req.params;
-    const { shelter_name, shelter_size, shelter_address, available, shelter_status } = req.body;
+    const { shelter_name, shelter_size, shelter_address, available, shelter_status, latitude, longitude } = req.body;
 
     try {
         //get government officer's divisional secretariat ID
@@ -336,6 +338,14 @@ export const updateShelter = async (req, res, next) => {
             updateFields.push('shelter_status = ?');
             updateParams.push(shelter_status);
         }
+        if (latitude !== undefined) {
+            updateFields.push('latitude = ?');
+            updateParams.push(latitude);
+        }
+        if (longitude !== undefined) {
+            updateFields.push('longitude = ?');
+            updateParams.push(longitude);
+        }
 
         if (updateFields.length === 0) {
             return res.status(400).json({
@@ -369,7 +379,9 @@ export const updateShelter = async (req, res, next) => {
                 ...(shelter_size !== undefined && { shelter_size }),
                 ...(shelter_address !== undefined && { shelter_address }),
                 ...(available !== undefined && { available }),
-                ...(shelter_status !== undefined && { shelter_status })
+                ...(shelter_status !== undefined && { shelter_status }),
+                ...(latitude !== undefined && { latitude }),
+                ...(longitude !== undefined && { longitude })
             }
         });
 

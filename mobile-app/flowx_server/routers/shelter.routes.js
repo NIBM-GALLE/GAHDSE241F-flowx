@@ -3,14 +3,17 @@ import {
   requestShelter,
   getShelterInfo,
   getShelterRequestHistory,
-  getUserRelatedShelters
+  getUserRelatedShelters,
+  getNearbySheltersWithUser
 } from '../controllers/shelter.controller.js';
+import { protect } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
-router.post('/request', requestShelter);
-router.get('/info', getShelterInfo);
-router.get('/history', getShelterRequestHistory);
-router.get('/related', getUserRelatedShelters);
+router.post('/request', protect, requestShelter);
+router.get('/info', protect, getShelterInfo);
+router.get('/history', protect, getShelterRequestHistory);
+router.get('/related', protect, getUserRelatedShelters);
+router.get('/map',protect, getNearbySheltersWithUser);
 
 export default router;

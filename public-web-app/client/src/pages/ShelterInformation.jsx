@@ -31,6 +31,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useShelterStore } from "@/stores/useShelterStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 function ShelterInformation() {
   const {
@@ -41,7 +44,9 @@ function ShelterInformation() {
     fetchShelterHistory,
     shelterHistory,
     loadingHistory,
-    errorHistory
+    errorHistory,
+    houseLat,
+    houseLng
   } = useShelterStore();
 
   const [showShelterDialog, setShowShelterDialog] = React.useState(false);
@@ -209,6 +214,43 @@ function ShelterInformation() {
                   ) : (
                     <div className="text-gray-500">No assigned shelter found.</div>
                   )}
+                </CardContent>
+              </Card>
+              {/* Map Section */}
+              <Card className="border border-purple-200 dark:border-purple-800">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 dark:text-white">Map: Your Location & Assigned Shelter</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-xl overflow-hidden border border-blue-200 dark:border-blue-800 shadow-lg mb-4">
+                    <MapContainer
+                      center={
+                        houseLat && houseLng && !isNaN(parseFloat(houseLat)) && !isNaN(parseFloat(houseLng))
+                          ? [parseFloat(houseLat), parseFloat(houseLng)]
+                          : [7.8731, 80.7718]
+                      }
+                      zoom={10}
+                      style={{ height: "300px", width: "100%" }}
+                      scrollWheelZoom={true}
+                    >
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; OpenStreetMap contributors"
+                      />
+                      {/* User marker (red) */}
+                      {houseLat && houseLng && !isNaN(parseFloat(houseLat)) && !isNaN(parseFloat(houseLng)) && (
+                        <Marker position={[parseFloat(houseLat), parseFloat(houseLng)]} icon={L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', iconSize: [25, 41], iconAnchor: [12, 41] })}>
+                          <Popup>Your House</Popup>
+                        </Marker>
+                      )}
+                      {/* Assigned shelter marker (blue) */}
+                      {assignedShelter && assignedShelter.latitude && assignedShelter.longitude && !isNaN(parseFloat(assignedShelter.latitude)) && !isNaN(parseFloat(assignedShelter.longitude)) && (
+                        <Marker position={[parseFloat(assignedShelter.latitude), parseFloat(assignedShelter.longitude)]} icon={L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] })}>
+                          <Popup>{assignedShelter.shelter_name}</Popup>
+                        </Marker>
+                      )}
+                    </MapContainer>
+                  </div>
                 </CardContent>
               </Card>
               {/* Information Card */}

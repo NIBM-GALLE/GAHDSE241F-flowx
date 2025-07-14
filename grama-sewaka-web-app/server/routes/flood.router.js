@@ -15,6 +15,9 @@ import {
   getTodayFloodDetails,
   predictFloodML,
   predictFloodRiskForUser,
+  getFloodStatistics,
+  getCurrentFloodSummary,
+  getPastFloodsSummary,
 } from '../controllers/flood.controller.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -24,6 +27,9 @@ const router = express.Router();
 router.get('/details/today', getTodayFloodDetails);
 router.post('/predict-ml', predictFloodML);
 router.post('/predict-user-risk', predictFloodRiskForUser);
+router.get('/statistics', getFloodStatistics);
+router.get('/summary/current', getCurrentFloodSummary);
+router.get('/summary/past', getPastFloodsSummary);
 
 // protect all other routes
 router.use(protect);

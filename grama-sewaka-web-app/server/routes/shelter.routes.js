@@ -14,6 +14,25 @@ import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+// Public endpoint to get all shelters (for map display)
+router.get('/all-public', async (req, res, next) => {
+    try {
+        const [shelters] = await req.app.get('db').query(
+            `SELECT s.*, ds.divisional_secretariat_name
+             FROM shelter s
+             JOIN divisional_secretariat ds ON s.divisional_secretariat_id = ds.divisional_secretariat_id
+             ORDER BY s.shelter_name`
+        );
+        res.status(200).json({
+            success: true,
+            message: shelters.length > 0 ? "Shelters found" : "No shelters found",
+            data: shelters
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 //all routes protected
 router.use(protect);
 

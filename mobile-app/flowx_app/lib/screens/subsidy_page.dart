@@ -7,27 +7,143 @@ import 'shelters_page.dart';
 import 'inform_victims_page.dart';
 import 'contact_page.dart';
 import 'profile_page.dart';
+import '../services/subsidy_api_service.dart';
 
 class SubsidyPage extends StatelessWidget {
   const SubsidyPage({Key? key}) : super(key: key);
 
+  Future<List<Map<String, dynamic>>> _fetchSubsidies() async {
+    final api = ApiService();
+    try {
+      return await api.fetchMySubsidies();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _showSubsidyDetails(BuildContext context, Map<String, dynamic> subsidy) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.card_giftcard, color: Color(0xFF1A237E), size: 28),
+                        const SizedBox(width: 10),
+                        Text(
+                          subsidy['subsidy_name'] ?? subsidy['title'] ?? '-',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A237E),
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black54),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const Divider(height: 28, thickness: 1.2),
+                _detailRow(Icons.monetization_on, 'Amount/Quantity',
+                  subsidy['amount'] != null ? 'LKR ${subsidy['amount']}' : (subsidy['quantity'] != null ? 'Qty: ${subsidy['quantity']}' : '-'),
+                  iconColor: Colors.green),
+                _detailRow(Icons.event, 'Assigned Date', subsidy['assigned_date'] ?? subsidy['date'] ?? '-', iconColor: Colors.blueGrey),
+                _detailRow(Icons.category, 'Category', subsidy['category'] ?? subsidy['subsidy_category'] ?? '-', iconColor: Colors.deepOrange),
+                _detailRow(Icons.numbers, 'Quantity', subsidy['quantity']?.toString() ?? '-', iconColor: Colors.green),
+                _detailRow(Icons.place, 'Collection Place', subsidy['collection_place'] ?? '-', iconColor: Colors.blue),
+                _detailRow(Icons.verified, 'Status', subsidy['subsidies_status'] ?? subsidy['status'] ?? '-',
+                  iconColor: (subsidy['subsidies_status'] == 'Approved' || subsidy['status'] == 'Approved') ? Colors.green : Colors.orange),
+                _detailRow(Icons.home, 'House ID', subsidy['house_id']?.toString() ?? '-', iconColor: Colors.teal),
+                _detailRow(Icons.confirmation_number, 'Subsidy ID', subsidy['subsidies_id']?.toString() ?? '-', iconColor: Colors.purple),
+                _detailRow(Icons.person, 'Grama Sevaka',
+                  (subsidy['grama_sevaka_first_name'] != null && subsidy['grama_sevaka_last_name'] != null)
+                    ? '${subsidy['grama_sevaka_first_name']} ${subsidy['grama_sevaka_last_name']}'
+                    : '-',
+                  iconColor: Colors.indigo),
+                _detailRow(Icons.phone, 'GS Phone', subsidy['grama_sevaka_phone_number'] ?? '-', iconColor: Colors.indigoAccent),
+                _detailRow(Icons.location_city, 'House Address', subsidy['house_address'] ?? '-', iconColor: Colors.brown),
+                _detailRow(Icons.water, 'Flood ID', subsidy['flood_id']?.toString() ?? '-', iconColor: Colors.lightBlue),
+                if (subsidy['provider'] != null)
+                  _detailRow(Icons.business, 'Provider', subsidy['provider'], iconColor: Colors.deepPurple),
+                if (subsidy['location'] != null)
+                  _detailRow(Icons.location_on, 'Location', subsidy['location'], iconColor: Colors.redAccent),
+                if (subsidy['description'] != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline, color: Colors.blueGrey, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              const SizedBox(height: 4),
+                              Text(subsidy['description'], style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 18),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1A237E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value, {Color iconColor = Colors.blueGrey}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 22),
+          const SizedBox(width: 10),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 15, color: Colors.black87)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final subsidies = [
-      {
-        'title': 'Flood Relief Grant',
-        'amount': 'LKR 25,000',
-        'status': 'Approved',
-        'date': '2025-06-10',
-      },
-      {
-        'title': 'Housing Repair Assistance',
-        'amount': 'LKR 50,000',
-        'status': 'Pending',
-        'date': '2025-06-12',
-      },
-    ];
-
     return AppScaffold(
       selectedIndex: 4,
       onItemSelected: (index) {
@@ -64,7 +180,62 @@ class SubsidyPage extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
         ),
-        body: ListView(
+        body: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              const TabBar(
+                labelColor: Color(0xFF1A237E),
+                unselectedLabelColor: Colors.black54,
+                indicatorColor: Color(0xFF1A237E),
+                tabs: [
+                  Tab(text: 'Assigned'),
+                  Tab(text: 'History'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    // Assigned Subsidies Tab
+                    _AssignedSubsidiesTab(fetchSubsidies: _fetchSubsidies, showDetails: _showSubsidyDetails),
+                    // History Tab
+                    _HistorySubsidiesTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Widget for Assigned Subsidies Tab
+class _AssignedSubsidiesTab extends StatelessWidget {
+  final Future<List<Map<String, dynamic>>> Function() fetchSubsidies;
+  final void Function(BuildContext, Map<String, dynamic>) showDetails;
+  const _AssignedSubsidiesTab({required this.fetchSubsidies, required this.showDetails});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: fetchSubsidies(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('Failed to load subsidies'));
+        }
+        final subsidies = snapshot.data ?? [];
+        if (subsidies.isEmpty) {
+          return const Center(
+            child: Text('No subsidies for you',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54)),
+          );
+        }
+        return ListView(
           padding: const EdgeInsets.all(20),
           children: [
             Center(
@@ -103,7 +274,7 @@ class SubsidyPage extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        subsidy['title']!,
+                                        subsidy['subsidy_name'] ?? subsidy['title'] ?? '-',
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
@@ -116,7 +287,7 @@ class SubsidyPage extends StatelessWidget {
                                           const Icon(Icons.monetization_on, color: Colors.green, size: 18),
                                           const SizedBox(width: 6),
                                           Text(
-                                            subsidy['amount']!,
+                                            (subsidy['amount'] != null ? 'LKR ${subsidy['amount']}' : subsidy['quantity'] != null ? 'Qty: ${subsidy['quantity']}' : '-'),
                                             style: const TextStyle(fontSize: 15, color: Colors.black87),
                                           ),
                                         ],
@@ -127,7 +298,7 @@ class SubsidyPage extends StatelessWidget {
                                           const Icon(Icons.event, color: Colors.blueGrey, size: 18),
                                           const SizedBox(width: 6),
                                           Text(
-                                            'Assigned: ${subsidy['date']}',
+                                            'Assigned: ${subsidy['assigned_date'] ?? subsidy['date'] ?? '-'}',
                                             style: const TextStyle(fontSize: 14, color: Colors.black54),
                                           ),
                                         ],
@@ -138,14 +309,227 @@ class SubsidyPage extends StatelessWidget {
                                           const Icon(Icons.verified, color: Colors.blue, size: 18),
                                           const SizedBox(width: 6),
                                           Text(
-                                            'Status: ${subsidy['status']}',
+                                            'Status: ${subsidy['subsidies_status'] ?? subsidy['status'] ?? '-'}',
                                             style: TextStyle(
                                               fontSize: 14,
-                                              color: subsidy['status'] == 'Approved'
+                                              color: (subsidy['subsidies_status'] == 'Approved' || subsidy['status'] == 'Approved')
                                                   ? Colors.green
                                                   : Colors.orange,
                                               fontWeight: FontWeight.w600,
                                             ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFF1A237E),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                                          ),
+                                          icon: const Icon(Icons.visibility, color: Colors.white, size: 20),
+                                          label: const Text('View', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                          onPressed: () => showDetails(context, subsidy),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Widget for Subsidies History Tab
+class _HistorySubsidiesTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final api = ApiService();
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: api.fetchSubsidiesHistory(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('Failed to load history'));
+        }
+        final history = snapshot.data ?? [];
+        if (history.isEmpty) {
+          return const Center(
+            child: Text('No subsidy history',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54)),
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 4,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 28.0, horizontal: 22.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Collected Subsidies',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A237E),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        ...history.map((subsidy) => Padding(
+                              padding: const EdgeInsets.only(bottom: 18.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF5F6FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        subsidy['subsidy_name'] ?? subsidy['title'] ?? '-',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1A237E),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.category, color: Colors.deepOrange, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            subsidy['category'] ?? subsidy['subsidy_category'] ?? '-',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.numbers, color: Colors.green, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Qty: ${subsidy['quantity']?.toString() ?? '-'}',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.place, color: Colors.blue, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            subsidy['collection_place'] ?? '-',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.verified, color: Colors.green, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Status: ${subsidy['subsidies_status'] ?? subsidy['status'] ?? '-'}',
+                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.home, color: Colors.teal, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'House ID: ${subsidy['house_id']?.toString() ?? '-'}',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.confirmation_number, color: Colors.purple, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Subsidy ID: ${subsidy['subsidies_id']?.toString() ?? '-'}',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.person, color: Colors.indigo, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            (subsidy['grama_sevaka_first_name'] != null && subsidy['grama_sevaka_last_name'] != null)
+                                              ? '${subsidy['grama_sevaka_first_name']} ${subsidy['grama_sevaka_last_name']}'
+                                              : '-',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.phone, color: Colors.indigoAccent, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            subsidy['grama_sevaka_phone_number'] ?? '-',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.location_city, color: Colors.brown, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            subsidy['house_address'] ?? '-',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.water, color: Colors.lightBlue, size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Flood ID: ${subsidy['flood_id']?.toString() ?? '-'}',
+                                            style: const TextStyle(fontSize: 15, color: Colors.black87),
                                           ),
                                         ],
                                       ),
@@ -161,8 +545,8 @@ class SubsidyPage extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

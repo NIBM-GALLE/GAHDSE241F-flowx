@@ -104,7 +104,10 @@ function FloodSummary() {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Flood Summary</h2>
+      <h2 className="text-xl font-semibold mb-2">Flood Summary</h2>
+      <div className="mb-4">
+        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">Kalutara District</span>
+      </div>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
@@ -176,46 +179,6 @@ function FloodSummary() {
                       {recoveryTime !== null ? formatTime(recoveryTime) : "-"}
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold mb-2">Flood Affected Area Details</h3>
-              <p className="text-sm text-gray-600 mb-2">
-                Based on the latest data and machine learning predictions.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-700">Total Affected Area:</span>
-                  <span className="text-sm font-semibold">
-                    {floodData.affected_area !== undefined
-                      ? formatArea(floodData.affected_area)
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-700">Urban Area Affected:</span>
-                  <span className="text-sm font-semibold">
-                    {floodData.urban_area !== undefined
-                      ? formatArea(floodData.urban_area)
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-700">Rural Area Affected:</span>
-                  <span className="text-sm font-semibold">
-                    {floodData.rural_area !== undefined
-                      ? formatArea(floodData.rural_area)
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-700">Estimated Recovery Time:</span>
-                  <span className="text-sm font-semibold">
-                    {floodData.recovery_time !== undefined
-                      ? formatTime(floodData.recovery_time)
-                      : "-"}
-                  </span>
                 </div>
               </div>
             </div>

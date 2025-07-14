@@ -126,16 +126,20 @@ export const predictFloodRiskForUser = async (req, res, next) => {
 
 // Enhanced flood risk prediction function
 export const getUserFloodRiskFromDB = async (req, res, next) => {
+  console.log('🟢 [getUserFloodRiskFromDB] called');
   try {
     // Support both authenticated and unauthenticated users
     let userId = null;
     if (req.user && req.user.id) {
       userId = req.user.id;
-    } else if (req.query.user_id) {
-      userId = req.query.user_id;
+      console.log('🟢 [getUserFloodRiskFromDB] Authenticated userId:', userId);
+    } else if (req.query.member_id) {
+      userId = req.query.member_id;
+      console.log('🟢 [getUserFloodRiskFromDB] member_id from query:', userId);
     }
 
     if (!userId) {
+      console.log('🟢 [getUserFloodRiskFromDB] No userId found, returning default risk');
       // For unauthenticated users, return generic flood risk (e.g., for Colombo or a default location)
       // You can customize this logic as needed
       const defaultAddress = "Colombo, Sri Lanka";
@@ -247,21 +251,32 @@ export const getUserFloodRiskFromDB = async (req, res, next) => {
       });
     }
 
-    // 1. Get user's home distance_to_river from database
+    // 1. Get user's home distance_to_river and location names from database
+    console.log('🟢 [getUserFloodRiskFromDB] Querying house/location for userId:', userId);
     const [userHomes] = await pool.query(
-      `SELECT distance_to_river, address FROM house WHERE user_id = ? LIMIT 1`,
+      `SELECT h.distance_to_river, h.address,
+              d.district_name, ds.divisional_secretariat_name, gnd.grama_niladhari_division_name
+         FROM house h
+         JOIN member m ON m.house_id = h.house_id
+         JOIN district d ON h.district_id = d.district_id
+         JOIN divisional_secretariat ds ON h.divisional_secretariat_id = ds.divisional_secretariat_id
+         JOIN grama_niladhari_division gnd ON h.grama_niladhari_division_id = gnd.grama_niladhari_division_id
+         WHERE m.member_id = ? LIMIT 1`,
       [userId]
     );
-    
+    console.log('🟢 [getUserFloodRiskFromDB] userHomes:', userHomes);
     if (userHomes.length === 0) {
+      console.log('🟢 [getUserFloodRiskFromDB] No house found for user');
       return res.status(404).json({
         success: false,
         message: 'User home information not found. Please update your home location.'
       });
     }
-    
     const distance_to_river = parseFloat(userHomes[0].distance_to_river);
     const address = userHomes[0].address;
+    const district_name = userHomes[0].district_name;
+    const ds_name = userHomes[0].divisional_secretariat_name;
+    const gn_name = userHomes[0].grama_niladhari_division_name;
     
     // 2. Get current flood area from flood_details (today's data)
     const today = new Date().toISOString().slice(0, 10);
@@ -353,6 +368,7 @@ export const getUserFloodRiskFromDB = async (req, res, next) => {
     
     logger.info(`Flood risk calculated for user ${userId}: ${riskLevel} - Distance: ${distance_from_flood}km`);
     
+    console.log('🟢 [getUserFloodRiskFromDB] Sending flood risk response');
     res.status(200).json({
       success: true,
       data: {
@@ -360,6 +376,9 @@ export const getUserFloodRiskFromDB = async (req, res, next) => {
         user_location: {
           address,
           distance_to_river,
+          district_name,
+          ds_name,
+          gn_name
         },
         
         // Current flood info
@@ -399,6 +418,7 @@ export const getUserFloodRiskFromDB = async (req, res, next) => {
     });
     
   } catch (error) {
+    console.log('🔴 [getUserFloodRiskFromDB] error:', error);
     logger.error('Get user flood risk from DB error:', error);
     next(error);
   }
